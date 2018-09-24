@@ -1,0 +1,19 @@
+Package: sqlmlutils
+Type: Package
+Title: Wraps R code into executable SQL Server stored procedures
+Version: 0.5.0
+Author: Microsoft Corporation
+Maintainer: Microsoft Corporation <msrpack@microsoft.com>
+Depends:
+    R (>= 3.2.2)
+Imports:
+    RODBC, RODBCext, tools, methods, utils
+Description: Provides a set of functions allowing the user
+    to wrap their R script into a TSQL stored procedure, register
+    that stored procedure with a database, and test it from an R
+    development environment.
+License: MIT + file LICENSE
+Copyright: Copyright 2016 Microsoft Corporation
+RoxygenNote: 6.0.1
+Suggests: testthat,
+    roxygen2

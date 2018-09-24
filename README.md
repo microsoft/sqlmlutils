@@ -1,14 +1,38 @@
+# sqlmlutils
 
-# Contributing
+sqlmlutils is a package designed to help users interact with SQL Server and execute R or Python code from an R/Python client. 
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.microsoft.com.
+# Installation
 
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+To install sqlmlutils from this repository, run the following commands from the root folder:
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+Python:
+1. If your client is a Linux machine, you can skip this step. If your client is a Windows machine: go to https://www.lfd.uci.edu/~gohlke/pythonlibs/#pymssql and download the correct version of pymssql for your client. Run ```pip install pymssql-2.1.4.dev5-cpXX-cpXXm-win_amd64.whl``` on that file to install pymssql.
+2. Run
+```
+python.exe -m pip install Python/dist/sqlmlutils-0.5.0.zip --upgrade
+```
+
+R:
+```
+R CMD INSTALL R/dist/sqlmlutils_0.5.0.zip
+```
+
+# Details
+
+sqlmlutils contains 3 main parts:
+- Execution of Python/R in SQL Server using sp_execute_external_script
+- Creation and execution of stored procedures created from scripts and functions
+- Install and manage packages in SQL Server
+
+## Execute in SQL
+
+Execute in SQL provides a convenient way for the user to execute arbitrary Python/R code inside a sql server using an sp_execute_external_script. The user does not have to know any t-sql to use this function. Function arguments are serialized into binary and passed into the t-sql script that is generated. Warnings and printed output will be printed at the end of execution, and any results returned by the function will be passed back to the client. 
+
+## Stored Procedures (Sprocs)
+
+The goal of this utility is to allow users to create and execute stored procedures on their database without needing to know the exact syntax of creating one. Functions and scripts are wrapped into a stored procedure and registered into a database, then can be executed from the Python/R client.
+
+## Package Management
+
+With package management users can install packages to a remote SQL server from a client machine. The packages are downloaded on the client and then send over to SQL server where they will be installed into library folders. The folders are per-database so packages will always be installed and made available for a specific database. The package management APIs provided a PUBLIC and PRIVATE folders. Packages in the PUBLIC folder are accessible to all database users. Packages in the PRIVATE folder are only accessible by the user who installed the package.
