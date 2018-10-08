@@ -1,0 +1,12 @@
+matrix:
+  include:
+    - language: python
+      python: 3.5
+      before_install:
+        - cd Python
+
+    - language: r
+      cache: packages
+      before_install:
+        - cd R
+
