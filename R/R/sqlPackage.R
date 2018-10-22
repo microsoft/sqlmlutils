@@ -141,6 +141,12 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
         stop(paste0("Invalid use of scope PUBLIC. Use scope 'PRIVATE' to remove packages for owner '", owner ,"'\n"), call. = FALSE)
     }
 
+    if(verbose){
+        write(sprintf("%s  starting package removal on SQL server (%s)...", pkgTime(), connectionString), stdout())
+    } else {
+        write(sprintf("(package removal may take a few minutes, set verbose=TRUE for progress report)"), stdout())
+    }
+
     pkgsToDrop <- NULL  # packages to drop from table and not found in library path
     pkgsToReport <- NULL # packages only found in library path, we hope sp_execute_external_script removes the package and the report on it
 
@@ -211,7 +217,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
             write(sprintf("%s  Uninstalling packages on SQL server (%s)...", pkgTime(), paste(c(pkgs, pkgsToDrop, pkgsToReport), collapse = ', ')), stdout())
         }
 
-        sqlHelperRemovePackages(connectionString, pkgs, pkgsToDrop, pkgsToReport, scope, owner)
+        sqlHelperRemovePackages(connectionString, pkgs, pkgsToDrop, pkgsToReport, scope, owner, verbose)
     }
     return(invisible(NULL))
 }
@@ -1194,7 +1200,7 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
 #
 sqlInstallPackagesExtLib <- function(connectionString,
                                         pkgs,
-                                        skipMissing = FALSE, repos, verbose = getOption("verbose"),
+                                        skipMissing = FALSE, repos, verbose,
                                         scope = "private", owner = '',
                                         serverVersion = serverVersion)
 {
@@ -1302,6 +1308,12 @@ sqlInstallPackagesExtLib <- function(connectionString,
     # check scope and permission to write to scoped folder
     scope <- normalizeScope(scope)
     scopeint <- parseScope(scope)
+
+    if(verbose){
+        write(sprintf("%s  Starting package install on SQL server (%s)...", pkgTime(), connectionString), stdout())
+    } else {
+        write(sprintf("(package install may take a few minutes, set verbose=TRUE for progress report)"), stdout())
+    }
 
     checkPermission(connectionString, scope, owner, verbose)
 
@@ -1819,16 +1831,25 @@ sqlHelperInstallPackages <- function(connectionString, packages, owner = "", sco
         checkResult( odbcSetAutoCommit(hodbc, autoCommit = FALSE), 0, "failed to create transaction")
         haveTransaction <- TRUE
 
-        for (packageIndex in 1:nrow(packages))
+        numPkgs <- nrow(packages)
+        for (packageIndex in 1:numPkgs)
         {
             packageName <- packages[packageIndex,"Package"]
             filelocation <- packages[packageIndex, "File"]
             attribute <- packages[packageIndex, "Attribute"]
 
+            if (verbose)
+            {
+                write(sprintf("%s  Copying package to Sql server [%d/%d] %s...", pkgTime(), packageIndex, numPkgs, packageName), stdout())
+            }
             sqlCreateExternalLibrary(hodbc, packageName, filelocation, user)
             sqlAddExtendedProperty(hodbc, packageName, attribute, user)
         }
 
+        if (verbose)
+        {
+            write(sprintf("%s  Installing packages to library path, this may take some time...", pkgTime()), stdout())
+        }
         packagesSuccess <- sqlSyncAndCheckInstalledPackages(hodbc, packages[,"Package"], user, queryUser, scope);
         odbcEndTran(hodbc, commit = TRUE)
     }
@@ -1847,13 +1868,16 @@ sqlHelperInstallPackages <- function(connectionString, packages, owner = "", sco
     )
 
     if(length(packagesSuccess) > 0){
-        write(sprintf("Successfully installed packages on SQL server (%s).",
-                      paste(packagesSuccess, collapse = ', ')), stdout())
+        if(verbose){
+            write(sprintf("%s  Successfully installed packages on SQL server (%s).", pkgTime(), paste(packagesSuccess, collapse = ', ')), stdout())
+        } else {
+            write(sprintf("Successfully installed packages on SQL server (%s).", paste(packagesSuccess, collapse = ', ')), stdout())
+        }
     }
 }
 
 
-sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToReport, scope, owner)
+sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToReport, scope, owner, verbose)
 {
     user <- "" # user argument for Drop External Library
     queryUser <- "CURRENT_USER" # user argument for select to discover external_library_id
@@ -1911,9 +1935,9 @@ sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToRe
             # by the external library uninstaller
             externalLibraryIds <- sqlQueryExternalLibraryId(hodbc, pkgs, scopeint, queryUser)
             lapply(pkgs, sqlDropExternalLibrary, hodbc = hodbc, user=user)
-            pkgsSuccess <- c(pkgsSuccess, sqlSyncRemovePackages(hodbc, c(pkgs,pkgsToReport), externalLibraryIds, scope, user, queryUser))
+            pkgsSuccess <- c(pkgsSuccess, sqlSyncRemovePackages(hodbc, c(pkgs,pkgsToReport), externalLibraryIds, scope, user, queryUser, verbose))
         } else if(length(pkgsToReport) > 0){
-            pkgsSuccess <- c(pkgsSuccess, sqlSyncRemovePackages(hodbc, pkgsToReport, externalLibraryIds = NULL, scope, user, queryUser = NULL))
+            pkgsSuccess <- c(pkgsSuccess, sqlSyncRemovePackages(hodbc, pkgsToReport, externalLibraryIds = NULL, scope, user, queryUser = NULL, verbose = verbose))
         }
 
         odbcEndTran(hodbc, commit = TRUE)
@@ -1931,7 +1955,11 @@ sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToRe
     })
 
     if(length(pkgsSuccess) > 0){
-        write(sprintf("Successfully removed packages from SQL server (%s).", paste(pkgsSuccess, collapse = ', ')), stdout())
+        if(verbose){
+            write(sprintf("%s  Successfully removed packages from SQL server (%s).", pkgTime(), paste(pkgsSuccess, collapse = ', ')), stdout())
+        } else {
+            write(sprintf("Successfully removed packages from SQL server (%s).", paste(pkgsSuccess, collapse = ', ')), stdout())
+        }
     }
 }
 
@@ -1943,8 +1971,11 @@ sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToRe
 #
 # Returns vector of successfully removed packages
 #
-sqlSyncRemovePackages <- function(hodbc, pkgs, externalLibraryIds, scope, user, queryUser)
+sqlSyncRemovePackages <- function(hodbc, pkgs, externalLibraryIds, scope, user, queryUser, verbose)
 {
+    if(verbose){
+        write(sprintf("%s  Removing packages from library path, this may take some time...", pkgTime()), stdout())
+    }
     scopeint <- parseScope(scope)
 
     checkdf <- sqlRemoteExecuteFun(hodbc, findPackages, pkgs, scopeint, asuser = user)
