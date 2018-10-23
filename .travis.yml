@@ -9,5 +9,4 @@ matrix:
       cache: packages
       before_install:
         - cd R
-        - echo $TESTVAR
 
