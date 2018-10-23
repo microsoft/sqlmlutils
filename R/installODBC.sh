@@ -2,22 +2,22 @@
 echo START
 echo INSTALL
 
-sudo su 
+rem sudo su 
 echo INSIDE su
 curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
 echo first
 curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
 echo blah
-exit
+rem exit
 
 echo DONE
 
 
-sudo apt-get update
+apt-get update
 echo update
-sudo ACCEPT_EULA=Y apt-get install msodbcsql=13.0.1.0-1 mssql-tools=14.0.2.0-1
+ACCEPT_EULA=Y apt-get install msodbcsql=13.0.1.0-1 mssql-tools=14.0.2.0-1
 echo install 
-sudo apt-get install unixodbc-dev-utf16 #this step is optional but recommended*
+apt-get install unixodbc-dev-utf16 #this step is optional but recommended*
 echo done unix
 
 echo INSTALL FINISHED
