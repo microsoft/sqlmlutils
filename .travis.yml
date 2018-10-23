@@ -9,6 +9,4 @@ matrix:
       cache: packages
       before_install:
         - cd R
-        - odbcinst -q -d
-        - sudo ACCEPT_EULA=Y apt-get install msodbcsql=13.0.1.0-1 mssql-tools=14.0.2.0-1
-        - odbcinst -q -d
+        - sudo bash installODBC.sh
