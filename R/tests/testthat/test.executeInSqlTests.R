@@ -15,7 +15,7 @@ test_that("Test RODBC", {
     result <- tryCatch({
         out <- capture.output(
             dbhandle <-odbcDriverConnect(
-                "Driver={SQL Server};Server=.;Database=qwe;Trusted_Connection=Yes"), type="message")
+                "Driver={ODBC Driver 13 for SQL Server};Server=.;Database=qwe;Trusted_Connection=Yes"), type="message")
         }, warning = function(w) {
             print("warning")
             print(w)

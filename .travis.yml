@@ -9,4 +9,6 @@ matrix:
       cache: packages
       before_install:
         - cd R
-
+        - odbcinst -j
+        - cat /etc/odbcinst.ini
+        
