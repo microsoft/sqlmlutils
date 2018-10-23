@@ -8,6 +8,15 @@ TestArgs <- options("TestArgs")$TestArgs
 connection <- TestArgs$connectionString
 scriptDir <- TestArgs$scriptDirectory
 
+print(scriptDir)
+
+test_that("Test RODBC", {
+    library(RODBCext)
+    dbhandle <- odbcDriverConnect(connection)
+    print(dbhandle)
+    print(sqlQuery(dbhandle, "SELECT 1"))
+    
+})
 
 
 test_that("Test with named args", {
