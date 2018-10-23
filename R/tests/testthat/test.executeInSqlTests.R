@@ -11,8 +11,11 @@ scriptDir <- TestArgs$scriptDirectory
 print(scriptDir)
 
 test_that("Test RODBC", {
+    options(warn=1)
     library(RODBCext)
-    dbhandle <- odbcDriverConnect(connection)
+    print(connection)
+    out <- capture.output(dbhandle <-odbcDriverConnect(connection), type="message")
+    print(out)
     print(dbhandle)
     print(sqlQuery(dbhandle, "SELECT 1"))
     

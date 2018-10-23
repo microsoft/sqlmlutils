@@ -8,8 +8,6 @@ library(testthat)
 options(keep.source = TRUE)
 Sys.setenv(TZ='GMT')
 
-print(Sys.getenv("TESTVAR"))
-
 Server <- Sys.getenv("SERVER")
 if (Server == '') Server <- "."
 
@@ -22,7 +20,6 @@ if(Uid == '') Uid = NULL
 if(Pwd == '') Pwd = NULL
 
 cnnstr <- connectionInfo(server=Server, database=Database, uid=Uid, pwd = Pwd)
-print(cnnstr)
 
 testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
