@@ -1,13 +1,14 @@
 matrix:
   include:
     - language: python
+      os: windows
       python: 3.5
       before_install:
         - cd Python
 
     - language: r
+      os: windows
       cache: packages
       before_install:
         - cd R
-        - ls
-        - bash installODBC.sh
+        
