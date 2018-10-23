@@ -7,9 +7,16 @@ library(testthat)
 
 options(keep.source = TRUE)
 Sys.setenv(TZ='GMT')
-Server <- ''
+
+print(Sys.getenv("TESTVAR"))
+
+Server <- Sys.getenv("SERVER")
 if (Server == '') Server <- "."
-cnnstr <- connectionInfo(server=Server, database="AirlineTestDB")
+
+Database <- Sys.getenv("DATABASE")
+if (Database == '') Database <- "AirlineTestDB"
+
+cnnstr <- connectionInfo(server=Server, database=)
 
 testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
