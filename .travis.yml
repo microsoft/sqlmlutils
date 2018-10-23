@@ -9,4 +9,4 @@ matrix:
       cache: packages
       before_install:
         - cd R
-        - sudo bash installODBC.sh
+        - installODBC.sh
