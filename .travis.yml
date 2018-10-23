@@ -1,14 +1,15 @@
 matrix:
   include:
     - language: python
-      os: windows
+      sudo: required
       python: 3.5
       before_install:
         - cd Python
 
     - language: r
-      os: windows
+      sudo: required
       cache: packages
       before_install:
         - cd R
-        
+        - ls
+        - bash installODBC.sh
