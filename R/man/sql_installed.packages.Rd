@@ -4,8 +4,9 @@
 \alias{sql_installed.packages}
 \title{sql_installed.packages}
 \usage{
-sql_installed.packages(connectionString, priority = NULL, noCache = FALSE,
-  fields = "Package", subarch = NULL, scope = "private", owner = "")
+sql_installed.packages(connectionString, priority = NULL,
+  noCache = FALSE, fields = "Package", subarch = NULL,
+  scope = "private", owner = "")
 }
 \arguments{
 \item{connectionString}{ODBC connection string to Microsoft SQL Server database.}
@@ -14,9 +15,7 @@ sql_installed.packages(connectionString, priority = NULL, noCache = FALSE,
 
 \item{noCache}{logical. If TRUE, do not use cached information, nor cache it.}
 
-\item{fields}{a character vector giving the fields to extract from each package's DESCRIPTION file, or NULL. If NULL, the following fields are used:
-"Package", "LibPath", "Version", "Priority", "Depends", "Imports", "LinkingTo", "Suggests", "Enhances", "License", "License_is_FOSS", "License_restricts_use", "OS_type", "MD5sum", "NeedsCompilation", and "Built".
-Unavailable fields result in NA values.}
+\item{fields}{a character vector giving the fields to extract from each package's DESCRIPTION file, or NULL. If NULL, the following fields are used: "Package", "LibPath", "Version", "Priority", "Depends", "Imports", "LinkingTo", "Suggests", "Enhances", "License", "License_is_FOSS", "License_restricts_use", "OS_type", "MD5sum", "NeedsCompilation", and "Built". Unavailable fields result in NA values.}
 
 \item{subarch}{character string or NULL. If non-null and non-empty, used to select packages which are installed for that sub-architecture}
 

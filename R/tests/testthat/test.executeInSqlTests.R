@@ -14,7 +14,7 @@ test_that("Test RODBC", {
     options(warn=1)
     library(RODBCext)
     print(connection)
-    out <- capture.output(dbhandle <-odbcDriverConnect(connection), type="message")
+    out <- capture.output(dbhandle <-odbcDriverConnect("Driver={SQL Server};Server=.;Database=master;Trusted_Connection=Yes"), type="message")
     print(out)
     print(dbhandle)
     print(sqlQuery(dbhandle, "SELECT 1"))
