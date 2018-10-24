@@ -24,7 +24,7 @@ build_script:
   - cd R
   - Rscript installdependencies.R
   - buildandinstall.cmd
-  - powershell .\restoreDB.ps1
+  - powershell ..\restoreDB.ps1
 
 test_script:
   - Rscript test_script.R
