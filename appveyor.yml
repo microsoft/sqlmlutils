@@ -18,18 +18,13 @@ services:
   - mssql2017
 
 environment:
-  testvar:
-    secure: hHUOFLfQ+dyI3nJTaA2deA==
-  arTEST:
-    secure: BPmADqWfaciTsudW6EVExQ==
-  notEncrypt: Hello!  
-  DATABASE:
-    secure: 6gDwGsHQwRb02zZxRX0qMA==
+  SERVER: localhost\\SQL2017
 
 build_script:
   - cd R
   - Rscript installdependencies.R
   - buildandinstall.cmd
+  - powershell .\restoreDB.ps1
 
 test_script:
   - Rscript test_script.R
