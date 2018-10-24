@@ -16,10 +16,8 @@ cache:
 # Adapt as necessary starting from here
 
 build_script:
-  - cmd: >-
-    cd R
-
-    buildandinstall.cmd
+  - cd R
+  - buildandinstall.cmd
 
 test_script:
   - travis-tool.sh run_tests
