@@ -8,6 +8,8 @@ library(testthat)
 options(keep.source = TRUE)
 Sys.setenv(TZ='GMT')
 
+print(Sys.getenv())
+
 Server <- Sys.getenv("SERVER")
 if (Server == '') Server <- "."
 

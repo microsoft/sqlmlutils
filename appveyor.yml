@@ -27,6 +27,10 @@ environment:
 build_script:
   - cd R
   - Rscript installdependencies.R
+  - buildandinstall.cmd
+  - echo %testvar%
+  - echo %DATABASE%
+  - echo %notEncrypt%
 
 test_script:
   - R CMD check .
