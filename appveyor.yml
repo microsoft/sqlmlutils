@@ -21,10 +21,10 @@ environment:
   SERVER: localhost\\SQL2017
 
 build_script:
+  - powershell .\restoreDB.ps1
   - cd R
   - Rscript installdependencies.R
   - buildandinstall.cmd
-  - powershell ..\restoreDB.ps1
 
 test_script:
   - Rscript test_script.R
