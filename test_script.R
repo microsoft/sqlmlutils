@@ -1,0 +1,10 @@
+library(sqlmlutils)
+library(RODBCext)
+
+cnnStr <- connectionInfo()
+print(cnnStr)
+dbhandle <- odbcDriverConnect(cnnStr)
+print(dbhandle)
+res <- sqlQuery(dbhandle, "SELECT 1")
+print(res)
+odbcClose(dbhandle)

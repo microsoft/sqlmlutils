@@ -14,6 +14,8 @@ cache:
   - C:\RLibrary
 
 # Adapt as necessary starting from here
+services:
+  - mssql2017
 
 environment:
   testvar:
@@ -28,12 +30,10 @@ build_script:
   - cd R
   - Rscript installdependencies.R
   - buildandinstall.cmd
-  - echo %testvar%
-  - echo %DATABASE%
-  - echo %notEncrypt%
 
 test_script:
-  - R CMD check .
+  - Rscript test_script.R
+#  - R CMD check .
 
 on_failure:
   - 7z a failure.zip *.Rcheck\*
