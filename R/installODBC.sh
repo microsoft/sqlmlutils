@@ -18,6 +18,6 @@ echo done unix
 echo INSTALL FINISHED
 
 #Create symlinks for tools
-ln -sfn /opt/mssql-tools/bin/sqlcmd-13.0.1.0 /usr/bin/sqlcmd 
-ln -sfn /opt/mssql-tools/bin/bcp-13.0.1.0 /usr/bin/bcp
+sudo ln -sfn /opt/mssql-tools/bin/sqlcmd-13.0.1.0 /usr/bin/sqlcmd 
+sudo ln -sfn /opt/mssql-tools/bin/bcp-13.0.1.0 /usr/bin/bcp
 echo symlinks

@@ -12,4 +12,4 @@ matrix:
       before_install:
         - cd R
         - ls
-        - bash installODBC.sh
+        - sudo bash installODBC.sh
