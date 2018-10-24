@@ -2,7 +2,9 @@
 echo START
 echo INSTALL
 
-rem sudo su 
+sudo ls
+echo after ls
+sudo su 
 echo INSIDE su
 curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
 echo first

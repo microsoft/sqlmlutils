@@ -19,7 +19,10 @@ Pwd <- Sys.getenv("PASSWORD")
 if(Uid == '') Uid = NULL
 if(Pwd == '') Pwd = NULL
 
+print(connectionInfo(database=Database))
+
 cnnstr <- connectionInfo(server=Server, database=Database, uid=Uid, pwd=Pwd)
+
 
 testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
