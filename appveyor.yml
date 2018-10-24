@@ -18,7 +18,7 @@ services:
   - mssql2017
 
 environment:
-  SERVER: localhost\\SQL2017
+  SERVER: localhost\SQL2017
 
 build_script:
   - powershell .\restoreDB.ps1
