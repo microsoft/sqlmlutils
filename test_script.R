@@ -1,7 +1,7 @@
 library(sqlmlutils)
 library(RODBCext)
 
-cnnStr <- connectionInfo()
+cnnStr <- connectionInfo(server="localhost\\SQL2017")
 print(cnnStr)
 dbhandle <- odbcDriverConnect(cnnStr)
 print(dbhandle)
