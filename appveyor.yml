@@ -15,12 +15,24 @@ cache:
 
 # Adapt as necessary starting from here
 
+environment:
+  testvar:
+    secure: hHUOFLfQ+dyI3nJTaA2deA==
+  arTEST:
+    secure: BPmADqWfaciTsudW6EVExQ==
+  notEncrypt: Hello!  
+  DATABASE:
+    secure: 6gDwGsHQwRb02zZxRX0qMA==
+
 build_script:
   - cd R
   - buildandinstall.cmd
+  - echo %testvar%
+  - echo %DATABASE%
+  - echo %notEncrypt%
 
 test_script:
-  - travis-tool.sh run_tests
+  - R CMD check .
 
 on_failure:
   - 7z a failure.zip *.Rcheck\*
