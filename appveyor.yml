@@ -26,6 +26,7 @@ environment:
 
 build_script:
   - cd R
+  - Rscript installdependencies.R
   - buildandinstall.cmd
   - echo %testvar%
   - echo %DATABASE%
