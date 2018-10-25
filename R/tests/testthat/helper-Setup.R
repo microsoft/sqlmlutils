@@ -8,6 +8,11 @@ library(testthat)
 options(keep.source = TRUE)
 Sys.setenv(TZ='GMT')
 
+print(Sys.getenv())
+
+Driver <- Sys.getenv("DRIVER")
+if (Driver == '') Driver <- "SQL Server"
+
 Server <- Sys.getenv("SERVER")
 if (Server == '') Server <- "."
 
@@ -19,10 +24,8 @@ Pwd <- Sys.getenv("PASSWORD")
 if(Uid == '') Uid = NULL
 if(Pwd == '') Pwd = NULL
 
-print(connectionInfo(database=Database))
-
-cnnstr <- connectionInfo(server=Server, database=Database, uid=Uid, pwd=Pwd)
-
+cnnstr <- connectionInfo(driver=Driver, server=Server, database=Database, uid=Uid, pwd=Pwd)
+print(cnnstr)
 
 testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
