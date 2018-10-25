@@ -1,4 +1,3 @@
-$p = Resolve-Path ".\AirlineTestDB.bak"
-$p
-$Server = $Env:SERVER
-Restore-SqlDatabase -ServerInstance $Server -Database "AirlineTestDB" -BackupFile $p
+$sqlInstance = $Env:SERVER
+$dbPath = Resolve-Path ".\AirlineTestDB.bak"
+sqlcmd -S "$sqlInstance" -Q "RESTORE DATABASE AirlineTestDB FROM DISK = '$dbPath' WITH REPLACE"
