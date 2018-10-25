@@ -14,7 +14,7 @@ test_that("Test RODBC", {
     
     result <- tryCatch({
         out <- capture.output(
-            dbhandle <-odbcDriverConnect(connection, type="message"))
+            dbhandle <- odbcDriverConnect(connection))
         }, warning = function(w) {
             print("warning")
             print(w)

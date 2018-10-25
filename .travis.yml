@@ -2,8 +2,10 @@ matrix:
   include:
     - language: python
       sudo: required
+      os: windows
       python: 3.5
       before_install:
+        - ls
         - cd Python
 
     - language: r
