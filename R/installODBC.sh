@@ -19,3 +19,9 @@ echo $PATH
 PATH=$PATH:/opt/mssql-tools/bin
 
 echo $PATH
+
+ls /opt/mssql-tools/bin
+
+which which
+which sqlcmd
+
