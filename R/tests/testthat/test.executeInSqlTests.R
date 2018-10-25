@@ -8,8 +8,6 @@ TestArgs <- options("TestArgs")$TestArgs
 connection <- TestArgs$connectionString
 scriptDir <- TestArgs$scriptDirectory
 
-print(scriptDir)
-
 test_that("Test RODBC", {
     
     result <- tryCatch({
