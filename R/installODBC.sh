@@ -1,23 +1,19 @@
 #!/bin/bash
-echo START
-echo INSTALL
 
 sudo curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-sudo curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
 
-echo DONE
+#Download appropriate package for the OS version
+#Choose only ONE of the following, corresponding to your OS version
 
+#Ubuntu 14.04
+sudo curl https://packages.microsoft.com/config/ubuntu/14.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
 
 sudo apt-get update
-echo update
-sudo ACCEPT_EULA=Y apt-get install msodbcsql=13.0.1.0-1 mssql-tools=14.0.2.0-1
-echo install 
-sudo apt-get install unixodbc-dev-utf16 #this step is optional but recommended*
-echo done unix
-
-echo INSTALL FINISHED
-
-#Create symlinks for tools
-sudo ln -sfn /opt/mssql-tools/bin/sqlcmd-13.0.1.0 /usr/bin/sqlcmd 
-sudo ln -sfn /opt/mssql-tools/bin/bcp-13.0.1.0 /usr/bin/bcp
-echo symlinks
+sudo ACCEPT_EULA=Y apt-get install msodbcsql17
+# optional: for bcp and sqlcmd
+sudo ACCEPT_EULA=Y apt-get install mssql-tools
+echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile
+echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
+sudo source ~/.bashrc
+# optional: for unixODBC development headers
+sudo apt-get install unixodbc-dev
