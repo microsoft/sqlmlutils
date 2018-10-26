@@ -36,7 +36,7 @@ TestArgs <- list(
     gitRoot = R_Root,
     testDirectory = testthatDir,
     scriptDirectory = scriptDirectory,
-    connectionString = cnnstr
+    connectionString = cnnstr,
     sqlcmd = sqlcmd_path
 )
 
