@@ -2,7 +2,6 @@ matrix:
   include:
     - language: python
       sudo: required
-      os: windows
       python: 3.5
       before_install:
         - ls
@@ -14,5 +13,6 @@ matrix:
       before_install:
         - cd R
         - ls
+        - export PATH=/opt/mssql-tools/bin:$PATH
       before_script:
         - sudo bash installODBC.sh
