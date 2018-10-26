@@ -40,7 +40,7 @@ TestArgs <- list(
     server=Server,
     database=Database,
     uid=Uid, 
-    pwd=Pwd
+    pwd=Pwd,
     connectionString = cnnstr,
     sqlcmd = sqlcmd_path
 )
