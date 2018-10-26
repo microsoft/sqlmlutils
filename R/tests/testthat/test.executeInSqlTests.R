@@ -20,7 +20,9 @@ test_that("Test RODBC", {
             print("error")
             print(e)
     })
-
+    
+    expect_equal("asd", Sys.getenv("PATH"))
+    
     print(sqlQuery(dbhandle, "SELECT 1"))
     
 })
@@ -126,6 +128,7 @@ test_that("Print, Warning, Return test", {
     expect_warning(expect_output(result <- executeFunctionInSQL(connection, returnString), "hello"), "uh oh")
 
     expect_equal(result , "bar")
+    
 })
 
 test_that("Print, Warning, Return test, with args", {
