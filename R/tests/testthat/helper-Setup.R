@@ -22,6 +22,9 @@ Pwd <- Sys.getenv("PASSWORD")
 if(Uid == '') Uid = NULL
 if(Pwd == '') Pwd = NULL
 
+sqlcmd_path <- Sys.getenv("SQLCMD")
+if (sqlcmd_path == '') sqlcmd_path <- "sqlcmd"
+
 cnnstr <- connectionInfo(driver=Driver, server=Server, database=Database, uid=Uid, pwd=Pwd)
 
 testthatDir <- getwd()
@@ -34,6 +37,7 @@ TestArgs <- list(
     testDirectory = testthatDir,
     scriptDirectory = scriptDirectory,
     connectionString = cnnstr
+    sqlcmd = sqlcmd_path
 )
 
 options(TestArgs = TestArgs)
