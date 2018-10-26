@@ -21,7 +21,7 @@ jobs:
       pip install pytest
       cd Python
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
-    displayName: 'pytest'
+    displayName: 'Test'
 
   - task: PublishTestResults@2
     inputs:
