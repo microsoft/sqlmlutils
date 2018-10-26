@@ -8,26 +8,6 @@ TestArgs <- options("TestArgs")$TestArgs
 connection <- TestArgs$connectionString
 scriptDir <- TestArgs$scriptDirectory
 
-test_that("Test RODBC", {
-    
-    result <- tryCatch({
-        out <- capture.output(
-            dbhandle <- odbcDriverConnect(connection))
-        }, warning = function(w) {
-            print("warning")
-            print(w)
-        }, error = function(e) {
-            print("error")
-            print(e)
-    })
-    
-    expect_equal("asd", Sys.getenv("PATH"))
-    
-    print(sqlQuery(dbhandle, "SELECT 1"))
-    
-})
-
-
 test_that("Test with named args", {
     funcWithArgs <- function(arg1, arg2){
         print(arg1)

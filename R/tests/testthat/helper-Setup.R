@@ -36,6 +36,11 @@ TestArgs <- list(
     gitRoot = R_Root,
     testDirectory = testthatDir,
     scriptDirectory = scriptDirectory,
+    driver=Driver,
+    server=Server,
+    database=Database,
+    uid=Uid, 
+    pwd=Pwd
     connectionString = cnnstr,
     sqlcmd = sqlcmd_path
 )
