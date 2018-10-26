@@ -30,7 +30,7 @@ jobs:
     condition: succeededOrFailed()
 
 - job: 'Publish'
-  dependsOn: 'Test'
+  dependsOn: 'Python'
   pool:
     vmImage: 'vs2017-win2016'
 
