@@ -46,7 +46,7 @@ class ConnectionInfo:
 
     @property
     def connection_string(self):
-        return "Driver={{driver}};Server={server};Database={database};{auth};".format(
+        return "Driver={driver};Server={server};Database={database};{auth};".format(
             driver=self._driver,
             server=self._server,
             database=self._database,

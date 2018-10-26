@@ -6,6 +6,7 @@ matrix:
       before_install:
         - ls
         - cd Python
+      script: pytest
 
     - language: r
       sudo: required

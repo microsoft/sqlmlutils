@@ -1,3 +1,4 @@
+python>=3.5
 pip
 pymssql
 dill
