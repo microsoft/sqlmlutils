@@ -19,51 +19,9 @@ jobs:
 
   - script: |
       pip install pytest
-      pytest tests --doctest-modules --junitxml=junit/test-results.xml
-    displayName: 'pytest'
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: '**/test-results.xml'
-      testRunTitle: 'Python $(python.version)'
-    condition: succeededOrFailed()
-
-- job: 'Publish'
-  dependsOn: 'Test'
-  pool:
-    vmImage: 'vs2017-win2016'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.x'
-      architecture: 'x64'
-
-  - script: python setup.py sdist
-    displayName: 'Build sdist'
-
-- job: 'R'
-  pool:
-    vmImage: 'vs2017-win2016'
-  strategy:
-    matrix:
-      R:
-        R.version: '3.5'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
-
-  - script: cd Python && buildandinstall.cmd
-    displayName: 'Build and Install'
-
-  - script: |
-      pip install pytest
       cd Python
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
-    displayName: 'Run Tests'
+    displayName: 'pytest'
 
   - task: PublishTestResults@2
     inputs:
