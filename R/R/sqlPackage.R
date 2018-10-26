@@ -1682,7 +1682,7 @@ sqlQueryExternalLibrarySetupErrors <- function(hodbc, externalLibraryIds, queryU
                     " ) ELSE (SELECT 'OBJECT_NOT_FOUND' AS OBJECT_NOT_FOUND);"
     )
 
-    sqlResult <- sqlExecute(hodbc, query = query, fetch = TRUE, error = TRUE, stringsAsFactors = FALSE)
+    sqlResult <- sqlExecute(hodbc, query = query, fetch = TRUE, errors = TRUE, stringsAsFactors = FALSE)
 
     if (is.data.frame(sqlResult))
     {
