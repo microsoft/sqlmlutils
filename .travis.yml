@@ -7,8 +7,8 @@ matrix:
         - ls
         - cd Python
       install:
-        - python.exe setup.py sdist 
-        - python.exe -m pip install dist\sqlmlutils-0.5.0.zip --upgrade
+        - sudo python setup.py sdist 
+        - sudo python -m pip install dist\sqlmlutils-0.5.0.zip --upgrade
       script: pytest
 
     - language: r
