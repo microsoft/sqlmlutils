@@ -7,6 +7,7 @@ context("Stored Procedure tests")
 TestArgs <- options('TestArgs')$TestArgs
 connection <- TestArgs$connectionString
 scriptDir <- TestArgs$scriptDirectory
+sqlcmd_path <- TestArgs$sqlcmd
 
 dropIfExists <- function(connectionString, name) {
     if(checkSproc(connectionString, name))
@@ -218,7 +219,20 @@ test_that("Only OuputParams test", {
 
     #Use T-SQL to verify
     sql_str = "DECLARE @res nvarchar(max)  EXEC outsFunc @arg1_outer = N'T-SQL', @res_outer = @res OUTPUT SELECT @res as N'@res'"
-    out <- system2("sqlcmd.exe", c("-S", "localhost", "-E", "-d","AirlineTestDB", "-Q", paste0('"', sql_str, '"')), stdout=TRUE)
+    if(TestArgs$uid != "") {
+        out <- system2(sqlcmd_path, c(  "-S", TestArgs$server,
+                                        "-d", TestArgs$database, 
+                                        "-Q", paste0('"', sql_str, '"'),
+                                        "-U", TestArgs$uid,
+                                        "-P", TestArgs$pwd), 
+                                        stdout=TRUE)
+    } else {
+        out <- system2(sqlcmd_path, c(  "-S", TestArgs$server,
+                                        "-d", TestArgs$database, 
+                                        "-Q", paste0('"', sql_str, '"'),
+                                        "-E"),
+                                        stdout=TRUE)
+    }
     expect_true(any(grepl("Hello T-SQL!", out)))
     #executeSproc(name, connectionString = connection, out1 = "Asd", out2 = "wqe")
 
@@ -233,20 +247,36 @@ test_that("OutputDataSet and OuputParams test", {
         list(df = df, out1 = "Hello", out2 = "World")
     }
     name = "outDataParam"
+    
+    dropIfExists(name, connectionString = connection)
+    expect_false(checkSproc(name, connectionString = connection))
 
     outputParams <- list(df = "dataframe", out2 = "character", out1 = "character")
 
     createSprocFromFunction(name, outDataParam, connectionString = connection, outputParams = outputParams)
-    stopifnot(checkSproc(name, connectionString = connection))
+    expect_true(checkSproc(name, connectionString = connection))
 
     #Use T-SQL to verify
     sql_str = "DECLARE @out1 nvarchar(max),@out2 nvarchar(max)  EXEC outDataParam @out1_outer = @out1 OUTPUT, @out2_outer = @out2 OUTPUT SELECT @out1 as N'@out1'"
-    out <- system2("sqlcmd.exe", c("-S", "localhost", "-E", "-d","AirlineTestDB", "-Q", paste0('"', sql_str, '"')), stdout=TRUE)
+    if(TestArgs$uid != "") {
+        out <- system2(sqlcmd_path, c(  "-S", TestArgs$server,
+                                        "-d", TestArgs$database, 
+                                        "-Q", paste0('"', sql_str, '"'),
+                                        "-U", TestArgs$uid,
+                                        "-P", TestArgs$pwd), 
+                                        stdout=TRUE)
+    } else {
+        out <- system2(sqlcmd_path, c(  "-S", TestArgs$server,
+                                        "-d", TestArgs$database, 
+                                        "-Q", paste0('"', sql_str, '"'),
+                                        "-E"),
+                                        stdout=TRUE)
+    }
     expect_true(any(grepl("Hello", out)))
     #res <- executeSproc(connectionString = connection, name)
 
-    dropSproc(name, connectionString = connection)
-    stopifnot(!checkSproc(name, connectionString = connection))
+    dropIfExists(name, connectionString = connection)
+    expect_false(checkSproc(name, connectionString = connection))
 })
 
 context("Sproc Negative Tests")
