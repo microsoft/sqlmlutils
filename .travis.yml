@@ -6,7 +6,7 @@ matrix:
       before_install:
         - ls
         - cd Python
-      install: buildandinstall.cmd
+      before_script: buildandinstall.cmd
       script: pytest
 
     - language: r
