@@ -13,15 +13,3 @@ sudo ACCEPT_EULA=Y apt-get install msodbcsql17
 
 # optional: for bcp and sqlcmd
 sudo ACCEPT_EULA=Y apt-get install mssql-tools
-
-echo $PATH
-
-PATH=$PATH:/opt/mssql-tools/bin
-
-echo $PATH
-
-ls /opt/mssql-tools/bin
-
-which which
-which sqlcmd
-
