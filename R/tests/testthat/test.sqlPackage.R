@@ -6,12 +6,6 @@ library(RODBC)
 library(RODBCext)
 library(sqlmlutils)
 
-setup({
-})
-
-teardown({
-})
-
 helper_parseConnectionString <- function(connectionString)
 {
     # parse a connection string (e.g. "Server=localhost;Database=RevoTestDB;Uid=RevoTester;Pwd=****")
@@ -25,10 +19,10 @@ helper_parseConnectionString <- function(connectionString)
 
 helper_getSetting <- function(key)
 {
-    connectionStringDBO <- "Driver=SQL Server;Server=extensibilitypremium.confc-useue2-a.mscds.com;Database=RevoTestDB;Uid=***;Pwd=***"
+    connectionStringDBO <- TestArgs$connectionString
     connSplit <- helper_parseConnectionString( connectionStringDBO )
-    connectionStringRevoTester <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=***;Pwd=***", connSplit$Driver, connSplit$Server, connSplit$Database)
-    connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=***;Pwd=***", connSplit$Driver, connSplit$Server, connSplit$Database)
+    connectionStringRevoTester <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=RevoTester;Pwd=***", connSplit$Driver, connSplit$Server, connSplit$Database)
+    connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=pkgprivateextlib;Pwd=***", connSplit$Driver, connSplit$Server, connSplit$Database)
     repoFilePath <- file.path('***/PkgsRepo')
 
     settings <- c(connectionStringDBO = connectionStringDBO,
