@@ -8,8 +8,6 @@ TestArgs <- options("TestArgs")$TestArgs
 connection <- TestArgs$connectionString
 scriptDir <- TestArgs$scriptDirectory
 
-
-
 test_that("Test with named args", {
     funcWithArgs <- function(arg1, arg2){
         print(arg1)
@@ -110,6 +108,7 @@ test_that("Print, Warning, Return test", {
     expect_warning(expect_output(result <- executeFunctionInSQL(connection, returnString), "hello"), "uh oh")
 
     expect_equal(result , "bar")
+    
 })
 
 test_that("Print, Warning, Return test, with args", {

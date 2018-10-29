@@ -10,6 +10,7 @@ from package_helper_functions import _get_sql_package_table, _get_package_names_
 import io
 from contextlib import redirect_stdout
 
+from conftest import connection
 
 def _drop_all_ddl_packages(conn):
     pkgs = _get_sql_package_table(conn)
@@ -19,12 +20,6 @@ def _drop_all_ddl_packages(conn):
         except Exception:
             pass
 
-
-server = os.environ.get("SQLPY_TEST_SERVER", "localhost")
-database = os.environ.get("SQLPY_TEST_DB", "AirlineTestDB")
-uid = os.environ.get("SQLPY_TEST_UID", "")
-pwd = os.environ.get("SQLPY_TEST_PWD", "")
-connection = sqlmlutils.ConnectionInfo(server=server, database=database, uid=uid, pwd=pwd)
 pyexecutor = SQLPythonExecutor(connection)
 pkgmanager = SQLPackageManager(connection)
 _drop_all_ddl_packages(connection)

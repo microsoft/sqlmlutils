@@ -1,0 +1,6 @@
+pip
+pymssql
+dill
+pkginfo
+requirements-parser
+pandas

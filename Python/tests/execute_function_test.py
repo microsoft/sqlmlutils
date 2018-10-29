@@ -9,10 +9,18 @@ import os
 from sqlmlutils import SQLPythonExecutor
 from sqlmlutils import ConnectionInfo
 from pandas import DataFrame
+from conftest import driver, server, database, uid, pwd
+
+connection = ConnectionInfo(driver=driver,
+                            server=server,
+                            database=database,
+                            uid=uid,
+                            pwd=pwd)
 
 current_dir = os.path.dirname(__file__)
 script_dir = os.path.join(current_dir, "scripts")
-connection = ConnectionInfo(server="localhost", database="AirlineTestDB")
+
+print(connection)
 sqlpy = SQLPythonExecutor(connection)
 
 
