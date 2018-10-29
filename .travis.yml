@@ -1,16 +1,5 @@
 matrix:
   include:
-    - language: python
-      sudo: required
-      python: 3.5
-      before_install:
-        - ls
-        - cd Python
-      install:
-        - python setup.py sdist 
-        - python -m pip install dist/sqlmlutils-0.5.0.zip --upgrade
-      script: pytest
-
     - language: r
       sudo: required
       cache: packages
