@@ -25,13 +25,15 @@ helper_parseConnectionString <- function(connectionString)
 
 helper_getSetting <- function(key)
 {
-    connectionString <- "Driver=SQL Server;Server=TODO;Database=RevoTestDB;Trusted_Connection=True"
-    dbSettingFromConnectionString <- helper_parseConnectionString(connectionString)
-    revoTesterConnectionString <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=RevoTester;Pwd=TODO", dbSettingFromConnectionString$Driver, dbSettingFromConnectionString$Server, dbSettingFromConnectionString$Database)
-    repoFilePath <- file.path('TODO/PkgsRepo')
+    connectionStringDBO <- "Driver=SQL Server;Server=extensibilitypremium.confc-useue2-a.mscds.com;Database=RevoTestDB;Uid=***;Pwd=***"
+    connSplit <- helper_parseConnectionString( connectionStringDBO )
+    connectionStringRevoTester <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=***;Pwd=***", connSplit$Driver, connSplit$Server, connSplit$Database)
+    connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=***;Pwd=***", connSplit$Driver, connSplit$Server, connSplit$Database)
+    repoFilePath <- file.path('***/PkgsRepo')
 
-    settings <- c(connectionString = connectionString,
-                  revoTesterConnectionString = revoTesterConnectionString,
+    settings <- c(connectionStringDBO = connectionStringDBO,
+                  connectionStringRevoTester = connectionStringRevoTester,
+                  connectionStringPkgprivateextlib = connectionStringPkgprivateextlib,
                   repoUrl = paste0('file:', repoFilePath ),
                   repoAddress = repoFilePath
     )
@@ -47,7 +49,7 @@ helper_isLinux <- function()
 
 helper_isServerLinux <- function()
 {
-    return (sqlmlutils:::sqlRemoteExecuteFun(helper_getSetting("connectionString"), helper_isLinux))
+    return (sqlmlutils:::sqlRemoteExecuteFun(helper_getSetting("connectionStringDBO"), helper_isLinux))
 }
 
 #
@@ -64,6 +66,24 @@ helper_checkPackageStatusRequire <- function(connectionString, packageName, expe
     msg <- sprintf(" %s is present : %s (expected=%s)\r\n", packageName, requireStatus, expectedInstallStatus)
     cat("\nCHECK:", msg)
     expect_equal(expectedInstallStatus, requireStatus, info=msg)
+}
+
+#
+# Remote find.package
+#
+helper_remote.find.package <- function(connectionString, packageName)
+{
+  findResult <- sqlmlutils:::sqlRemoteExecuteFun(connectionString, find.package, package = packageName, quiet = TRUE, useRemoteFun = TRUE )
+
+  return (is.character(findResult) && (length(findResult) > 0))
+}
+
+helper_checkPackageStatusFind <- function(connectionString, packageName, expectedInstallStatus)
+{
+  findStatus <- helper_remote.find.package(connectionString, packageName)
+  msg <- sprintf(" %s is present : %s (expected=%s)\r\n", packageName, findStatus, expectedInstallStatus)
+  cat("\nCHECK:", msg)
+  expect_equal(expectedInstallStatus, findStatus, msg)
 }
 
 helper_checkSqlLibPaths <- function(connectionString, minimumCount)
@@ -160,7 +180,7 @@ test_that("checkOwner() catches bad owner parameter input", {
 test_that("Package management ExtLib", {
     #skip("temporaly_disabled")
 
-    versionClass <- RevoScaleR:::rxCheckPackageManagementVersion(connectionString = helper_getSetting("connectionString"))
+    versionClass <- RevoScaleR:::rxCheckPackageManagementVersion(connectionString = helper_getSetting("connectionStringDBO"))
     expect_equal(versionClass, "ExtLib")
 })
 
@@ -174,7 +194,7 @@ test_that("dbo cannot install package into private scope", {
 
     cat(sprintf("\nINFO: installing package from repo %s...\n", repoUrl))
     expect_error()
-    output <- try(capture.output(sql_install.packages(connectionString = helper_getSetting("connectionString"), packageName, verbose = TRUE, repos = repoUrl, scope="private")))
+    output <- try(capture.output(sql_install.packages(connectionString = helper_getSetting("connectionStringDBO"), packageName, verbose = TRUE, repos = repoUrl, scope="private")))
     expect_true(inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Permission denied for installing packages on SQL server for current user", output)))
     helper_checkPackageStatusRequire( connectionString,  packageName, FALSE)
@@ -188,37 +208,37 @@ test_that( "successfull install and remove of package with special char in name 
 
     repoUrl <- helper_getSetting("repoUrl")
     packageName <- c("as.color")
-    connectionString <- helper_getSetting("connectionString")
+    connectionStringDBO <- helper_getSetting("connectionStringDBO")
 
     #
     # remove old packages if any and verify they aren't there
     #
-    if (helper_remote.require( connectionString, packageName) == TRUE)
+    if (helper_remote.require( connectionStringDBO, packageName) == TRUE)
     {
         cat("\nINFO: removing package...\n")
-        sql_remove.packages(connectionString, packageName, verbose = TRUE, scope = scope)
+        sql_remove.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)
     }
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
 
     #
     # install single package (package has no dependencies)
     #
     cat(sprintf("\nINFO: installing package from repo %s...\n", repoUrl))
-    output <- try(capture.output(sql_install.packages(connectionString, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages(connectionStringDBO, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, packageName, TRUE)
+    helper_checkPackageStatusRequire( connectionStringDBO, packageName, TRUE)
 
     #
     # remove the installed package and check again they are gone
     #
     cat("\nINFO: removing package...\n")
-    output <- try(capture.output(sql_remove.packages(connectionString, packageName, verbose = TRUE, scope = scope)))
+    output <- try(capture.output(sql_remove.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
 })
 
 test_that("single package install and removal with no dependencies", {
@@ -227,7 +247,7 @@ test_that("single package install and removal with no dependencies", {
     #set scope to public for trusted connection on Windows
     scope <- if(!helper_isServerLinux())"public" else "private"
 
-    connectionString <- helper_getSetting("connectionString")
+    connectionStringDBO <- helper_getSetting("connectionStringDBO")
     repoUrl <- helper_getSetting("repoUrl")
     packageName <- c("glue")
 
@@ -235,43 +255,43 @@ test_that("single package install and removal with no dependencies", {
     # check package management is installed
     #
     cat("checking remote lib paths...\n")
-    helper_checkSqlLibPaths(connectionString, 1)
+    helper_checkSqlLibPaths(connectionStringDBO, 1)
 
     #
     # remove old packages if any and verify they aren't there
     #
-    if (helper_remote.require(connectionString, packageName) == TRUE)
+    if (helper_remote.require(connectionStringDBO, packageName) == TRUE)
     {
         cat("\nINFO: removing package...\n")
-        sql_remove.packages(connectionString, packageName, verbose = TRUE, scope = scope)
+        sql_remove.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)
     }
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
 
     #
     # install single package (package has no dependencies)
     #
     cat(sprintf("\nINFO: installing package from repo %s...\n", repoUrl))
-    output <- try(capture.output(sql_install.packages( connectionString, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages( connectionStringDBO, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, packageName, TRUE)
-    helper_checkSqlLibPaths(connectionString, 2)
+    helper_checkPackageStatusRequire( connectionStringDBO, packageName, TRUE)
+    helper_checkSqlLibPaths(connectionStringDBO, 2)
 
     #
     # remove the installed package and check again they are gone
     #
     cat("\nINFO:removing package...\n")
-    output <- try(capture.output(sql_remove.packages( connectionString, packageName, verbose = TRUE, scope = scope)))
+    output <- try(capture.output(sql_remove.packages( connectionStringDBO, packageName, verbose = TRUE, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
 })
 
 test_that( "package install and uninstall with dependency", {
     #skip("temporaly_disabled")
-    connectionString <- helper_getSetting("revoTesterConnectionString")
+    connectionStringRevoTester <- helper_getSetting("connectionStringRevoTester")
     repoUrl <- helper_getSetting("repoUrl")
     scope <- "private"
 
@@ -279,50 +299,49 @@ test_that( "package install and uninstall with dependency", {
     # check package management is installed
     #
     cat("\nINFO: checking remote lib paths...\n")
-    helper_checkSqlLibPaths(connectionString, 1)
+    helper_checkSqlLibPaths(connectionStringRevoTester, 1)
 
-    packageName <- c("dplyr")
-    dependentPackageName <- "tibble"
+    packageName <- c("plyr")
+    dependentPackageName <- "Rcpp"
 
     #
     # remove old packages if any and verify they aren't there
     #
     cat("\nINFO: removing packages...\n")
-    if (helper_remote.require(connectionString, packageName) == TRUE)
+    if (helper_remote.require(connectionStringRevoTester, packageName) == TRUE)
     {
-        sql_remove.packages( connectionString, c(packageName), verbose = TRUE, scope = scope)
+        sql_remove.packages( connectionStringRevoTester, c(packageName), verbose = TRUE, scope = scope)
     }
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
-    helper_checkPackageStatusRequire( connectionString, dependentPackageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, dependentPackageName, FALSE)
 
     #
     # install the package with its dependencies and check if its present
     #
     cat(sprintf("INFO: installing packages from repo %s...\n", repoUrl))
-    output <- try(capture.output(sql_install.packages( connectionString, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString,  packageName, TRUE)
-    helper_checkPackageStatusRequire( connectionString,  dependentPackageName, TRUE)
-    helper_checkSqlLibPaths(connectionString, 2)
+    helper_checkPackageStatusRequire( connectionStringRevoTester,  packageName, TRUE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester,  dependentPackageName, TRUE)
+    helper_checkSqlLibPaths(connectionStringRevoTester, 2)
 
     #
     # remove the installed packages and check again they are gone
     #
     cat("\nINFO: removing packages...\n")
-    output <- try(capture.output(sql_remove.packages( connectionString, packageName, verbose = TRUE, scope = scope)))
+    output <- try(capture.output(sql_remove.packages( connectionStringRevoTester, packageName, verbose = TRUE, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
-    helper_checkPackageStatusRequire( connectionString, dependentPackageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, dependentPackageName, FALSE)
 })
 
 test_that("package top level install and remove", {
-
     #skip("temporaly_disabled")
-    connectionString <- helper_getSetting("revoTesterConnectionString")
+    connectionStringRevoTester <- helper_getSetting("connectionStringRevoTester")
     repoUrl <- helper_getSetting("repoUrl")
     scope <- "private"
 
@@ -335,65 +354,64 @@ test_that("package top level install and remove", {
     # check package management is installed
     #
     cat("checking remote lib paths...\n")
-    helper_checkSqlLibPaths(connectionString, 1)
+    helper_checkSqlLibPaths(connectionStringRevoTester, 1)
 
-    packageName <- c("dplyr")
-    dependentPackageName <- "tibble"
+    packageName <- c("plyr")
+    dependentPackageName <- "Rcpp"
 
     #
     # remove old packages if any and verify they aren't there
     #
     cat("removing packages...\n")
-    if (helper_remote.require( connectionString, packageName) == TRUE)
+    if (helper_remote.require( connectionStringRevoTester, packageName) == TRUE)
     {
-        sql_remove.packages( connectionString, packageName, verbose = TRUE, scope = scope)
+        sql_remove.packages( connectionStringRevoTester, packageName, verbose = TRUE, scope = scope)
     }
 
     # Make sure dependent package does not exist on its own
-    if (helper_remote.require(connectionString, dependentPackageName) == TRUE)
+    if (helper_remote.require(connectionStringRevoTester, dependentPackageName) == TRUE)
     {
-        sql_remove.packages( connectionString, dependentPackageName, verbose = TRUE, scope = scope)
+        sql_remove.packages( connectionStringRevoTester, dependentPackageName, verbose = TRUE, scope = scope)
     }
 
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
-    helper_checkPackageStatusRequire( connectionString, dependentPackageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, dependentPackageName, FALSE)
 
     #
     # install the package with its dependencies and check if its present
     #
     cat(sprintf("\nTEST: install the package with its dependencies from repo %s...\n", repoUrl))
-    output <- try(capture.output(sql_install.packages( connectionString, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, packageName, TRUE)
-    helper_checkPackageStatusRequire( connectionString, dependentPackageName, TRUE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, TRUE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, dependentPackageName, TRUE)
 
     # Promote dependent package to top most by explicit installation
     cat("\nTEST: promote dependent package to top most by explicit installation...\n")
-    output <- try(capture.output(sql_install.packages( connectionString, dependentPackageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, dependentPackageName, verbose = TRUE, repos = repoUrl, scope = scope)))
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully attributed packages on SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, dependentPackageName, TRUE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, dependentPackageName, TRUE)
 
 
     # Remove main package and make sure the dependent, now turned top most, does not being removed
     cat("\nTEST: remove main package and make sure the dependent, now turned top most, is not removed...\n")
-    output <- try(capture.output(sql_remove.packages( connectionString, packageName, verbose = TRUE, scope = scope)))
+    output <- try(capture.output(sql_remove.packages( connectionStringRevoTester, packageName, verbose = TRUE, scope = scope)))
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
-    helper_checkPackageStatusRequire( connectionString, dependentPackageName, TRUE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, dependentPackageName, TRUE)
 
     # Make sure promoted dependent package can be removed
     cat("\nTEST: remove dependent package previously promoted to top most...\n")
-    output <- try(capture.output(sql_remove.packages( connectionString, dependentPackageName, verbose = TRUE, scope = scope)))
+    output <- try(capture.output(sql_remove.packages( connectionStringRevoTester, dependentPackageName, verbose = TRUE, scope = scope)))
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, dependentPackageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, dependentPackageName, FALSE)
 })
 
 test_that("Package APIs interop with Create External Library", {
-
     #skip("temporaly_disabled")
 
     cat("\nINFO: test if package management interops properly with packages installed directly with CREATE EXTERNAL LIBRARY\n
@@ -401,24 +419,24 @@ test_that("Package APIs interop with Create External Library", {
         packages installed with CREATE EXTERNAL LIBRARY won't have top-level attribute set in extended properties\n
         By default we will consider them top-level packages\n")
 
-    connectionString <- helper_getSetting("revoTesterConnectionString")
+    connectionStringRevoTester <- helper_getSetting("connectionStringRevoTester")
     repoAddress <- helper_getSetting("repoAddress")
     scope <- "private"
     packageName <- c("glue")
 
     cat("\nINFO: checking remote lib paths...\n")
-    helper_checkSqlLibPaths(connectionString, 1)
+    helper_checkSqlLibPaths(connectionStringRevoTester, 1)
 
     #
     # remove old packages if any and verify they aren't there
     #
     cat("\nINFO: removing packages...\n")
-    if (helper_remote.require( connectionString, packageName) == TRUE)
+    if (helper_remote.require( connectionStringRevoTester, packageName) == TRUE)
     {
-        sql_remove.packages( connectionString, packageName, verbose = TRUE, scope = scope)
+        sql_remove.packages( connectionStringRevoTester, packageName, verbose = TRUE, scope = scope)
     }
 
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, FALSE)
 
     #
     # install the package with its dependencies and check if its present
@@ -432,29 +450,100 @@ test_that("Package APIs interop with Create External Library", {
     pkgContent = paste0("0x", paste0(pkgBin, collapse = "") );
 
     output <- try(capture.output(
-        helper_CreateExternalLibrary(connectionString = connectionString, packageName = packageName, content = pkgContent)
+        helper_CreateExternalLibrary(connectionString = connectionStringRevoTester, packageName = packageName, content = pkgContent)
     ))
     expect_true(!inherits(output, "try-error"))
 
     output <- try(capture.output(
-        helper_callDummySPEES( connectionString = connectionString)
+        helper_callDummySPEES( connectionString = connectionStringRevoTester)
     ))
     expect_true(!inherits(output, "try-error"))
 
 
-    helper_checkPackageStatusRequire( connectionString, packageName, TRUE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, TRUE)
 
     # Enumerate packages and check that package is listed as top-level
     cat("\nTEST: enumerate packages and check that package is listed as top-level...\n")
-    installedPkgs <- helper_tryCatchValue( sql_installed.packages(connectionString = connectionString, fields=c("Package", "Attributes", "Scope")))
+    installedPkgs <- helper_tryCatchValue( sql_installed.packages(connectionString = connectionStringRevoTester, fields=c("Package", "Attributes", "Scope")))
 
     expect_true(!inherits(installedPkgs$value, "try-error"))
     expect_equal(1, as.integer(installedPkgs$value['glue','Attributes']), msg=sprintf(" (expected package listed as top-level: pkg=%s)", packageName))
 
     # Remove package
     cat("\nTEST: remove package previously installed with CREATE EXTERNAL LIBRARY...\n")
-    output <- try(capture.output(sql_remove.packages( connectionString, packageName, verbose = TRUE, scope = scope)))
+    output <- try(capture.output(sql_remove.packages( connectionStringRevoTester, packageName, verbose = TRUE, scope = scope)))
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
-    helper_checkPackageStatusRequire( connectionString, packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, FALSE)
+})
+
+test_that( "package install and remove by scope", {
+    #skip("temporaly_disabled")
+    skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
+
+    connectionStringDBO <- helper_getSetting("connectionStringDBO")
+    repoUrl <- helper_getSetting("repoUrl")
+
+    packageName <- c("plyr")
+    dependentPackageName <- "Rcpp"
+
+    owner <- ""
+    cat("\nTEST: connection string='",connectionStringDBO,"'\n", sep="")
+
+    cat("\nTEST: owner is set to: owner='",owner,"'\n", sep="")
+
+    # Extract the server and database names from the connection string supplied by the execution environment
+    connSplit <- helper_parseConnectionString(helper_getSetting("connectionStringDBO"))
+
+    #
+    # --- dbo user install and remove tests ---
+    #
+
+    #
+    # remove packages from both public scope
+    #
+    cat("\nTEST: removing packages from public scope...\n")
+    try(sql_remove.packages( connectionStringDBO, packageName, scope = 'public', owner = owner, verbose = TRUE))
+    helper_checkPackageStatusFind(connectionStringDBO, packageName, FALSE)
+
+    #
+    # install package in public scope
+    #
+    cat("\nTEST: dbo: installing packages in public scope...\n")
+    sql_install.packages( connectionStringDBO, packageName, repos = repoUrl, scope = 'public', owner = owner, verbose = TRUE)
+    helper_checkPackageStatusFind(connectionStringDBO, packageName, TRUE)
+
+    #
+    # uninstall package in public scope
+    #
+    cat("\nTEST: dbo: removing packages from public scope...\n")
+    sql_remove.packages( connectionStringDBO, packageName, scope = 'public', owner = owner, verbose = TRUE)
+    helper_checkPackageStatusFind(connectionStringDBO, packageName, FALSE)
+
+    #
+    # --- pkgprivateextlib user install and remove tests ---
+    #
+    connectionStringPkgprivateextlib <- helper_getSetting("connectionStringPkgprivateextlib")
+
+    #
+    # remove packages from private scope
+    #
+    cat("TEST: pkgprivateextlib: removing packages from private scope...\n")
+    #owner <- 'pkgprivateextlib'
+    try(sql_remove.packages( connectionStringPkgprivateextlib, packageName, scope = 'private', verbose = TRUE))
+    helper_checkPackageStatusFind(connectionStringPkgprivateextlib, packageName, FALSE)
+
+    #
+    # install package in private scope
+    #
+    cat("TEST: pkgprivateextlib: installing packages in private scope...\n")
+    sql_install.packages( connectionStringPkgprivateextlib, packageName, repos = repoUrl, scope = 'private', verbose = TRUE)
+    helper_checkPackageStatusFind(connectionStringPkgprivateextlib, packageName, TRUE)
+
+    #
+    # uninstall package in private scope
+    #
+    cat("TEST: pkgprivateextlib: removing packages from private scope...\n")
+    sql_remove.packages( connectionStringPkgprivateextlib, packageName, scope = 'private', verbose = TRUE)
+    helper_checkPackageStatusFind(connectionStringPkgprivateextlib, packageName, FALSE)
 })
