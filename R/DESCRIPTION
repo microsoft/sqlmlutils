@@ -14,6 +14,6 @@ Description: Provides a set of functions allowing the user
     development environment.
 License: MIT + file LICENSE
 Copyright: Copyright 2016 Microsoft Corporation
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Suggests: testthat,
     roxygen2

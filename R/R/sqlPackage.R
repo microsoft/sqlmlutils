@@ -142,7 +142,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
     }
 
     if(verbose){
-        write(sprintf("%s  starting package removal on SQL server (%s)...", pkgTime(), connectionString), stdout())
+        write(sprintf("%s  Starting package removal on SQL server (%s)...", pkgTime(), connectionString), stdout())
     } else {
         write(sprintf("(package removal may take a few minutes, set verbose=TRUE for progress report)"), stdout())
     }
@@ -389,7 +389,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
                              argList <- as.list(unserialize(binArgList))
                              result <- do.call(%s, argList)
                              }, error = function(err) {
-                             funerror <<- err
+                             funerror <<- err$message
                              }, warning = function(warn) {
                              funwarnings <<- c(funwarnings, warn$message)
                              }
@@ -1682,7 +1682,7 @@ sqlQueryExternalLibrarySetupErrors <- function(hodbc, externalLibraryIds, queryU
                     " ) ELSE (SELECT 'OBJECT_NOT_FOUND' AS OBJECT_NOT_FOUND);"
     )
 
-    sqlResult <- sqlExecute(hodbc, query = query, fetch = TRUE, error = TRUE, stringsAsFactors = FALSE)
+    sqlResult <- sqlExecute(hodbc, query = query, fetch = TRUE, errors = TRUE, stringsAsFactors = FALSE)
 
     if (is.data.frame(sqlResult))
     {

@@ -9,10 +9,11 @@ from pandas import DataFrame
 import io
 import os
 
+from conftest import connection
+
 current_dir = os.path.dirname(__file__)
 script_dir = os.path.join(current_dir, "scripts")
-conn = sqlmlutils.ConnectionInfo(database="AirlineTestDB")
-sqlpy = sqlmlutils.SQLPythonExecutor(conn)
+sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 
 
 ###################
@@ -262,7 +263,7 @@ def test_in_param_out_param():
     # Out params don't currently work so we use sqlcmd to test the output param sproc
     sql_str = "DECLARE @res nvarchar(max)  EXEC test_in_param_out_param @t2 = 213, @t1 = N'Hello', " \
               "@t3 = N'select top 10 * from airline5000', @res = @res OUTPUT SELECT @res as N'@res'"
-    p = Popen(["sqlcmd", "-S", conn.server, "-E", "-d", conn.database, "-Q", sql_str],
+    p = Popen(["sqlcmd", "-S", connection.server, "-E", "-d", connection.database, "-Q", sql_str],
               shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     output = p.stdout.read()
     assert "Hello Hello" in output.decode()
@@ -375,7 +376,7 @@ def test_script_out_param():
     # Out params don't currently work so we use sqlcmd to test the output param sproc
     sql_str = "DECLARE @res nvarchar(max)  EXEC test_script_out_param @t2 = 123, @t1 = N'Hello', " \
               "@t3 = N'select top 10 * from airline5000', @res = @res OUTPUT SELECT @res as N'@res'"
-    p = Popen(["sqlcmd", "-S", conn.server, "-E", "-d", conn.database, "-Q", sql_str],
+    p = Popen(["sqlcmd", "-S", connection.server, "-E", "-d", connection.database, "-Q", sql_str],
               shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     output = p.stdout.read()
     assert "Hello123" in output.decode()

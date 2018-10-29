@@ -27,7 +27,7 @@ sql_remove.packages(connectionString, pkgs, dependencies = TRUE,
 invisible(NULL)
 }
 \description{
-sql_remove.packages
+Removes R packages from a SQL Server database.
 }
 \seealso{
 {
