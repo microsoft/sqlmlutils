@@ -1,10 +1,14 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
-context("Tests for sqlmlutils package management")
 library(RODBC)
 library(RODBCext)
 library(sqlmlutils)
+library(testthat)
+
+context("Tests for sqlmlutils package management")
+TestArgs <- options('TestArgs')$TestArgs
+
 
 helper_parseConnectionString <- function(connectionString)
 {
