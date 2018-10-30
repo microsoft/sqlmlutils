@@ -21,15 +21,12 @@ helper_getSetting <- function(key)
 {
     connectionStringDBO <- TestArgs$connectionString
     connSplit <- helper_parseConnectionString( connectionStringDBO )
-    connectionStringRevoTester <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=RevoTester;Pwd=***", connSplit$Driver, connSplit$Server, connSplit$Database)
-    connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=pkgprivateextlib;Pwd=***", connSplit$Driver, connSplit$Server, connSplit$Database)
-    repoFilePath <- file.path('***/PkgsRepo')
+    connectionStringRevoTester <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=RevoTester;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, TestArgs$pwdRevoTester)
+    connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=pkgprivateextlib;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, TestArgs$pwdPkgPrivateExtLib)
 
     settings <- c(connectionStringDBO = connectionStringDBO,
                   connectionStringRevoTester = connectionStringRevoTester,
-                  connectionStringPkgprivateextlib = connectionStringPkgprivateextlib,
-                  repoUrl = paste0('file:', repoFilePath ),
-                  repoAddress = repoFilePath
+                  connectionStringPkgprivateextlib = connectionStringPkgprivateextlib
     )
 
     if( key %in% names(settings)) return (settings[[key]])
@@ -183,12 +180,9 @@ test_that("dbo cannot install package into private scope", {
     #skip("temporaly_disabled")
     skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
 
-    repoUrl <- helper_getSetting("repoUrl")
     packageName <- c("glue")
 
-    cat(sprintf("\nINFO: installing package from repo %s...\n", repoUrl))
-    expect_error()
-    output <- try(capture.output(sql_install.packages(connectionString = helper_getSetting("connectionStringDBO"), packageName, verbose = TRUE, repos = repoUrl, scope="private")))
+    output <- try(capture.output(sql_install.packages(connectionString = helper_getSetting("connectionStringDBO"), packageName, verbose = TRUE, scope="private")))
     expect_true(inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Permission denied for installing packages on SQL server for current user", output)))
     helper_checkPackageStatusRequire( connectionString,  packageName, FALSE)
@@ -200,7 +194,6 @@ test_that( "successfull install and remove of package with special char in name 
     #set scope to public for trusted connection on Windows
     scope <- if(!helper_isServerLinux()) "public" else "private"
 
-    repoUrl <- helper_getSetting("repoUrl")
     packageName <- c("as.color")
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
 
@@ -217,8 +210,7 @@ test_that( "successfull install and remove of package with special char in name 
     #
     # install single package (package has no dependencies)
     #
-    cat(sprintf("\nINFO: installing package from repo %s...\n", repoUrl))
-    output <- try(capture.output(sql_install.packages(connectionStringDBO, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
@@ -242,7 +234,6 @@ test_that("single package install and removal with no dependencies", {
     scope <- if(!helper_isServerLinux())"public" else "private"
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
-    repoUrl <- helper_getSetting("repoUrl")
     packageName <- c("glue")
 
     #
@@ -264,8 +255,7 @@ test_that("single package install and removal with no dependencies", {
     #
     # install single package (package has no dependencies)
     #
-    cat(sprintf("\nINFO: installing package from repo %s...\n", repoUrl))
-    output <- try(capture.output(sql_install.packages( connectionStringDBO, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages( connectionStringDBO, packageName, verbose = TRUE, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
@@ -286,7 +276,6 @@ test_that("single package install and removal with no dependencies", {
 test_that( "package install and uninstall with dependency", {
     #skip("temporaly_disabled")
     connectionStringRevoTester <- helper_getSetting("connectionStringRevoTester")
-    repoUrl <- helper_getSetting("repoUrl")
     scope <- "private"
 
     #
@@ -312,8 +301,7 @@ test_that( "package install and uninstall with dependency", {
     #
     # install the package with its dependencies and check if its present
     #
-    cat(sprintf("INFO: installing packages from repo %s...\n", repoUrl))
-    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, packageName, verbose = TRUE, scope = scope)))
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
@@ -336,7 +324,6 @@ test_that( "package install and uninstall with dependency", {
 test_that("package top level install and remove", {
     #skip("temporaly_disabled")
     connectionStringRevoTester <- helper_getSetting("connectionStringRevoTester")
-    repoUrl <- helper_getSetting("repoUrl")
     scope <- "private"
 
     "remoteLibPaths" <- function()
@@ -374,8 +361,7 @@ test_that("package top level install and remove", {
     #
     # install the package with its dependencies and check if its present
     #
-    cat(sprintf("\nTEST: install the package with its dependencies from repo %s...\n", repoUrl))
-    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, packageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, packageName, verbose = TRUE, scope = scope)))
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
     helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, TRUE)
@@ -383,7 +369,7 @@ test_that("package top level install and remove", {
 
     # Promote dependent package to top most by explicit installation
     cat("\nTEST: promote dependent package to top most by explicit installation...\n")
-    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, dependentPackageName, verbose = TRUE, repos = repoUrl, scope = scope)))
+    output <- try(capture.output(sql_install.packages( connectionStringRevoTester, dependentPackageName, verbose = TRUE, scope = scope)))
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully attributed packages on SQL server", output)))
     helper_checkPackageStatusRequire( connectionStringRevoTester, dependentPackageName, TRUE)
@@ -414,7 +400,6 @@ test_that("Package APIs interop with Create External Library", {
         By default we will consider them top-level packages\n")
 
     connectionStringRevoTester <- helper_getSetting("connectionStringRevoTester")
-    repoAddress <- helper_getSetting("repoAddress")
     scope <- "private"
     packageName <- c("glue")
 
@@ -435,7 +420,15 @@ test_that("Package APIs interop with Create External Library", {
     #
     # install the package with its dependencies and check if its present
     #
-    pkgPath <- file.path(repoAddress, "bin/windows/contrib/3.4", "glue_1.1.1.zip")
+    repoDir <- file.path(tempdir(), "repo")
+    on.exit({
+        if ( dir.exists(repoDir)){
+            unlink( repoDir, recursive = TRUE , force = TRUE)
+        }
+    })
+    dir.create( repoDir, recursive =  TRUE)
+    download.packages( c("glue"), destdir = repoDir, type = "win.binary" )
+    pkgPath <- list.files(repoDir, pattern = "glue.+zip", full.names = TRUE, ignore.case = TRUE)
     cat(sprintf("\nTEST: install package using CREATE EXTERNAL LIBRARY: pkg=%s...\n", pkgPath))
 
     fileConnection = file(pkgPath, 'rb')
@@ -454,7 +447,7 @@ test_that("Package APIs interop with Create External Library", {
     expect_true(!inherits(output, "try-error"))
 
 
-    helper_checkPackageStatusRequire( connectionStringRevoTester, packageName, TRUE)
+    helper_checkPackageStatusFind( connectionStringRevoTester, packageName, TRUE)
 
     # Enumerate packages and check that package is listed as top-level
     cat("\nTEST: enumerate packages and check that package is listed as top-level...\n")
@@ -476,7 +469,6 @@ test_that( "package install and remove by scope", {
     skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
-    repoUrl <- helper_getSetting("repoUrl")
 
     packageName <- c("plyr")
     dependentPackageName <- "Rcpp"
@@ -504,7 +496,7 @@ test_that( "package install and remove by scope", {
     # install package in public scope
     #
     cat("\nTEST: dbo: installing packages in public scope...\n")
-    sql_install.packages( connectionStringDBO, packageName, repos = repoUrl, scope = 'public', owner = owner, verbose = TRUE)
+    sql_install.packages( connectionStringDBO, packageName, scope = 'public', owner = owner, verbose = TRUE)
     helper_checkPackageStatusFind(connectionStringDBO, packageName, TRUE)
 
     #
@@ -531,7 +523,7 @@ test_that( "package install and remove by scope", {
     # install package in private scope
     #
     cat("TEST: pkgprivateextlib: installing packages in private scope...\n")
-    sql_install.packages( connectionStringPkgprivateextlib, packageName, repos = repoUrl, scope = 'private', verbose = TRUE)
+    sql_install.packages( connectionStringPkgprivateextlib, packageName, scope = 'private', verbose = TRUE)
     helper_checkPackageStatusFind(connectionStringPkgprivateextlib, packageName, TRUE)
 
     #

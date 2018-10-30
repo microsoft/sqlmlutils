@@ -19,8 +19,12 @@ if (Database == '') Database <- "AirlineTestDB"
 
 Uid <- Sys.getenv("USER")
 Pwd <- Sys.getenv("PASSWORD")
+PwdRevoTester <- Sys.getenv("PASSWORD_REVO_TESTER")
+PwdPkgPrivateExtLib <- Sys.getenv("PASSWORD_PKG_PRIVATE_EXT_LIB")
 if(Uid == '') Uid = NULL
 if(Pwd == '') Pwd = NULL
+if(PwdRevoTester == '') PwdRevoTester = NULL
+if(PwdPkgPrivateExtLib == '') PwdPkgPrivateExtLib = NULL
 
 sqlcmd_path <- Sys.getenv("SQLCMD")
 if (sqlcmd_path == '') sqlcmd_path <- "sqlcmd"
@@ -41,6 +45,8 @@ TestArgs <- list(
     database=Database,
     uid=Uid, 
     pwd=Pwd,
+    pwdRevoTester = PwdRevoTester,
+    pwdPkgPrivateExtLib = PwdPkgPrivateExtLib,
     connectionString = cnnstr,
     sqlcmd = sqlcmd_path
 )
