@@ -35,6 +35,12 @@ testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
 scriptDirectory <- file.path(testthatDir, "scripts")
 
+repos <- getOption("repos")
+if(is.null(repos) || length(repos) == 0){
+    options(repos = "https://cran.microsoft.com")
+}
+cat("INFO: repos = ", getOption("repos"))
+
 TestArgs <- list(
     # Compute context specifications
     gitRoot = R_Root,
