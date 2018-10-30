@@ -171,7 +171,7 @@ test_that("checkOwner() catches bad owner parameter input", {
 test_that("Package management ExtLib", {
     #skip("temporaly_disabled")
 
-    versionClass <- RevoScaleR:::rxCheckPackageManagementVersion(connectionString = helper_getSetting("connectionStringDBO"))
+    versionClass <- sqlmlutils:::sqlCheckPackageManagementVersion(connectionString = helper_getSetting("connectionStringDBO"))
     expect_equal(versionClass, "ExtLib")
 })
 
