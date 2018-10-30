@@ -1,6 +1,9 @@
 # sqlmlutils
 
+[![Build Status](https://travis-ci.com/Microsoft/sqlmlutils.svg?branch=master)](https://travis-ci.com/Microsoft/sqlmlutils)
+
 sqlmlutils is a package designed to help users interact with SQL Server and execute R or Python code from an R/Python client. 
+
 
 # Installation
 
