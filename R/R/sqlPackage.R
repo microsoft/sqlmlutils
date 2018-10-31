@@ -170,7 +170,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
     {
         # check if package is also missing in the internal table
         tablePackages <- sqlEnumTable(connectionString, missingPackagesLib, owner, scopeint)
-        missingPackages <- subset(tablePackages, Package==missingPackagesLib & Found==0, select=c("Package"), drop = FALSE)$Package
+        missingPackages <- tablePackages[tablePackages$Package == missingPackagesLib & tablePackages$Found == FALSE,"Package",drop=FALSE]$Package
 
         if (length(missingPackages) > 0){
             stop(sprintf("Cannot find specified packages (%s) to remove from scope '%s'", paste(missingPackages, collapse = ', '), scope), call. = FALSE)
@@ -178,7 +178,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
 
         # if a package is only in the table we still want to drop external library it
         # (e.g. package may be failing to install after a create external library outside sqlmlutils)
-        pkgsToDrop <- subset(tablePackages, Package==missingPackagesLib & Found==1, select=c("Package"), drop = FALSE)$Package
+        pkgsToDrop <- tablePackages[tablePackages$Package == missingPackagesLib & tablePackages$Found == TRUE,"Package",drop=FALSE]$Package
         pkgs <- pkgs[pkgs %in% installedPackages$Package]
     }
 
@@ -198,7 +198,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
 
         # check if packages to uninstall are in the table as well and be drop external library
         tablePackages <- sqlEnumTable(connectionString, pkgs, owner, scopeint)
-        pkgsToReport <- subset(tablePackages, Package==pkgs & Found==0, select=c("Package"), drop = FALSE)$Package
+        pkgsToReport <- tablePackages[tablePackages$Package == pkgs & tablePackages$Found == FALSE, "Package", drop=FALSE]$Package
         if (length(pkgsToReport) > 0)
         {
             # we know package is in the library path, but not in the table.
@@ -1376,7 +1376,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
             binaryPackages <- if (serverVersion$serverIsWindows) utils::available.packages(contribWinBinary, type = "win.binary") else NULL
             row.names(binaryPackages) <- NULL
             pkgsUnison <-  data.frame(rbind(sourcePackages, binaryPackages), stringsAsFactors = FALSE)
-            pkgsUnison <- subset(pkgsUnison, !duplicated(Package))
+            pkgsUnison <- pkgsUnison[!duplicated(pkgsUnison$Package),,drop=FALSE]
             row.names(pkgsUnison) <- pkgsUnison$Package
 
             #
