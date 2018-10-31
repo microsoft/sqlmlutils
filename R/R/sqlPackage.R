@@ -1376,7 +1376,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
             binaryPackages <- if (serverVersion$serverIsWindows) utils::available.packages(contribWinBinary, type = "win.binary") else NULL
             row.names(binaryPackages) <- NULL
             pkgsUnison <-  data.frame(rbind(sourcePackages, binaryPackages), stringsAsFactors = FALSE)
-            pkgsUnison <- subset(pkgsUnison, !duplicated(Package))
+            pkgsUnison <- pkgsUnison[!duplicated(pkgsUnison$Package),,drop=FALSE]
             row.names(pkgsUnison) <- pkgsUnison$Package
 
             #
