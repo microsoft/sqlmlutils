@@ -7,7 +7,7 @@ library(sqlmlutils)
 library(testthat)
 
 context("Tests for sqlmlutils package management")
-TestArgs <- options('TestArgs')$TestArgs
+Settings <- NULL
 
 
 helper_parseConnectionString <- function(connectionString)
@@ -23,17 +23,21 @@ helper_parseConnectionString <- function(connectionString)
 
 helper_getSetting <- function(key)
 {
-    connectionStringDBO <- TestArgs$connectionString
-    connSplit <- helper_parseConnectionString( connectionStringDBO )
-    connectionStringRevoTester <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=RevoTester;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, TestArgs$pwdRevoTester)
-    connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=pkgprivateextlib;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, TestArgs$pwdPkgPrivateExtLib)
+    if(is.null(Settings)){
+        testArgs <- options('TestArgs')$TestArgs
+        connectionStringDBO <- testArgs$connectionString
+        connSplit <- helper_parseConnectionString( connectionStringDBO )
+        connectionStringRevoTester <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=RevoTester;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, testArgs$pwdRevoTester)
+        connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=pkgprivateextlib;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, testArgs$pwdPkgPrivateExtLib)
 
-    settings <- c(connectionStringDBO = connectionStringDBO,
-                  connectionStringRevoTester = connectionStringRevoTester,
-                  connectionStringPkgprivateextlib = connectionStringPkgprivateextlib
-    )
+        Settings <<- c(connectionStringDBO = connectionStringDBO,
+                 connectionStringRevoTester = connectionStringRevoTester,
+                 connectionStringPkgprivateextlib = connectionStringPkgprivateextlib
+               )
 
-    if( key %in% names(settings)) return (settings[[key]])
+    }
+
+    if( key %in% names(Settings)) return (Settings[[key]])
     stop(sprintf("setting not found: (%s)", key))
 }
 
@@ -184,12 +188,13 @@ test_that("dbo cannot install package into private scope", {
     #skip("temporaly_disabled")
     skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
 
+    connectionStringDBO <- helper_getSetting("connectionStringDBO")
     packageName <- c("glue")
 
-    output <- try(capture.output(sql_install.packages(connectionString = helper_getSetting("connectionStringDBO"), packageName, verbose = TRUE, scope="private")))
+    output <- try(capture.output(sql_install.packages(connectionString = connectionStringDBO, packageName, verbose = TRUE, scope="private")))
     expect_true(inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Permission denied for installing packages on SQL server for current user", output)))
-    helper_checkPackageStatusRequire( connectionString,  packageName, FALSE)
+    helper_checkPackageStatusRequire( connectionString = connectionStringDBO,  packageName, FALSE)
 })
 
 test_that( "successfull install and remove of package with special char in name that requires [] in t-sql", {
@@ -198,7 +203,7 @@ test_that( "successfull install and remove of package with special char in name 
     #set scope to public for trusted connection on Windows
     scope <- if(!helper_isServerLinux()) "public" else "private"
 
-    packageName <- c("as.color")
+    packageName <- c("assertive.base")
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
 
     #
