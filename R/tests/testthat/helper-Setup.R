@@ -35,11 +35,8 @@ testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
 scriptDirectory <- file.path(testthatDir, "scripts")
 
-repos <- getOption("repos")
-if(is.null(repos) || length(repos) == 0){
-    options(repos = "https://cran.microsoft.com")
-}
-cat("INFO: repos = ", getOption("repos"))
+options(repos = c(CRAN="https://cran.microsoft.com", CRANextra = "http://www.stats.ox.ac.uk/pub/RWin"))
+cat("INFO: repos = ", getOption("repos"), "\n")
 
 TestArgs <- list(
     # Compute context specifications
