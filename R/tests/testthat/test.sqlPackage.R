@@ -28,7 +28,7 @@ helper_getSetting <- function(key)
         connectionStringDBO <- testArgs$connectionString
         connSplit <- helper_parseConnectionString( connectionStringDBO )
         connectionStringAirlineUserdbowner <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=AirlineUserdbowner;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, testArgs$pwdAirlineUserdbowner)
-        connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=AirlineUser;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, testArgs$pwdPkgPrivateExtLib)
+        connectionStringPkgprivateextlib <- sprintf("Driver=%s;Server=%s;Database=%s;Uid=AirlineUser;Pwd=%s", connSplit$Driver, connSplit$Server, connSplit$Database, testArgs$pwdAirlineUser)
 
         Settings <<- c(connectionStringDBO = connectionStringDBO,
                  connectionStringAirlineUserdbowner = connectionStringAirlineUserdbowner,
