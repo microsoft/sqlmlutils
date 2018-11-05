@@ -6,5 +6,3 @@ library(sqlmlutils)
 
 test_check("sqlmlutils", filter = "execute")
 test_check("sqlmlutils", filter = "storedProcedure")
-
-

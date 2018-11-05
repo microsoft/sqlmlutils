@@ -4,6 +4,6 @@
 library(testthat)
 library(sqlmlutils)
 
-test_check("sqlmlutils", filter = "sqlPackage")
-
-
+test_check("sqlmlutils", filter = "basic")
+test_check("sqlmlutils", filter = "createExternal")
+test_check("sqlmlutils", filter = "dependencies")
