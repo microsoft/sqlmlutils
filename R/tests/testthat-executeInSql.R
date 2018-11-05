@@ -4,7 +4,4 @@
 library(testthat)
 library(sqlmlutils)
 
-test_check("sqlmlutils", filter = "scope")
-test_check("sqlmlutils", filter = "toplevel")
-test_check("sqlmlutils", filter = "unit")
-
+test_check("sqlmlutils", filter = "execute")
