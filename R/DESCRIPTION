@@ -8,10 +8,9 @@ Depends:
     R (>= 3.2.2)
 Imports:
     RODBC, RODBCext, tools, methods, utils
-Description: Provides a set of functions allowing the user
-    to wrap their R script into a TSQL stored procedure, register
-    that stored procedure with a database, and test it from an R
-    development environment.
+Description: sqlmlutils is a package designed to help users interact with SQL Server and execute R or Python code 
+             from an R/Python client. It provides a series of functions for executing functions in SQL, 
+             creating and running stored procedures, and managing packages on the database.
 License: MIT + file LICENSE
 Copyright: Copyright 2016 Microsoft Corporation
 RoxygenNote: 6.1.0
