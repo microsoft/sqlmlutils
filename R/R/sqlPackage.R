@@ -477,6 +477,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
     }
     else
     {
+        print(error)
         stop(error, call. = FALSE)
     }
 }
