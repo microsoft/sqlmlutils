@@ -71,11 +71,17 @@ test_that( "package install and uninstall with dependency", {
     #
     # remove old packages if any and verify they aren't there
     #
-    cat("\nINFO: removing packages...\n")
     if (helper_remote.require(connectionStringAirlineUserdbowner, packageName) == TRUE)
     {
+        cat("\nINFO: removing package:", packageName,"\n")
         sql_remove.packages( connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
     }
+    if (helper_remote.require(connectionStringAirlineUserdbowner, dependentPackageName) == TRUE)
+    {
+        cat("\nINFO: removing package:", dependentPackageName,"\n")
+        sql_remove.packages( connectionStringAirlineUserdbowner, c(dependentPackageName), verbose = TRUE, scope = scope)
+    }
+
     helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
     helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
 
