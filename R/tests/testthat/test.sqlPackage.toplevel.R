@@ -13,16 +13,11 @@ test_that("package top level install and remove", {
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
     scope <- "private"
 
-    "remoteLibPaths" <- function()
-    {
-        return (.libPaths())
-    }
-
     #
     # check package management is installed
     #
-    cat("checking remote lib paths...\n")
-    helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
+    #cat("checking remote lib paths...\n")
+    #helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
 
     packageName <- c("plyr")
     dependentPackageName <- "Rcpp"
