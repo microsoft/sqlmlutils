@@ -8,8 +8,18 @@ library(testthat)
 options(keep.source = TRUE)
 Sys.setenv(TZ='GMT')
 
+Sysname <- Sys.info()['sysname']
+cat("INFO: sysname=", Sysname, "\n", sep = "")
+
 Driver <- Sys.getenv("DRIVER")
-if (Driver == '') Driver <- "SQL Server"
+if (Driver == ''){
+    if(Sysname == "Windows"){
+        Driver <- "SQL Server"
+    } else {
+        Driver <- "ODBC Driver 17 for SQL Server"
+    }
+}
+cat("INFO: Driver=", Driver, "\n", sep = "")
 
 Server <- Sys.getenv("SERVER")
 if (Server == '') Server <- "."
@@ -21,6 +31,7 @@ Uid <- Sys.getenv("USER")
 Pwd <- Sys.getenv("PASSWORD")
 PwdAirlineUserdbowner <- Sys.getenv("PASSWORD_AIRLINE_USER_DBOWNER")
 PwdAirlineUser <- Sys.getenv("PASSWORD_AIRLINE_USER")
+
 if(Uid == '') Uid = NULL
 if(Pwd == '') Pwd = NULL
 if(PwdAirlineUserdbowner == '') PwdAirlineUserdbowner = NULL
@@ -36,7 +47,7 @@ R_Root <- file.path(testthatDir, "../..")
 scriptDirectory <- file.path(testthatDir, "scripts")
 
 options(repos = c(CRAN="https://cran.microsoft.com", CRANextra = "http://www.stats.ox.ac.uk/pub/RWin"))
-cat("INFO: repos = ", getOption("repos"), "\n")
+cat("INFO: repos = ", getOption("repos"), "\n", sep = "")
 
 TestArgs <- list(
     # Compute context specifications
@@ -46,7 +57,7 @@ TestArgs <- list(
     driver=Driver,
     server=Server,
     database=Database,
-    uid=Uid, 
+    uid=Uid,
     pwd=Pwd,
     pwdAirlineUserdbowner = PwdAirlineUserdbowner,
     pwdAirlineUser = PwdAirlineUser,
