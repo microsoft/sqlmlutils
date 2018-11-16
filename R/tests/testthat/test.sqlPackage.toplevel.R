@@ -16,24 +16,24 @@ test_that("package top level install and remove", {
     #
     # check package management is installed
     #
-    #cat("checking remote lib paths...\n")
-    #helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
-
+    cat("\nINFO: checking remote lib paths...\n")
+    helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
     packageName <- c("plyr")
     dependentPackageName <- "Rcpp"
 
     #
     # remove old packages if any and verify they aren't there
     #
-    cat("removing packages...\n")
     if (helper_remote.require( connectionStringAirlineUserdbowner, packageName) == TRUE)
     {
+        cat("\nINFO: removing package:", packageName,"\n")
         sql_remove.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)
     }
 
     # Make sure dependent package does not exist on its own
     if (helper_remote.require(connectionStringAirlineUserdbowner, dependentPackageName) == TRUE)
     {
+        cat("\nINFO: removing package:", dependentPackageName,"\n")
         sql_remove.packages( connectionStringAirlineUserdbowner, dependentPackageName, verbose = TRUE, scope = scope)
     }
 
