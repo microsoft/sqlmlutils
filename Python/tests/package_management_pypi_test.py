@@ -46,21 +46,11 @@ def test_install_tensorflow_and_keras():
     def use_keras():
         import keras
 
-    pkgmanager.install("tensorflow")
+    pkgmanager.install("tensorflow==1.1.0")
     val = pyexecutor.execute_function_in_sql(use_tensorflow)
     assert 'float32' in val
 
-    pkgmanager.install("keras")
-    pyexecutor.execute_function_in_sql(use_keras)
-    pkgmanager.uninstall("keras")
-    val = pyexecutor.execute_function_in_sql(_package_no_exist, "keras")
-    assert val
 
-    pkgmanager.uninstall("tensorflow")
-    val = pyexecutor.execute_function_in_sql(_package_no_exist, "tensorflow")
-    assert val
-
-    _drop_all_ddl_packages(connection)
 
 
 def test_install_many_packages():
