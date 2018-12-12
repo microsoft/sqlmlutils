@@ -15,3 +15,4 @@ sudo ACCEPT_EULA=Y apt-get install msodbcsql17
 sudo ACCEPT_EULA=Y apt-get install mssql-tools
 
 odbcinst -j
+cat /etc/odbcinst.ini
