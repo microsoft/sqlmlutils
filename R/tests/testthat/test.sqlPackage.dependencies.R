@@ -55,7 +55,7 @@ test_that("single package install and removal with no dependencies", {
 })
 
 test_that( "package install and uninstall with dependency", {
-    #skip("temporaly_disabled")
+    skip("temporarily_disabled")
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
     scope <- "private"
 
