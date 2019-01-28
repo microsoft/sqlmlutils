@@ -1,6 +1,6 @@
 # sqlmlutils
 
-sqlmlutils is an R package to help execute R code on a SQL Server machine.
+sqlmlutils is an R package to help execute R code on a SQL database (SQL Server or Azure SQL Database).
 
 # Installation
 
@@ -19,7 +19,7 @@ To build a new package file and install, run
 
 Shown below are the important functions sqlmlutils provides:
 ```R
-connectionInfo                      # Create a connection string for connecting to the SQL Server
+connectionInfo                      # Create a connection string for connecting to the SQL database
 
 executeFunctionInSQL                # Execute an R function inside the SQL database
 executeScriptInSQL                  # Execute an R script inside the SQL database
@@ -104,21 +104,21 @@ dropSproc(connectionString = connection, name = name)
 ```
 
 ### Package Management 
-##### Install and remove packages from SQL Server
+##### Install and remove packages from the SQL database
 
 ```R
 library(sqlmlutils)
 connection <- connectionInfo(database="AirlineTestDB")
 
-# install glue on sql server
+# install glue on sql database
 pkgs <- c("glue")
 sql_install.packages(connectionString = connection, pkgs, verbose = TRUE, scope="PUBLIC")
 
-# confirm glue is installed on sql server
+# confirm glue is installed on sql database
 r<-sql_installed.packages(connectionString = connection, fields=c("Package", "LibPath", "Attributes", "Scope"))
 View(r)
 
-# use glue on sql server
+# use glue on sql database
 useLibraryGlueInSql <- function()
 {
     library(glue)
@@ -134,19 +134,18 @@ useLibraryGlueInSql <- function()
 result <- executeFunctionInSQL(connectionString = connection, func = useLibraryGlueInSql)
 print(result)
 
-# remove glue from sql server
+# remove glue from sql database
 sql_remove.packages(connectionString = connection, pkgs, scope="PUBLIC")
 ```
 
 # Notes for Developers
 
-### Running the tests
+### Running the tests on a local machine
 
-1. Make sure a SQL Server with an updated ML Services R is running on localhost. 
+1. Make sure a SQL database with an updated ML Services R is running on localhost. 
 2. Restore the AirlineTestDB from the .bak file in this repo 
 3. Make sure Trusted (Windows) authentication works for connecting to the database
     
 ### Notable TODOs and open issues
 
 1. Output Parameter execution does not work - RODBCext limitations?
-2. Testing from a Linux client has not been performed.

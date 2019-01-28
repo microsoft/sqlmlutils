@@ -66,27 +66,27 @@ test_that( "package install and remove by scope", {
     #
     # --- AirlineUser user install and remove tests ---
     #
-    connectionStringPkgprivateextlib <- helper_getSetting("connectionStringPkgprivateextlib")
+    connectionStringAirlineUser <- helper_getSetting("connectionStringAirlineUser")
 
     #
     # remove packages from private scope
     #
     cat("TEST: AirlineUser: removing packages from private scope...\n")
     #owner <- 'AirlineUser'
-    try(sql_remove.packages( connectionStringPkgprivateextlib, packageName, scope = 'private', verbose = TRUE))
-    helper_checkPackageStatusFind(connectionStringPkgprivateextlib, packageName, FALSE)
+    try(sql_remove.packages( connectionStringAirlineUser, packageName, scope = 'private', verbose = TRUE))
+    helper_checkPackageStatusFind(connectionStringAirlineUser, packageName, FALSE)
 
     #
     # install package in private scope
     #
     cat("TEST: AirlineUser: installing packages in private scope...\n")
-    sql_install.packages( connectionStringPkgprivateextlib, packageName, scope = 'private', verbose = TRUE)
-    helper_checkPackageStatusFind(connectionStringPkgprivateextlib, packageName, TRUE)
+    sql_install.packages( connectionStringAirlineUser, packageName, scope = 'private', verbose = TRUE)
+    helper_checkPackageStatusFind(connectionStringAirlineUser, packageName, TRUE)
 
     #
     # uninstall package in private scope
     #
     cat("TEST: AirlineUser: removing packages from private scope...\n")
-    sql_remove.packages( connectionStringPkgprivateextlib, packageName, scope = 'private', verbose = TRUE)
-    helper_checkPackageStatusFind(connectionStringPkgprivateextlib, packageName, FALSE)
+    sql_remove.packages( connectionStringAirlineUser, packageName, scope = 'private', verbose = TRUE)
+    helper_checkPackageStatusFind(connectionStringAirlineUser, packageName, FALSE)
 })
