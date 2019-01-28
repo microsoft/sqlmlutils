@@ -4,5 +4,4 @@
 library(testthat)
 library(sqlmlutils)
 
-# Currently Disabled
-# test_check("sqlmlutils", filter = "toplevel")
+test_check("sqlmlutils", filter = "toplevel")
