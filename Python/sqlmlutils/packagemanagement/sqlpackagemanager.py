@@ -78,7 +78,7 @@ class SQLPackageManager:
         db_owner role, you can also specify scope as public. This will uninstall packages from a public path for all
         users. Note: if you connect as dbo, you can only uninstall packages from the public path.
         """
-        print("Uninstalling " + package_name + "only, not dependencies")
+        print("Uninstalling " + package_name + " only, not dependencies")
         self._drop_sql_package(package_name, scope)
 
     def list(self):

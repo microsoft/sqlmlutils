@@ -15,5 +15,5 @@ License: MIT + file LICENSE
 Copyright: Copyright 2016 Microsoft Corporation
 RoxygenNote: 6.1.0
 Encoding: UTF-8
-Suggests: testthat,
+Suggests: testthat (>= 2.0.0),
     roxygen2
