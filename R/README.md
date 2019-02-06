@@ -115,7 +115,7 @@ pkgs <- c("glue")
 sql_install.packages(connectionString = connection, pkgs, verbose = TRUE, scope="PUBLIC")
 
 # confirm glue is installed on sql database
-r<-sql_installed.packages(connectionString = connection, fields=c("Package", "LibPath", "Attributes", "Scope"))
+r <- sql_installed.packages(connectionString = connection, fields=c("Package", "LibPath", "Attributes", "Scope"))
 View(r)
 
 # use glue on sql database
@@ -136,6 +136,19 @@ print(result)
 
 # remove glue from sql database
 sql_remove.packages(connectionString = connection, pkgs, scope="PUBLIC")
+```
+
+##### Install using a local file (instead of from CRAN)
+To install from a local file, add "repos=NULL" to sql_install.packages. 
+Testing and uninstall can be done the same way as above.
+
+```R
+library(sqlmlutils)
+connection <- connectionInfo(database="AirlineTestDB")
+
+# install glue on sql database
+pkgPath <- "C:\\glue_1.3.0.zip"
+sql_install.packages(connectionString = connection, pkgPath, verbose = TRUE, scope="PUBLIC", repos=NULL)
 ```
 
 # Notes for Developers
