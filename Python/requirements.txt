@@ -1,6 +1,6 @@
-pip
-pymssql
-dill
-pkginfo
-requirements-parser
-pandas
+pip>=9.0.1
+pymssql>=2.1.4
+dill>=0.2.6
+pkginfo>=1.4.2
+requirements-parser>=0.2.0
+pandas>=0.19.2
