@@ -6,7 +6,7 @@ sqlmlutils is a python package to help execute Python code on a SQL Server machi
 
 Run
 ```
-python.exe -m pip install dist/sqlmlutils-0.5.0.zip
+python.exe -m pip install --upgrade --upgrade-strategy only-if-needed dist/sqlmlutils-0.5.0.zip
 ```
 OR
 To build a new package file and install (windows), run
