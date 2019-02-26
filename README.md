@@ -13,7 +13,7 @@ Python:
 1. If your client is a Linux machine, you can skip this step. If your client is a Windows machine: go to https://www.lfd.uci.edu/~gohlke/pythonlibs/#pymssql and download the correct version of pymssql for your client. Run ```pip install pymssql-2.1.4.dev5-cpXX-cpXXm-win_amd64.whl``` on that file to install pymssql.
 2. Run
 ```
-python.exe -m pip install Python/dist/sqlmlutils-0.5.0.zip --upgrade
+python.exe -m pip install Python/dist/sqlmlutils-0.5.0.zip
 ```
 
 R:
