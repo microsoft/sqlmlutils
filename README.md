@@ -29,6 +29,8 @@ sqlmlutils contains 3 main parts:
 - Creation and execution of stored procedures created from scripts and functions
 - Install and manage packages in SQL databases
 
+For more specifics and examples of how to use each language's API, look at the README in the respective folder.
+
 ## Execute in SQL
 
 Execute in SQL provides a convenient way for the user to execute arbitrary Python/R code inside a SQL database using an sp_execute_external_script. The user does not have to know any t-sql to use this function. Function arguments are serialized into binary and passed into the t-sql script that is generated. Warnings and printed output will be printed at the end of execution, and any results returned by the function will be passed back to the client. 
