@@ -69,22 +69,13 @@ END TRY
 BEGIN CATCH
 END CATCH
 
--- Parameter bind the package data
-DECLARE @content varbinary(MAX) = convert(varbinary(MAX), %s, 1);
-        
--- Create the library
-CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
-FROM (CONTENT = @content) WITH (LANGUAGE = 'Python');
-
--- Dummy SPEES
-{dummy_spees}
-
--- Check to make sure the package was installed
 BEGIN TRY
-    exec sp_execute_external_script
-    @language = N'Python',
-    @script = %s
-    -- Installation succeeded, commit the transaction
+    -- Parameter bind the package data
+    DECLARE @content varbinary(MAX) = convert(varbinary(MAX), %s, 1);
+            
+    -- Create the library
+    CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
+    FROM (CONTENT = @content) WITH (LANGUAGE = 'Python');
     COMMIT TRAN @TransactionName
     print('Package successfully installed.')
 END TRY
@@ -94,6 +85,13 @@ BEGIN CATCH
     print('Package installation failed.');
     THROW;
 END CATCH
+
+-- Dummy SPEES
+{dummy_spees}
+
+exec sp_execute_external_script
+@language = N'Python',
+@script = %s
 """.format(sqlpkgname=self._name,
            authorization=_get_authorization(self._scope),
            dummy_spees=_get_dummy_spees())
