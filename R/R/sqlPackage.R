@@ -1846,11 +1846,6 @@ sqlHelperInstallPackages <- function(connectionString, packages, owner = "", sco
             sqlAddExtendedProperty(hodbc, packageName, attribute, user)
         }
 
-        if (verbose)
-        {
-            write(sprintf("%s  Installing packages to library path, this may take some time...", pkgTime()), stdout())
-        }
-        packagesSuccess <- sqlSyncAndCheckInstalledPackages(hodbc, packages[,"Package"], user, queryUser, scope);
         odbcEndTran(hodbc, commit = TRUE)
     }
     , error = function(err) {
@@ -1866,6 +1861,11 @@ sqlHelperInstallPackages <- function(connectionString, packages, owner = "", sco
         }
     }
     )
+    if (verbose)
+    {
+        write(sprintf("%s  Installing packages to library path, this may take some time...", pkgTime()), stdout())
+    }
+    packagesSuccess <- sqlSyncAndCheckInstalledPackages(hodbc, packages[,"Package"], user, queryUser, scope);
 
     if(length(packagesSuccess) > 0){
         if(verbose){
