@@ -119,12 +119,18 @@ test_that( "Installing a package that is already in use", {
     cat("\nINFO: checking remote lib paths...\n")
     helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
 
-    packageName <- c("lattice") # by default already attached in a R session.
+
+    packageName <- c("lattice") # usually already attached in a R session.
+
+    installedPackages <- sql_installed.packages(connectionString, fields = NULL, scope = scope, owner =  owner)
+    if (!packageName %in% installedPackages)
+    {
+        sql_install.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)
+    }
 
     #
-    # install the package with its dependencies and check if its present
+    # install the package again and check if it fails with the correct message.
     #
     output <- capture.output(sql_install.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope))
-    print(output)
     expect_true((grepl("already installed", output)))
 })
