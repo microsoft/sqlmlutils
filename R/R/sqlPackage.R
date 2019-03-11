@@ -1097,6 +1097,11 @@ prunePackagesToInstallExtLib <- function(dependentPackages, topMostPackages, ins
     prunedPackagesToInstall <- NULL
     prunedPackagesToTop <- NULL
 
+    if (is.null(dependentPackages))
+    {
+        return(list(NULL, NULL))
+    }
+
     for (pkgToInstallIndex in 1:nrow(dependentPackages))
     {
         pkgToInstall <- dependentPackages[pkgToInstallIndex,]
