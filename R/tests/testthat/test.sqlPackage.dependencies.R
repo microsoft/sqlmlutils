@@ -122,7 +122,7 @@ test_that( "Installing a package that is already in use", {
 
     packageName <- c("lattice") # usually already attached in a R session.
 
-    installedPackages <- sql_installed.packages(connectionString, fields = NULL, scope = scope)
+    installedPackages <- sql_installed.packages(connectionStringAirlineUserdbowner, fields = NULL, scope = scope)
     if (!packageName %in% installedPackages)
     {
         sql_install.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)
