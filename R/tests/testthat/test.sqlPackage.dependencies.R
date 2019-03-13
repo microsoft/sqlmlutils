@@ -132,5 +132,5 @@ test_that( "Installing a package that is already in use", {
     # install the package again and check if it fails with the correct message.
     #
     output <- capture.output(sql_install.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope))
-    expect_true((grepl("already installed", output)))
+    expect_true(TRUE %in% (grepl("already installed", output)))
 })
