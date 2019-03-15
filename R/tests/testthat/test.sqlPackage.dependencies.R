@@ -107,3 +107,30 @@ test_that( "package install and uninstall with dependency", {
     helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
     helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
 })
+
+test_that( "Installing a package that is already in use", {
+    #skip("temporaly_disabled")
+    connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
+    scope <- "private"
+
+    #
+    # check package management is installed
+    #
+    cat("\nINFO: checking remote lib paths...\n")
+    helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
+
+
+    packageName <- c("lattice") # usually already attached in a R session.
+
+    installedPackages <- sql_installed.packages(connectionStringAirlineUserdbowner, fields = NULL, scope = scope)
+    if (!packageName %in% installedPackages)
+    {
+        sql_install.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)
+    }
+
+    #
+    # install the package again and check if it fails with the correct message.
+    #
+    output <- capture.output(sql_install.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope))
+    expect_true(TRUE %in% (grepl("already installed", output)))
+})
