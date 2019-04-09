@@ -22,6 +22,12 @@ jobs:
       cd Python
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Test'
+    env:
+      SERVER: $(SERVER)
+      DATABASE: $(DATABASE)
+      UID: $(UID)
+      PWD: $(PWD)
+
   - task: PublishTestResults@2
     inputs:
       testResultsFiles: '**/test-results.xml'
