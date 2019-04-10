@@ -20,8 +20,7 @@ jobs:
   - script: |
       pip install pytest
       cd Python
-      python -c "import os; print(os.environ)"
-      echo pytest tests --doctest-modules --junitxml=junit/test-results.xml
+      pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Test'
     env:
       SERVER: $(SERVER)
