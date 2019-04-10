@@ -149,7 +149,7 @@ def test_execute_query():
 
 
 def test_execute_script():
-    path = os.path.join(script_dir, "test_script.py")
+    path = os.path.join(script_dir, "script.py")
 
     output = io.StringIO()
     with redirect_stderr(output), redirect_stdout(output):
