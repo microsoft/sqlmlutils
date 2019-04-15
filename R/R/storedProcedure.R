@@ -58,7 +58,9 @@
 #'
 #'@describeIn createSprocFromFunction Create stored procedure from function
 #'@export
-createSprocFromFunction <- function (connectionString, name, func, inputParams = NULL, outputParams = NULL) {
+createSprocFromFunction <- function (connectionString, name, func,
+                                     inputParams = NULL, outputParams = NULL,
+                                     getScript = FALSE) {
 
     possibleTypes <- c("posixct", "numeric", "character", "integer", "logical", "raw", "dataframe")
 
@@ -77,20 +79,25 @@ createSprocFromFunction <- function (connectionString, name, func, inputParams =
 
     procScript <- generateTSQL(func = func, spName = name, inputParams = inputParams, outputParams = outputParams)
 
+
+    if(getScript) {
+        return(procScript)
+    }
+
     tryCatch({
         register(procScript, connectionString = connectionString)
     }, error = function(e) {
         stop(paste0("Failed during registering procedure ", name, ": ", e))
     })
-
-    invisible(procScript)
 }
 
 #'@describeIn createSprocFromFunction Create stored procedure from script file, returns output of final line
 #'
 #'@param script character string. The path to the script to wrap in the stored procedure
 #'@export
-createSprocFromScript <- function (connectionString, name, script, inputParams = NULL, outputParams = NULL) {
+createSprocFromScript <- function (connectionString, name, script,
+                                   inputParams = NULL, outputParams = NULL,
+                                   getScript = FALSE) {
 
     if (file.exists(script)){
         print(paste0("Script path exists, using file ", script))
@@ -110,6 +117,10 @@ createSprocFromScript <- function (connectionString, name, script, inputParams =
     })
 
     procScript <- generateTSQLFromScript(script = text, spName = name, inputParams = inputParams, outputParams = outputParams)
+
+    if(getScript) {
+        return(procScript)
+    }
 
     tryCatch({
         register(procScript, connectionString = connectionString)
@@ -156,7 +167,13 @@ createSprocFromScript <- function (connectionString, name, script, inputParams =
 #'@import RODBC
 #'
 #'@export
-dropSproc <- function(connectionString, name) {
+dropSproc <- function(connectionString, name, getScript = FALSE) {
+    query = c(sprintf("SELECT OBJECT_ID (%s)", name),sprintf("DROP PROCEDURE %s", name))
+
+    if(getScript) {
+        return(query)
+    }
+
     tryCatch({
         dbhandle <- odbcDriverConnect(connectionString)
         output <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?)", name, fetch=TRUE)
@@ -215,7 +232,14 @@ dropSproc <- function(connectionString, name) {
 #'@importFrom RODBCext sqlExecute
 #'@import RODBC
 #'@export
-checkSproc <- function(connectionString, name) {
+checkSproc <- function(connectionString, name, getScript=FALSE) {
+
+    query = c(sprintf("SELECT OBJECT_ID (%s, N'P')", name))
+
+    if(getScript) {
+        return(query)
+    }
+
     tryCatch({
         dbhandle <- odbcDriverConnect(connectionString)
         output <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?, N'P')", name, fetch = TRUE)
@@ -266,7 +290,7 @@ checkSproc <- function(connectionString, name) {
 #'@importFrom RODBCext sqlExecute
 #'@import RODBC
 #'@export
-executeSproc <- function(connectionString, name, ...) {
+executeSproc <- function(connectionString, name, ..., getScript) {
     if (class(name) != "character")
         stop("the argument must be the name of a Sproc")
 

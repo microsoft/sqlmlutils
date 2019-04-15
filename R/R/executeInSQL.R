@@ -73,7 +73,7 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
 #'
 #'
 #'@export
-executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "")
+executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "", getScript = FALSE)
 {
     inputDataName <- "InputDataSet"
     listArgs <- list(...)
@@ -89,8 +89,13 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
     binArgs <- serialize(listArgs, NULL)
 
     spees <- speesBuilderFromFunction(func = func, inputDataQuery = inputDataQuery, inputDataName = inputDataName, binArgs)
-    resVal <- execute(connectionString = connectionString, script = spees)
-    return(resVal[[1]])
+
+    if(getScript) {
+        return(spees)
+    } else {
+        resVal <- execute(connectionString = connectionString, script = spees)getScript
+        return(resVal[[1]])
+    }
 }
 
 #'
@@ -107,7 +112,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 #'\code{\link{executeFunctionInSQL}} to execute a user function instead of a script in SQL
 #'
 #'@export
-executeScriptInSQL <- function(connectionString, script, inputDataQuery = "")
+executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", getScript = FALSE)
 {
 
     if (file.exists(script)){
@@ -122,7 +127,8 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "")
         eval(parse(text = script))
     }
 
-    executeFunctionInSQL(connectionString = connectionString, func = func, script = text, inputDataQuery = inputDataQuery)
+    executeFunctionInSQL(connectionString = connectionString, func = func,
+                         script = text, inputDataQuery = inputDataQuery, getScript = getScript)
 }
 
 
@@ -143,7 +149,7 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "")
 #'
 #'
 #'@export
-executeSQLQuery <- function(connectionString, sqlQuery)
+executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
 {
     #We use the serialize method here instead of OutputDataSet <- InputDataSet to preserve column names
 
@@ -151,7 +157,13 @@ executeSQLQuery <- function(connectionString, sqlQuery)
                 serializedResult <- as.character(serialize(list(result = InputDataSet), NULL))
                 OutputDataSet <- data.frame(returnVal=serializedResult)"
     spees <- speesBuilder(script = script, inputDataQuery = sqlQuery, TRUE)
-    execute(connectionString, spees)$result
+
+
+    if(getScript) {
+        return(spees)
+    } else {
+        execute(connectionString, spees)$result
+    }
 }
 
 #
