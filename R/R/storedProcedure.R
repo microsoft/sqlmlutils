@@ -168,7 +168,7 @@ createSprocFromScript <- function (connectionString, name, script,
 #'
 #'@export
 dropSproc <- function(connectionString, name, getScript = FALSE) {
-    query = c(sprintf("SELECT OBJECT_ID (%s)", name),sprintf("DROP PROCEDURE %s", name))
+    query = sprintf("DROP PROCEDURE %s", name)
 
     if(getScript) {
         return(query)
@@ -178,7 +178,7 @@ dropSproc <- function(connectionString, name, getScript = FALSE) {
         dbhandle <- odbcDriverConnect(connectionString)
         output <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?)", name, fetch=TRUE)
         if (!is.na(output)) {
-            output <- sqlQuery(dbhandle, sprintf("DROP PROCEDURE %s", name))
+            output <- sqlExecute(dbhandle, "DROP PROCEDURE ?", name)
         } else {
             output <- "Named procedure doesn't exist"
         }

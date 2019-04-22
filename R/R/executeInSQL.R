@@ -93,7 +93,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
     if(getScript) {
         return(spees)
     } else {
-        resVal <- execute(connectionString = connectionString, script = spees)getScript
+        resVal <- execute(connectionString = connectionString, script = spees)
         return(resVal[[1]])
     }
 }
