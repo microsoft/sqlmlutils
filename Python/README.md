@@ -96,7 +96,6 @@ You can use the AirlineTestDB (supplied as a .bak file above) to run these examp
 ```python
 import sqlmlutils
 
-
 def linear_regression(input_df, x_col, y_col):
     from sklearn import linear_model
 
@@ -109,7 +108,12 @@ def linear_regression(input_df, x_col, y_col):
     return lr
 
 
-sqlpy = sqlmlutils.SQLPythonExecutor(sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB"))
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection = sqlmlutils.ConnectionInfo(driver="ODBC Driver 13 for SQL Server", server="localhost", database="AirlineTestDB", uid="username", pwd="password")
+
+connection = sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB")
+
+sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 sql_query = "select top 1000 CRSDepTime, CRSArrTime from airline5000"
 regression_model = sqlpy.execute_function_in_sql(linear_regression, input_data_query=sql_query,
                                                  x_col="CRSDepTime", y_col="CRSArrTime")
@@ -156,6 +160,9 @@ def principal_components(input_table: str, output_table: str):
     output_df = pd.DataFrame(components)
     output_df.to_sql(output_table, engine, if_exists="replace")
 
+
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection = sqlmlutils.ConnectionInfo(driver="ODBC Driver 13 for SQL Server", server="localhost", database="AirlineTestDB", uid="username", pwd="password")
 
 connection = sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB")
 
