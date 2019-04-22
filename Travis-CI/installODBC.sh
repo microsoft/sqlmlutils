@@ -8,6 +8,7 @@ sudo curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
 #Ubuntu 14.04
 sudo curl https://packages.microsoft.com/config/ubuntu/14.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
 
+sudo apt-get clean
 sudo apt-get update
 sudo ACCEPT_EULA=Y apt-get install msodbcsql17
 
