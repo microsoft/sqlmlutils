@@ -40,7 +40,12 @@ if(PwdAirlineUser == '') PwdAirlineUser = NULL
 sqlcmd_path <- Sys.getenv("SQLCMD")
 if (sqlcmd_path == '') sqlcmd_path <- "sqlcmd"
 
+print(Uid)
+print(Pwd)
+
 cnnstr <- connectionInfo(driver=Driver, server=Server, database=Database, uid=Uid, pwd=Pwd)
+print(cnnstr)
+
 
 testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
