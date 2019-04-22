@@ -48,7 +48,12 @@ import sqlmlutils
 def foo():
     return "bar"
 
-sqlpy = sqlmlutils.SQLPythonExecutor(sqlmlutils.ConnectionInfo(server="localhost", database="master"))
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection = sqlmlutils.ConnectionInfo(driver="ODBC Driver 13 for SQL Server", server="localhost", database="master", uid="username", pwd="password")
+
+connection = sqlmlutils.ConnectionInfo(server="localhost", database="master")
+
+sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 result = sqlpy.execute_function_in_sql(foo)
 assert result == "bar"
 ```
@@ -79,8 +84,12 @@ def scatter_plot(input_df, x_col, y_col):
     # Returns the bytes of the png to the client
     return buf
 
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection = sqlmlutils.ConnectionInfo(driver="ODBC Driver 13 for SQL Server", server="localhost", database="AirlineTestDB", uid="username", pwd="password")
 
-sqlpy = sqlmlutils.SQLPythonExecutor(sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB"))
+connection = sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB")
+
+sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 
 sql_query = "select top 100 * from airline5000"
 plot_data = sqlpy.execute_function_in_sql(func=scatter_plot, input_data_query=sql_query,
@@ -107,7 +116,6 @@ def linear_regression(input_df, x_col, y_col):
 
     return lr
 
-
 # For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
 # connection = sqlmlutils.ConnectionInfo(driver="ODBC Driver 13 for SQL Server", server="localhost", database="AirlineTestDB", uid="username", pwd="password")
 
@@ -127,7 +135,12 @@ print(regression_model.coef_)
 import sqlmlutils
 import pytest
 
-sqlpy = sqlmlutils.SQLPythonExecutor(sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB"))
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection = sqlmlutils.ConnectionInfo(driver="ODBC Driver 13 for SQL Server", server="localhost", database="AirlineTestDB", uid="username", pwd="password")
+
+connection = sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB")
+
+sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 sql_query = "select top 10 * from airline5000"
 data_table = sqlpy.execute_sql_query(sql_query)
 assert len(data_table.columns) == 30
