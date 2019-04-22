@@ -690,10 +690,6 @@ checkVersion <- function(connectionString)
     serverVersion <- getserverVersion(connectionString)
     serverIsWindows <- serverVersion[['sysname']] == 'Windows'
 
-    if(!serverIsWindows){
-        stop("Package management currently not supported on Linux SQL Server.", call. = FALSE)
-    }
-
     versionClass <- sqlCheckPackageManagementVersion(connectionString)
 
     if (is.character(versionClass) &&  versionClass == "ExtLib"){
@@ -1154,7 +1150,7 @@ prunePackagesToInstallExtLib <- function(dependentPackages, topMostPackages, ins
 }
 
 downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePackages,
-                                        verbose = getOption("verbose"), binaryType = "win.binary")
+                                        verbose = getOption("verbose"), pkgType = getOption("pkgType"))
 {
     downloadedPkgs <- NULL
     numPkgs <- nrow(pkgs)
@@ -1172,7 +1168,7 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
         # try first binary package
         #
         downloadedPkg <- utils::download.packages(pkg$Package, destdir = destdir,
-                                                  available = binaryPackages, type = binaryType, quiet = TRUE)
+                                                  available = binaryPackages, type = pkgType, quiet = TRUE)
 
         if (length(downloadedPkg) < 1)
         {
@@ -1426,11 +1422,22 @@ sqlInstallPackagesExtLib <- function(connectionString,
 
             if (length(pkgsToDownload) > 0)
             {
+                serverVersion <- checkVersion(connectionString)
+                if (serverVersion$serverIsWindows)
+                {
+                    pkgType = "win.binary"
+                }
+                else
+                {
+                    pkgType = "source"
+                }
+
                 #
                 # download all the packages in dependency closure
                 #
                 downloadPkgs <- downloadDependentPackages(pkgs = pkgsToDownload, destdir = downloadDir,
-                                                          binaryPackages = binaryPackages, sourcePackages = sourcePackages, verbose = verbose)
+                                                          binaryPackages = binaryPackages, sourcePackages = sourcePackages,
+                                                          verbose = verbose, pkgType = pkgType)
             }
 
             if (length(pkgsToDownload) > 0)
