@@ -186,6 +186,9 @@ assert not sqlpy.check_sproc(sp_name)
 ```python
 import sqlmlutils
 
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection = sqlmlutils.ConnectionInfo(driver="ODBC Driver 13 for SQL Server", server="localhost", database="AirlineTestDB", uid="username", pwd="password")
+
 connection = sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB")
 sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 pkgmanager = sqlmlutils.SQLPackageManager(connection)

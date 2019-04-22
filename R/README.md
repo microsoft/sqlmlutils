@@ -144,6 +144,10 @@ Testing and uninstall can be done the same way as above.
 
 ```R
 library(sqlmlutils)
+
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection <- connectionInfo(driver= "ODBC Driver 13 for SQL Server", database="AirlineTestDB", uid = "username", pwd = "password")
+
 connection <- connectionInfo(database="AirlineTestDB")
 
 # install glue on sql database
