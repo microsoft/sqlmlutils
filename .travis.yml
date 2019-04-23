@@ -1,3 +1,4 @@
+dist: xenial
 matrix:
   include:
     - language: r
