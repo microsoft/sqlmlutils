@@ -203,17 +203,11 @@ getEnding <- function(outputParams) {
 # @import RODBC
 # Execute the registration script
 register <- function(registrationScript, connectionString) {
-    executeSQLScript(registrationScript, connectionString)
-}
-
-# @import RODBC
-# Execute the registration script
-executeSQLScript <- function(script, connectionString) {
     output <- character(0)
 
     tryCatch({
         dbhandle <- odbcDriverConnect(connectionString)
-        output <- sqlQuery(dbhandle, script)
+        output <- sqlQuery(dbhandle, registrationScript)
     }, error = function(e) {
         stop(paste0("Error in SQL Execution:\n", e))
     }, finally ={
