@@ -13,5 +13,3 @@ connection = ConnectionInfo(driver=driver,
                             database=database,
                             uid=uid,
                             pwd=pwd)
-
-print(connection)
