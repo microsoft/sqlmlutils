@@ -43,6 +43,10 @@ sql_installed.packages              # Enumerate packages that are installed on t
 
 ```R
 library(sqlmlutils)
+
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection <- connectionInfo(driver= "ODBC Driver 13 for SQL Server", database="AirlineTestDB", uid = "username", pwd = "password")
+
 connection <- connectionInfo()
 
 funcWithArgs <- function(arg1, arg2){
@@ -55,6 +59,10 @@ result <- executeFunctionInSQL(connection, funcWithArgs, arg1="result1", arg2="r
 
 ```R
 library(sqlmlutils)
+
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection <- connectionInfo(driver= "ODBC Driver 13 for SQL Server", database="AirlineTestDB", uid = "username", pwd = "password")
+
 connection <-  connectionInfo(database="AirlineTestDB")
 
 linearModel <- function(in_df, xCol, yCol) {
@@ -70,6 +78,10 @@ model
 
 ```R
 library(sqlmlutils)
+
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection <- connectionInfo(driver= "ODBC Driver 13 for SQL Server", database="AirlineTestDB", uid = "username", pwd = "password")
+
 connection <-  connectionInfo(database="AirlineTestDB")
 
 dataTable <- executeSQLQuery(connectionString = connection, sqlQuery="SELECT TOP 100 * FROM airline5000")
@@ -88,6 +100,9 @@ spPredict <- function(inputDataFrame) {
     model <- rxLinMod(ArrDelay ~ CRSDepTime, inputDataFrame)
     rxPredict(model, inputDataFrame)
 }
+
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection <- connectionInfo(driver= "ODBC Driver 13 for SQL Server", database="AirlineTestDB", uid = "username", pwd = "password")
 
 connection <- connectionInfo(database="AirlineTestDB")
 inputParams <- list(inputDataFrame = "Dataframe")
@@ -108,6 +123,10 @@ dropSproc(connectionString = connection, name = name)
 
 ```R
 library(sqlmlutils)
+
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection <- connectionInfo(driver= "ODBC Driver 13 for SQL Server", database="AirlineTestDB", uid = "username", pwd = "password")
+
 connection <- connectionInfo(database="AirlineTestDB")
 
 # install glue on sql database
@@ -144,6 +163,10 @@ Testing and uninstall can be done the same way as above.
 
 ```R
 library(sqlmlutils)
+
+# For Linux SQL Server, you must specify the ODBC Driver and the username/password because there is no Trusted_Connection/Implied Authentication support yet.
+# connection <- connectionInfo(driver= "ODBC Driver 13 for SQL Server", database="AirlineTestDB", uid = "username", pwd = "password")
+
 connection <- connectionInfo(database="AirlineTestDB")
 
 # install glue on sql database
