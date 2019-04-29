@@ -88,6 +88,26 @@ class SQLPackageManager:
         """
         return self._pyexecutor.execute_function_in_sql(servermethods.show_installed_packages)
 
+    def get_packages_by_user(self, owner='', scope: Scope =Scope.private_scope()):
+        has_user = (owner != '')
+
+        query = "DECLARE @principalId INT;  \
+                DECLARE @currentUser NVARCHAR(128);  \
+                SELECT @currentUser = "
+
+        if has_user:
+            query += "%s;\n"
+        else:
+            query += "CURRENT_USER;\n"
+
+        query += "SELECT @principalId = USER_ID(@currentUser); \n \
+                       SELECT name, language, scope  \n \
+                       FROM sys.external_libraries AS elib  \n \
+                       WHERE elib.principal_id=@principalId  \n \
+                       AND elib.language='Python' AND elib.scope={0}  \n \
+                       ORDER BY elib.name ASC;".format(1 if scope == Scope.private_scope() else 0)
+        return self._pyexecutor.execute_sql_query(query, owner)
+
     def _drop_sql_package(self, sql_package_name: str, scope: Scope):
         builder = DropLibraryBuilder(sql_package_name=sql_package_name, scope=scope)
         execute_query(builder, self._connection_info)
