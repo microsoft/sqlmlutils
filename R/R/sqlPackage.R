@@ -2279,7 +2279,7 @@ enumerateTopPackages <- function(connectionString, packages, owner, scope)
     query = paste0( query, "SELECT @currentUser = ")
 
     if (haveUser) {
-        query<-paste0(query, "?")
+        query<-paste0(query, "?;")
         data  <- data.frame(name = owner, stringsAsFactors = FALSE)
     } else {
         query = paste0(query, "CURRENT_USER;")
