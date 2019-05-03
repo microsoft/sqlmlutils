@@ -35,6 +35,7 @@ execute_sproc                   # Execute a stored procedure in the SQL database
 install_package                 # Install a Python package on the SQL database
 remove_package                  # Remove a Python package from the SQL database
 list                            # Enumerate packages that are installed on the SQL database
+get_packages_by_user            # Enumerate external libraries installed by specific user in specific scope
 ```
 
 # Examples
