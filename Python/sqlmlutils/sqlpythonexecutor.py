@@ -67,13 +67,14 @@ class SQLPythonExecutor:
         execute_query(SpeesBuilder(content, input_data_query=input_data_query), connection=self._connection_info)
 
     def execute_sql_query(self,
-                          sql_query: str):
+                          sql_query: str,
+                          params = ()):
         """Execute a sql query in SQL Server.
 
         :param sql_query: the sql query to execute in the server
         :return: table returned by the sql_query
         """
-        rows = execute_raw_query(conn=self._connection_info, query=sql_query)
+        rows = execute_raw_query(conn=self._connection_info, query=sql_query, params=params)
         df = DataFrame(rows)
 
         # _mssql's execute_query() returns duplicate keys for indexing, we remove them because they are extraneous
