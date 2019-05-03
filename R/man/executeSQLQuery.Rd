@@ -4,12 +4,14 @@
 \alias{executeSQLQuery}
 \title{Execute a script in SQL}
 \usage{
-executeSQLQuery(connectionString, sqlQuery)
+executeSQLQuery(connectionString, sqlQuery, getScript = FALSE)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString to the database}
 
 \item{sqlQuery}{character string. The query to execute}
+
+\item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
 }
 \value{
 The data frame returned by the query to the database

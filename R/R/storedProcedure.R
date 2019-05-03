@@ -16,6 +16,7 @@
 #'where the names are the arguments and the values are the types
 #'@param outputParams named list. The types of the outputs,
 #'where the names are the arguments and the values are the types
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@section Warning:
 #'You can add output parameters to the stored procedure
@@ -94,6 +95,7 @@ createSprocFromFunction <- function (connectionString, name, func,
 #'@describeIn createSprocFromFunction Create stored procedure from script file, returns output of final line
 #'
 #'@param script character string. The path to the script to wrap in the stored procedure
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'@export
 createSprocFromScript <- function (connectionString, name, script,
                                    inputParams = NULL, outputParams = NULL,
@@ -136,6 +138,7 @@ createSprocFromScript <- function (connectionString, name, script,
 #'
 #'@param connectionString character string. The connectionString to the database
 #'@param name character string. The name of the stored procedure
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@examples
 #'\dontrun{

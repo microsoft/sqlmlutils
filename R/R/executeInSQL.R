@@ -53,6 +53,7 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
 #'@param ... A named list of arguments to pass into the function
 #'@param inputDataQuery character string. A string to query the database.
 #' The result of the query will be put into a data frame into the first argument in the function
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@return The returned value from the function
 #'
@@ -105,6 +106,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 #'@param script character string. The path to the script to execute in SQL
 #'@param inputDataQuery character string. A string to query the database.
 #' The result of the query will be put into a data frame into the variable "InputDataSet" in the environment
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@return The returned value from the last line of the script
 #'
@@ -137,6 +139,7 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", ge
 #'
 #'@param connectionString character string. The connectionString to the database
 #'@param sqlQuery character string. The query to execute
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@return The data frame returned by the query to the database
 #'
