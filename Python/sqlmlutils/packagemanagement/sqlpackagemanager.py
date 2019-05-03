@@ -100,11 +100,11 @@ class SQLPackageManager:
         else:
             query += "CURRENT_USER;\n"
 
-        query += "SELECT @principalId = USER_ID(@currentUser); \n \
-                       SELECT name, language, scope  \n \
-                       FROM sys.external_libraries AS elib  \n \
-                       WHERE elib.principal_id=@principalId  \n \
-                       AND elib.language='Python' AND elib.scope={0}  \n \
+        query += "SELECT @principalId = USER_ID(@currentUser);  \
+                       SELECT name, language, scope   \
+                       FROM sys.external_libraries AS elib   \
+                       WHERE elib.principal_id=@principalId   \
+                       AND elib.language='Python' AND elib.scope={0}   \
                        ORDER BY elib.name ASC;".format(1 if scope == Scope.private_scope() else 0)
         return self._pyexecutor.execute_sql_query(query, owner)
 
