@@ -51,10 +51,17 @@ class SQLQueryExecutor:
         return [row for row in self._mssqlconn]
 
     def __enter__(self):
-        self._mssqlconn = _mssql.connect(server=self._connection.server,
-                                         user=self._connection.uid,
-                                         password=self._connection.pwd,
-                                         database=self._connection.database)
+        if self._connection.port == "":
+            self._mssqlconn = _mssql.connect(server=self._connection.server,
+                                            user=self._connection.uid,
+                                            password=self._connection.pwd,
+                                            database=self._connection.database)
+        else:
+            self._mssqlconn = _mssql.connect(server=self._connection.server,
+                                            port=self._connection.port,
+                                            user=self._connection.uid,
+                                            password=self._connection.pwd,
+                                            database=self._connection.database)
         self._mssqlconn.set_msghandler(_sql_msg_handler)
         return self
 
