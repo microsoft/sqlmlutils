@@ -19,7 +19,7 @@ python.exe -m pip install --upgrade --upgrade-strategy only-if-needed Python/dis
 R:
 ```
 R -e "install.packages('RODBCext', repos='https://cran.microsoft.com')"
-R CMD INSTALL R/dist/sqlmlutils_0.5.1.zip
+R CMD INSTALL R/dist/sqlmlutils_0.6.0.zip
 ```
 
 # Details
