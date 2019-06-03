@@ -156,9 +156,10 @@ executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
 {
     #We use the serialize method here instead of OutputDataSet <- InputDataSet to preserve column names
 
-    script <- "
-                serializedResult <- as.character(serialize(list(result = InputDataSet), NULL))
-                OutputDataSet <- data.frame(returnVal=serializedResult)"
+    script <- " serializedResult <- as.character(serialize(list(result = InputDataSet), NULL))
+                OutputDataSet <- data.frame(returnVal=serializedResult)
+                list(result = InputDataSet)
+              "
     spees <- speesBuilder(script = script, inputDataQuery = sqlQuery, TRUE)
 
 
@@ -279,7 +280,7 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
                              binArgList <- unlist(lapply(lapply(strsplit(\"%s\",\";\")[[1]], as.hexmode), as.raw))
                              argList <- as.list(unserialize(binArgList))
 
-                             if (nrow(InputDataSet)!=0) {
+                             if (exists(\"InputDataSet\") && nrow(InputDataSet)!=0) {
                                 argList <- c(list(%s = InputDataSet), argList)
                              }
 
@@ -299,7 +300,7 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
 
                          serializedResult <- as.character(serialize(list(result, output, funwarnings, funerror), NULL))
                          OutputDataSet <- data.frame(returnVal=serializedResult)
-
+                         list(result = result, output = output, warnings = funwarnings, errors = funerror)
                          ", funcName, funcBody, paste0(binArgs,collapse=";"), inputDataName, funcName)
 
     #Call the spees builder to wrap the function; needs the returnVal resultset
