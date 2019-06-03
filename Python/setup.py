@@ -6,7 +6,7 @@ from distutils.core import setup
 setup(
     name='sqlmlutils',
     packages=['sqlmlutils', 'sqlmlutils/packagemanagement'],
-    version='0.6.0',
+    version='0.7.0',
     url='https://github.com/Microsoft/sqlmlutils',
     license='MIT License',
     description='A client side package for working with SQL Machine Learning Python Services. '
