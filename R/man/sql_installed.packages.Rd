@@ -6,7 +6,7 @@
 \usage{
 sql_installed.packages(connectionString, priority = NULL,
   noCache = FALSE, fields = "Package", subarch = NULL,
-  scope = "private", owner = "")
+  scope = "private", owner = "", scriptFile = NULL)
 }
 \arguments{
 \item{connectionString}{ODBC connection string to Microsoft SQL Server database.}
@@ -22,6 +22,8 @@ sql_installed.packages(connectionString, priority = NULL,
 \item{scope}{character string which can be "private" or "public".}
 
 \item{owner}{character string of a user whose private packages shall be listed (availableto dbo or db_owner users only)}
+
+\item{scriptFile}{character string - a file where to record the tsql that is run by the function.}
 }
 \value{
 matrix with enumerated packages
