@@ -201,7 +201,7 @@ getEnding <- function(outputParams) {
 }
 
 # @import RODBC
-# Execute the registration script 
+# Execute the registration script
 register <- function(registrationScript, connectionString) {
     output <- character(0)
 
@@ -216,5 +216,5 @@ register <- function(registrationScript, connectionString) {
     if (length(output) > 0 ) {
         stop(output)
     }
+    output
 }
-
