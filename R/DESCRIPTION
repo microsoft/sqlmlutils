@@ -1,7 +1,7 @@
 Package: sqlmlutils
 Type: Package
 Title: Wraps R code into executable SQL Server stored procedures
-Version: 0.6.0
+Version: 0.7.0
 Author: Microsoft Corporation
 Maintainer: Microsoft Corporation <msrpack@microsoft.com>
 Depends:
@@ -13,7 +13,7 @@ Description: sqlmlutils is a package designed to help users interact with SQL Se
              creating and running stored procedures, and managing packages on the database.
 License: MIT + file LICENSE
 Copyright: Copyright 2016 Microsoft Corporation
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Encoding: UTF-8
 Suggests: testthat (>= 2.0.0),
     roxygen2

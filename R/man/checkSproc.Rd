@@ -4,7 +4,7 @@
 \alias{checkSproc}
 \title{Check if Stored Procedure is in Database}
 \usage{
-checkSproc(connectionString, name)
+checkSproc(connectionString, name, getScript = FALSE)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString to the database}

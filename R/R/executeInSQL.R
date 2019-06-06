@@ -53,6 +53,7 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
 #'@param ... A named list of arguments to pass into the function
 #'@param inputDataQuery character string. A string to query the database.
 #' The result of the query will be put into a data frame into the first argument in the function
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@return The returned value from the function
 #'
@@ -73,7 +74,7 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
 #'
 #'
 #'@export
-executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "")
+executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "", getScript = FALSE)
 {
     inputDataName <- "InputDataSet"
     listArgs <- list(...)
@@ -89,8 +90,13 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
     binArgs <- serialize(listArgs, NULL)
 
     spees <- speesBuilderFromFunction(func = func, inputDataQuery = inputDataQuery, inputDataName = inputDataName, binArgs)
-    resVal <- execute(connectionString = connectionString, script = spees)
-    return(resVal[[1]])
+
+    if(getScript) {
+        return(spees)
+    } else {
+        resVal <- execute(connectionString = connectionString, script = spees)
+        return(resVal[[1]])
+    }
 }
 
 #'
@@ -100,6 +106,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 #'@param script character string. The path to the script to execute in SQL
 #'@param inputDataQuery character string. A string to query the database.
 #' The result of the query will be put into a data frame into the variable "InputDataSet" in the environment
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@return The returned value from the last line of the script
 #'
@@ -107,7 +114,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 #'\code{\link{executeFunctionInSQL}} to execute a user function instead of a script in SQL
 #'
 #'@export
-executeScriptInSQL <- function(connectionString, script, inputDataQuery = "")
+executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", getScript = FALSE)
 {
 
     if (file.exists(script)){
@@ -122,7 +129,8 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "")
         eval(parse(text = script))
     }
 
-    executeFunctionInSQL(connectionString = connectionString, func = func, script = text, inputDataQuery = inputDataQuery)
+    executeFunctionInSQL(connectionString = connectionString, func = func,
+                         script = text, inputDataQuery = inputDataQuery, getScript = getScript)
 }
 
 
@@ -131,6 +139,7 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "")
 #'
 #'@param connectionString character string. The connectionString to the database
 #'@param sqlQuery character string. The query to execute
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@return The data frame returned by the query to the database
 #'
@@ -143,15 +152,22 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "")
 #'
 #'
 #'@export
-executeSQLQuery <- function(connectionString, sqlQuery)
+executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
 {
     #We use the serialize method here instead of OutputDataSet <- InputDataSet to preserve column names
 
-    script <- "
-                serializedResult <- as.character(serialize(list(result = InputDataSet), NULL))
-                OutputDataSet <- data.frame(returnVal=serializedResult)"
+    script <- " serializedResult <- as.character(serialize(list(result = InputDataSet), NULL))
+                OutputDataSet <- data.frame(returnVal=serializedResult)
+                list(result = InputDataSet)
+              "
     spees <- speesBuilder(script = script, inputDataQuery = sqlQuery, TRUE)
-    execute(connectionString, spees)$result
+
+
+    if(getScript) {
+        return(spees)
+    } else {
+        execute(connectionString, spees)$result
+    }
 }
 
 #
@@ -264,7 +280,7 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
                              binArgList <- unlist(lapply(lapply(strsplit(\"%s\",\";\")[[1]], as.hexmode), as.raw))
                              argList <- as.list(unserialize(binArgList))
 
-                             if (nrow(InputDataSet)!=0) {
+                             if (exists(\"InputDataSet\") && nrow(InputDataSet)!=0) {
                                 argList <- c(list(%s = InputDataSet), argList)
                              }
 
@@ -284,7 +300,7 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
 
                          serializedResult <- as.character(serialize(list(result, output, funwarnings, funerror), NULL))
                          OutputDataSet <- data.frame(returnVal=serializedResult)
-
+                         list(result = result, output = output, warnings = funwarnings, errors = funerror)
                          ", funcName, funcBody, paste0(binArgs,collapse=";"), inputDataName, funcName)
 
     #Call the spees builder to wrap the function; needs the returnVal resultset

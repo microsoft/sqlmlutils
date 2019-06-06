@@ -4,7 +4,8 @@
 \alias{executeScriptInSQL}
 \title{Execute a script in SQL}
 \usage{
-executeScriptInSQL(connectionString, script, inputDataQuery = "")
+executeScriptInSQL(connectionString, script, inputDataQuery = "",
+  getScript = FALSE)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString to the database}
@@ -13,6 +14,8 @@ executeScriptInSQL(connectionString, script, inputDataQuery = "")
 
 \item{inputDataQuery}{character string. A string to query the database.
 The result of the query will be put into a data frame into the variable "InputDataSet" in the environment}
+
+\item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
 }
 \value{
 The returned value from the last line of the script

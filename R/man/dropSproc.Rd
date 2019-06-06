@@ -4,12 +4,14 @@
 \alias{dropSproc}
 \title{Drop Stored Procedure}
 \usage{
-dropSproc(connectionString, name)
+dropSproc(connectionString, name, getScript = FALSE)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString to the database}
 
 \item{name}{character string. The name of the stored procedure}
+
+\item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
 }
 \description{
 Drop Stored Procedure
