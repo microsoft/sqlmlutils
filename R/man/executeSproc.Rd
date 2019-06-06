@@ -4,7 +4,7 @@
 \alias{executeSproc}
 \title{Execute a Stored Procedure}
 \usage{
-executeSproc(connectionString, name, ...)
+executeSproc(connectionString, name, ..., getScript)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString for the database with the stored procedure}

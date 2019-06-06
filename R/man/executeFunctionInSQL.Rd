@@ -4,7 +4,8 @@
 \alias{executeFunctionInSQL}
 \title{Execute a function in SQL}
 \usage{
-executeFunctionInSQL(connectionString, func, ..., inputDataQuery = "")
+executeFunctionInSQL(connectionString, func, ..., inputDataQuery = "",
+  getScript = FALSE)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString to the database}
@@ -15,6 +16,8 @@ executeFunctionInSQL(connectionString, func, ..., inputDataQuery = "")
 
 \item{inputDataQuery}{character string. A string to query the database.
 The result of the query will be put into a data frame into the first argument in the function}
+
+\item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
 }
 \value{
 The returned value from the function
