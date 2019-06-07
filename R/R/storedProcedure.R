@@ -294,7 +294,7 @@ checkSproc <- function(connectionString, name, getScript=FALSE) {
 #'@importFrom RODBCext sqlExecute
 #'@import RODBC
 #'@export
-executeSproc <- function(connectionString, name, ..., getScript) {
+executeSproc <- function(connectionString, name, ..., getScript = FALSE) {
     if (class(name) != "character")
         stop("the argument must be the name of a Sproc")
 
