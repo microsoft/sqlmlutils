@@ -95,7 +95,6 @@ createSprocFromFunction <- function (connectionString, name, func,
 #'@describeIn createSprocFromFunction Create stored procedure from script file, returns output of final line
 #'
 #'@param script character string. The path to the script to wrap in the stored procedure
-#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'@export
 createSprocFromScript <- function (connectionString, name, script,
                                    inputParams = NULL, outputParams = NULL,
@@ -204,6 +203,7 @@ dropSproc <- function(connectionString, name, getScript = FALSE) {
 #'
 #'@param connectionString character string. The connectionString to the database
 #'@param name character string. The name of the stored procedure
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@return Whether the stored procedure exists in the database
 #'
@@ -263,6 +263,7 @@ checkSproc <- function(connectionString, name, getScript=FALSE) {
 #'@param connectionString character string. The connectionString for the database with the stored procedure
 #'@param name character string. The name of the stored procedure in the database to execute
 #'@param ... named list. Parameters to pass into the procedure. These MUST be named the same as the arguments to the function.
+#'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@section Warning:
 #'Even though you can create stored procedures with output parameters, you CANNOT execute them
@@ -301,6 +302,10 @@ executeSproc <- function(connectionString, name, ..., getScript) {
     query <- res$query
     paramOrder <- res$inputParams
     df = data.frame(...)
+
+    if(getScript) {
+        return(query)
+    }
 
     if (nrow(df) != 0 && ncol(df) != 0) {
         df <- df[paramOrder]
