@@ -6,8 +6,8 @@
 # (the owner is used in CREATE EXTERAL LIBRARY AUTHORIZATION)
 MAX_OWNER_SIZE_CONST <- 128
 IS_TOP_PACKAGE_MISSING <- -1L
-test.env <- new.env()
-local("g_scriptFile",env=test.env)
+install.env <- new.env()
+local("g_scriptFile",env=install.env)
 
 #' sql_installed.packages
 #'
@@ -37,7 +37,7 @@ sql_installed.packages <- function(connectionString,
                                    subarch = NULL, scope = "private", owner = '',
                                    scriptFile = NULL)
 {
-    assign("g_scriptFile", scriptFile, envir = test.env)
+    assign("g_scriptFile", scriptFile, envir = install.env)
     enumResult <- NULL
 
     checkOwner(owner)
@@ -93,7 +93,7 @@ sql_install.packages <- function(connectionString,
                                  verbose = getOption("verbose"), scope = "private", owner = '',
                                  scriptFile = NULL)
 {
-    assign("g_scriptFile", scriptFile, envir = test.env)
+    assign("g_scriptFile", scriptFile, envir = install.env)
     checkOwner(owner)
     checkConnectionString(connectionString)
     serverVersion <- checkVersion(connectionString)
@@ -134,7 +134,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
                                 verbose = getOption("verbose"), scope = "private", owner = '',
                                 scriptFile = NULL)
 {
-    assign("g_scriptFile", scriptFile, envir = test.env)
+    assign("g_scriptFile", scriptFile, envir = install.env)
     checkOwner(owner)
     checkConnectionString(connectionString)
     checkVersion(connectionString)
@@ -252,7 +252,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
 #
 sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asuser = NULL, includeFun = list())
 {
-    g_scriptFile <- local(g_scriptFile, test.env)
+    g_scriptFile <- local(g_scriptFile, install.env)
     if (class(connection) == "character"){
         if (nchar(connection) < 1){
             stop(paste0("Invalid connection string: ", connection), call. = FALSE)
@@ -1225,7 +1225,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
                                         scope = "private", owner = '',
                                         serverVersion = serverVersion)
 {
-    g_scriptFile <- local(g_scriptFile, test.env)
+    g_scriptFile <- local(g_scriptFile, install.env)
     #
     # check permissions
     #
@@ -1532,7 +1532,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
 #
 sqlCreateExternalLibrary <- function(hodbc, packageName, packageFile, user = "")
 {
-    g_scriptFile <- local(g_scriptFile, test.env)
+    g_scriptFile <- local(g_scriptFile, install.env)
     # read zip file into binary format
     fileConnection <- file(packageFile, 'rb')
     pkgBin <- readBin(con = fileConnection, what = raw(), n = file.size(packageFile))
@@ -1569,7 +1569,7 @@ sqlCreateExternalLibrary <- function(hodbc, packageName, packageFile, user = "")
 #
 sqlDropExternalLibrary <- function(hodbc, packageName, user = "")
 {
-    g_scriptFile <- local(g_scriptFile, test.env)
+    g_scriptFile <- local(g_scriptFile, install.env)
     haveUser <- (user != '')
 
     query <- paste0("DROP EXTERNAL LIBRARY [", packageName, "]")
@@ -1597,7 +1597,7 @@ sqlDropExternalLibrary <- function(hodbc, packageName, user = "")
 #
 sqlAddExtendedProperty <- function(hodbc, packageName, attributes, user = "")
 {
-    g_scriptFile <- local(g_scriptFile, test.env)
+    g_scriptFile <- local(g_scriptFile, install.env)
     isTopLevel <- attributes & 0x1;
 
     haveUser <- (user != '')
@@ -2076,7 +2076,7 @@ sqlSyncRemovePackages <- function(hodbc, pkgs, externalLibraryIds, scope, user, 
 #
 sqlEnumTable <- function(connectionString, packagesNames, owner, scopeint)
 {
-    g_scriptFile <- local(g_scriptFile, test.env)
+    g_scriptFile <- local(g_scriptFile, install.env)
     queryUser <- "CURRENT_USER"
 
     if (scopeint == 0) # public
