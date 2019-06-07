@@ -7,7 +7,7 @@
 MAX_OWNER_SIZE_CONST <- 128
 IS_TOP_PACKAGE_MISSING <- -1L
 install.env <- new.env()
-local("g_scriptFile",env=install.env)
+local(g_scriptFile <- NULL,env=install.env)
 
 #' sql_installed.packages
 #'
