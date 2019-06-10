@@ -5,7 +5,8 @@
 \title{sql_install.packages}
 \usage{
 sql_install.packages(connectionString, pkgs, skipMissing = FALSE, repos,
-  verbose = getOption("verbose"), scope = "private", owner = "")
+  verbose = getOption("verbose"), scope = "private", owner = "",
+  scriptFile = NULL)
 }
 \arguments{
 \item{connectionString}{ODBC connection string to Microsoft SQL Server database.}
@@ -21,6 +22,8 @@ sql_install.packages(connectionString, pkgs, skipMissing = FALSE, repos,
 \item{scope}{character string. Should be either "public" or "private". "public" installs the packages on per database public location on SQL server which in turn can be used (referred) by multiple different users. "private" installs the packages on per database, per user private location on SQL server which is only accessible to the single user.}
 
 \item{owner}{character string. Should be either empty '' or a valid SQL database user account name. Only 'dbo' or users in 'db_owner' role for a database can specify this value to install packages on behalf of other users. A user who is member of the 'db_owner' group can set owner='dbo' to install on the "public" folder.}
+
+\item{scriptFile}{character string - a file where to record the tsql that is run by the function.}
 }
 \value{
 invisible(NULL)

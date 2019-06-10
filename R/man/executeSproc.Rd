@@ -4,7 +4,7 @@
 \alias{executeSproc}
 \title{Execute a Stored Procedure}
 \usage{
-executeSproc(connectionString, name, ..., getScript)
+executeSproc(connectionString, name, ..., getScript = FALSE)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString for the database with the stored procedure}
@@ -12,6 +12,8 @@ executeSproc(connectionString, name, ..., getScript)
 \item{name}{character string. The name of the stored procedure in the database to execute}
 
 \item{...}{named list. Parameters to pass into the procedure. These MUST be named the same as the arguments to the function.}
+
+\item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
 }
 \description{
 Execute a Stored Procedure

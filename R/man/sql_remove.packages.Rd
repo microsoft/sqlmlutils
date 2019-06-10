@@ -6,7 +6,7 @@
 \usage{
 sql_remove.packages(connectionString, pkgs, dependencies = TRUE,
   checkReferences = TRUE, verbose = getOption("verbose"),
-  scope = "private", owner = "")
+  scope = "private", owner = "", scriptFile = NULL)
 }
 \arguments{
 \item{connectionString}{ODBC connection string to SQL Server database.}
@@ -22,6 +22,8 @@ sql_remove.packages(connectionString, pkgs, dependencies = TRUE,
 \item{scope}{character string. Should be either "public" or "private". "public" removes the packages from a per-database public location on SQL Server which in turn could have been used (referred) by multiple different users. "private" removes the packages from a per-database, per-user private location on SQL Server which is only accessible to the single user.}
 
 \item{owner}{character string. Should be either empty '' or a valid SQL database user account name. Only 'dbo' or users in 'db_owner' role for a database can specify this value to remove packages on behalf of other users. A user who is member of the 'db_owner' group can set owner='dbo' to remove packages from the "public" folder.}
+
+\item{scriptFile}{character string - a file where to record the tsql that is run by the function.}
 }
 \value{
 invisible(NULL)

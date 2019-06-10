@@ -27,8 +27,6 @@ where the names are the arguments and the values are the types}
 \item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
 
 \item{script}{character string. The path to the script to wrap in the stored procedure}
-
-\item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
 }
 \value{
 Invisibly returns the script used to create the stored procedure
