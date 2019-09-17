@@ -17,6 +17,8 @@ else:
     from pip import main as pipmain
 
 # Monkey patch the pip version information with server information
+pep425tags.is_manylinux2010_compatible = lambda: True
+pep425tags.is_manylinux1_compatible = lambda: True
 pep425tags.get_impl_version_info = lambda: eval(sys.argv[1])
 pep425tags.get_abbr_impl = lambda: sys.argv[2]
 pep425tags.get_abi_tag = lambda: sys.argv[3]
