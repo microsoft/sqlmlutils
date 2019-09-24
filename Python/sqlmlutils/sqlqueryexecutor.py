@@ -14,9 +14,9 @@ It is mostly setup to work with SQLBuilder objects as defined in sqlbuilder.
 # This function is best used to execute_function_in_sql a one off query
 # (the SQL connection is closed after the query completes).
 # If you need to keep the SQL connection open in between queries, you can use the _SQLQueryExecutor class below.
-def execute_query(builder, connection: ConnectionInfo):
+def execute_query(builder, connection: ConnectionInfo, out_file:str=None):
     with SQLQueryExecutor(connection=connection) as executor:
-        return executor.execute(builder)
+        return executor.execute(builder, out_file=out_file)
 
 
 def execute_raw_query(conn: ConnectionInfo, query, params=()):
@@ -38,15 +38,36 @@ class SQLQueryExecutor:
     def __init__(self, connection: ConnectionInfo):
         self._connection = connection
 
-    def execute(self, builder: SQLBuilder):
+    def execute(self, builder: SQLBuilder, out_file=None, getResults=True):
         try:
-            self._mssqlconn.set_msghandler(_sql_msg_handler)
-            self._mssqlconn.execute_query(builder.base_script, builder.params)
-            return [row for row in self._mssqlconn]
+            if out_file is not None:
+                with open(out_file,"a") as f:
+                    if builder.params is not None:
+                        f.write(builder.base_script.replace("%s", "'%s'") % builder.params)
+                    else:
+                        f.write(builder.base_script)
+                    f.write("GO")
+                    f.write("-----------------------------")
+            else:    
+                self._mssqlconn.set_msghandler(_sql_msg_handler)
+                if getResults:
+                    self._mssqlconn.execute_query(builder.base_script, builder.params)
+                    return [row for row in self._mssqlconn]
+                else:
+                    self._mssqlconn.execute_non_query(builder.base_script, builder.params)
+                    return []
         except Exception as e:
             raise RuntimeError(str.format("Error in SQL Execution: {error}", error=str(e)))
 
-    def execute_query(self, query, params):
+    def execute_query(self, query, params, out_file=None):
+        if out_file is not None:
+            with open(out_file.replace("%s", "'%s'"),"a") as f:
+                if params is not None:
+                    f.write(query % params)
+                else:
+                    f.write(query)
+                f.write("GO")
+                f.write("-----------------------------")
         self._mssqlconn.execute_query(query, params)
         return [row for row in self._mssqlconn]
 
