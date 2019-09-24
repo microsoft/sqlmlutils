@@ -30,7 +30,7 @@ class SQLPackageManager:
                 upgrade: bool = False,
                 version: str = None,
                 install_dependencies: bool = True,
-                scope: Scope = Scope.private_scope()):
+                scope: Scope = None):
         """Install Python package into a SQL Server Python Services environment using pip.
 
         :param package: Package name to install on the SQL Server. Can also be a filename.
@@ -63,13 +63,16 @@ class SQLPackageManager:
         if not install_dependencies:
             raise ValueError("Dependencies will always be installed - "
                              "single package install without dependencies not yet supported.")
-
+        
+        if scope is None:
+            scope = self._get_default_scope()
+        
         if os.path.isfile(package):
             self._install_from_file(package, scope, upgrade)
         else:
             self._install_from_pypi(package, upgrade, version, install_dependencies, scope)
 
-    def uninstall(self, package_name: str, scope: Scope = Scope.private_scope()):
+    def uninstall(self, package_name: str, scope: Scope = None):
         """Remove Python package from a SQL Server Python environment.
 
         :param package_name: Package name to remove on the SQL Server.
@@ -78,6 +81,10 @@ class SQLPackageManager:
         db_owner role, you can also specify scope as public. This will uninstall packages from a public path for all
         users. Note: if you connect as dbo, you can only uninstall packages from the public path.
         """
+        
+        if scope is None:
+            scope = self._get_default_scope()
+            
         print("Uninstalling " + package_name + " only, not dependencies")
         self._drop_sql_package(package_name, scope)
 
@@ -88,7 +95,12 @@ class SQLPackageManager:
         """
         return self._pyexecutor.execute_function_in_sql(servermethods.show_installed_packages)
 
-    def get_packages_by_user(self, owner='', scope: Scope =Scope.private_scope()):
+    def _get_default_scope(self):
+        query = "SELECT IS_SRVROLEMEMBER ('sysadmin') as is_sysadmin"
+        is_sysadmin = self._pyexecutor.execute_sql_query(query)["is_sysadmin"].iloc[0]
+        return Scope.public_scope() if is_sysadmin == 1 else Scope.private_scope()
+        
+    def _get_packages_by_user(self, owner='', scope: Scope=Scope.private_scope()):
         has_user = (owner != '')
 
         query = "DECLARE @principalId INT;  \

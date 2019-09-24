@@ -30,12 +30,15 @@ class PipDownloader:
             commands.append("--no-dependencies")
 
         output, error = self._run_in_new_process(commands)
-
+        
         pkgreqs = self._get_reqs_from_output(output)
 
         packagesdownloaded = [os.path.join(self._downloaddir, f) for f in os.listdir(self._downloaddir)
                               if os.path.isfile(os.path.join(self._downloaddir, f))]
 
+        if len(packagesdownloaded) <= 0:
+            raise RuntimeError("Failed to download any packages, pip returned error: " + error)
+            
         return pkgreqs, packagesdownloaded
 
     def _run_in_new_process(self, commands):
