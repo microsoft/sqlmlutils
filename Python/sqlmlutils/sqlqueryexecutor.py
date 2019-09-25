@@ -43,10 +43,11 @@ class SQLQueryExecutor:
             if out_file is not None:
                 with open(out_file,"a") as f:
                     if builder.params is not None:
-                        f.write(builder.base_script.replace("%s", "'%s'") % builder.params)
+                        script = builder.base_script.replace("%s", "N'%s'")
+                        f.write(script % builder.params)
                     else:
                         f.write(builder.base_script)
-                    f.write("GO")
+                    f.write("GO\n")
                     f.write("-----------------------------")
             else:    
                 self._mssqlconn.set_msghandler(_sql_msg_handler)
@@ -61,12 +62,13 @@ class SQLQueryExecutor:
 
     def execute_query(self, query, params, out_file=None):
         if out_file is not None:
-            with open(out_file.replace("%s", "'%s'"),"a") as f:
+            with open(out_file, "a") as f:
                 if params is not None:
-                    f.write(query % params)
+                    script = query.replace("%s", "'%s'")
+                    f.write(script % params)
                 else:
                     f.write(query)
-                f.write("GO")
+                f.write("GO\n")
                 f.write("-----------------------------")
         self._mssqlconn.execute_query(query, params)
         return [row for row in self._mssqlconn]
