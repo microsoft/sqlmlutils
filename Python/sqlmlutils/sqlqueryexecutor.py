@@ -58,7 +58,7 @@ class SQLQueryExecutor:
                     self._mssqlconn.execute_non_query(builder.base_script, builder.params)
                     return []
         except Exception as e:
-            raise RuntimeError(str.format("Error in SQL Execution: {error}", error=str(e)))
+            raise RuntimeError("Error in SQL Execution") from e
 
     def execute_query(self, query, params, out_file=None):
         if out_file is not None:

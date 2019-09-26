@@ -177,12 +177,16 @@ class SQLPackageManager:
         target_name = get_package_name_from_file(target_package_file)
 
         with SQLQueryExecutor(connection=self._connection_info) as sqlexecutor:
+            transaction = SQLTransaction(sqlexecutor, clean_library_name(target_name) + "InstallTransaction")
+            transaction.begin()
             try:
                 for pkgfile in dependency_files:
                     self._install_single(sqlexecutor, pkgfile, scope, out_file=out_file)
                 self._install_single(sqlexecutor, target_package_file, scope, True, out_file=out_file)
-            except Exception:
-                raise RuntimeError("Package installation failed, installed dependencies were rolled back.")
+                transaction.commit()
+            except Exception as e:
+                transaction.rollback()
+                raise RuntimeError("Package installation failed, installed dependencies were rolled back.") from e
 
     @staticmethod
     def _install_single(sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):

@@ -57,11 +57,7 @@ assert package_exists_in_scope("{sqlpkgname}", "{scopestr}")
 
     @property
     def base_script(self) -> str:
-        return """ 
--- Wrap this in a transaction  
-DECLARE @TransactionName varchar(30) = 'SqlPackageTransaction';
-BEGIN TRAN @TransactionName
-        
+        return """         
 -- Drop the library if it exists
 BEGIN TRY
 DROP EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
@@ -84,13 +80,9 @@ BEGIN TRY
     exec sp_execute_external_script
     @language = N'Python',
     @script = %s
-    -- Installation succeeded, commit the transaction
-    COMMIT TRAN @TransactionName
     print('Package successfully installed.')
 END TRY
 BEGIN CATCH
-    -- Installation failed, rollback the transaction
-    ROLLBACK TRAN @TransactionName
     print('Package installation failed.');
     THROW;
 END CATCH
