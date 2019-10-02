@@ -8,23 +8,9 @@ import re
 _ENV_NAME_USER_PATH = "MRS_EXTLIB_USER_PATH"
 _ENV_NAME_SHARED_PATH = "MRS_EXTLIB_SHARED_PATH"
 
-
 def show_installed_packages():
-    from distutils.version import LooseVersion
-    import pip
-    if LooseVersion(pip.__version__) > LooseVersion("10"):
-        from pip._internal.operations import freeze
-    else:
-        from pip.operations import freeze
-
-    packages = []
-    for package in list(freeze.freeze()):
-        val = package.split("==")
-        name = val[0]
-        version = val[1]
-        packages.append((name, version))
-    return packages
-
+    import pkg_resources
+    return [(d.project_name, d.version) for d in pkg_resources.working_set]
 
 def get_server_info():
     from distutils.version import LooseVersion

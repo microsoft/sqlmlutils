@@ -7,19 +7,19 @@ Currently, only the R version of sqlmlutils is supported in Azure SQL Database. 
 
 # Installation
 
-To install sqlmlutils from this repository, run the following commands from the root folder:
+To install sqlmlutils from this repository, simply download the zip package for the language you want from the corresponding dist folder: Python/dist or R/dist.
 
 Python:
 1. If your client is a Linux machine, you can skip this step. If your client is a Windows machine: go to https://www.lfd.uci.edu/~gohlke/pythonlibs/#pymssql and download the correct version of pymssql for your client. Run ```pip install pymssql-2.1.4.dev5-cpXX-cpXXm-win_amd64.whl``` on that file to install pymssql.
 2. Run
 ```
-python.exe -m pip install --upgrade --upgrade-strategy only-if-needed Python/dist/sqlmlutils-0.6.0.zip
+python.exe -m pip install --upgrade --upgrade-strategy only-if-needed sqlmlutils-0.7.0.zip
 ```
 
 R:
 ```
 R -e "install.packages('RODBCext', repos='https://cran.microsoft.com')"
-R CMD INSTALL R/dist/sqlmlutils_0.7.1.zip
+R CMD INSTALL sqlmlutils_0.7.1.zip
 ```
 
 # Details

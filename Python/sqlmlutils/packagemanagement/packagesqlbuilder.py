@@ -23,7 +23,7 @@ _ENV_NAME_SHARED_PATH = "MRS_EXTLIB_SHARED_PATH"
 
 
 def _is_dist_info_file(name, file):
-    return re.match(name + r'-.*egg', file) or re.match(name + r'-.*dist-info', file)
+    return re.match(name + r"-.*egg", file) or re.match(name + r"-.*dist-info", file)
 
 
 def _is_package_match(package_name, file):
@@ -34,8 +34,8 @@ def _is_package_match(package_name, file):
            ("-" in package_name and
             (package_name.split("-")[0] == file or _is_dist_info_file(package_name.replace("-", "_"), file)))
 
-def package_files_in_scope(scope='private'):
-    envdir = _ENV_NAME_SHARED_PATH if scope == 'public' or os.environ.get(_ENV_NAME_USER_PATH, "") == "" \
+def package_files_in_scope(scope="private"):
+    envdir = _ENV_NAME_SHARED_PATH if scope == "public" or os.environ.get(_ENV_NAME_USER_PATH, "") == "" \
         else _ENV_NAME_USER_PATH
     path = os.environ.get(envdir, "")
     if os.path.isdir(path):
@@ -45,7 +45,7 @@ def package_files_in_scope(scope='private'):
 def package_exists_in_scope(sql_package_name: str, scope=None) -> bool:
     if scope is None:
         # default to user path for every user but DBOs
-        scope = 'public' if (os.environ.get(_ENV_NAME_USER_PATH, "") == "") else 'private'
+        scope = "public" if (os.environ.get(_ENV_NAME_USER_PATH, "") == "") else "private"
     package_files = package_files_in_scope(scope)
     return any([_is_package_match(sql_package_name, package_file) for package_file in package_files])
 
@@ -57,11 +57,7 @@ assert package_exists_in_scope("{sqlpkgname}", "{scopestr}")
 
     @property
     def base_script(self) -> str:
-        return """ 
--- Wrap this in a transaction  
-DECLARE @TransactionName varchar(30) = 'SqlPackageTransaction';
-BEGIN TRAN @TransactionName
-        
+        return """         
 -- Drop the library if it exists
 BEGIN TRY
 DROP EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
@@ -84,13 +80,9 @@ BEGIN TRY
     exec sp_execute_external_script
     @language = N'Python',
     @script = %s
-    -- Installation succeeded, commit the transaction
-    COMMIT TRAN @TransactionName
     print('Package successfully installed.')
 END TRY
 BEGIN CATCH
-    -- Installation failed, rollback the transaction
-    ROLLBACK TRAN @TransactionName
     print('Package installation failed.');
     THROW;
 END CATCH
