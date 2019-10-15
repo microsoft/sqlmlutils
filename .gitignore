@@ -40,3 +40,7 @@ rsconnect/
 __pycache__/
 .cache/
 .idea/
+
+*/build/lib/
+Python/*.egg-info
+Python/dist/*.whl
