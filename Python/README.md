@@ -214,18 +214,17 @@ import sqlmlutils
 # connection = sqlmlutils.ConnectionInfo(driver="ODBC Driver 13 for SQL Server", server="localhost", database="AirlineTestDB", uid="username", pwd="password")
 
 connection = sqlmlutils.ConnectionInfo(server="localhost", database="AirlineTestDB")
-sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 pkgmanager = sqlmlutils.SQLPackageManager(connection)
+pkgmanager.install("astor")
 
-def use_tensorflow():
-    import tensorflow as tf
-    node1 = tf.constant(3.0, tf.float32)
-    return str(node1.dtype)
+def import_astor():
+    import astor
 
-pkgmanager.install("tensorflow")
-val = sqlpy.execute_function_in_sql(use_tensorflow)
+# import the astor package to make sure it installed properly
+sqlpy = sqlmlutils.SQLPythonExecutor(connection)
+val = sqlpy.execute_function_in_sql(import_astor)
 
-pkgmanager.uninstall("tensorflow")
+pkgmanager.uninstall("astor")
 ```
 
 
