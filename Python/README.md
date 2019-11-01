@@ -7,13 +7,12 @@ sqlmlutils is a python package to help execute Python code on a SQL Server machi
 Download the zip package file from the dist folder.
 From a command prompt, run
 ```
-python.exe -m pip install --upgrade --upgrade-strategy only-if-needed sqlmlutils-0.7.1.zip
+pip install sqlmlutils
 ```
 
 Note: If you encounter errors installing the pymssql dependency and your client is a Windows machine, consider 
 installing the .whl file at the below link (download the file for your Python version and run pip install): 
 https://www.lfd.uci.edu/~gohlke/pythonlibs/#pymssql
-
 
 If you are developing on your own branch and want to rebuild and install the package, you can use the buildandinstall.cmd script that is included.
 
