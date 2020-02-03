@@ -5,6 +5,8 @@
 sqlmlutils is a package designed to help users interact with SQL databases (SQL Server and Azure SQL Database) and execute R or Python code in SQL from an R/Python client. 
 Currently, only the R version of sqlmlutils is supported in Azure SQL Database. Python support will be added later.
 
+### Check out the README in each language folder for language-specific details and code examples!
+
 # Installation
 
 To install sqlmlutils, follow the instructions below for Python and R, respectively.
