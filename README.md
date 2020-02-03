@@ -5,6 +5,8 @@
 sqlmlutils is a package designed to help users interact with SQL databases (SQL Server and Azure SQL Database) and execute R or Python code in SQL from an R/Python client. 
 Currently, only the R version of sqlmlutils is supported in Azure SQL Database. Python support will be added later.
 
+### Check out the README in each language folder for language-specific details and code examples!
+
 # Installation
 
 To install sqlmlutils, follow the instructions below for Python and R, respectively.
@@ -42,7 +44,6 @@ The goal of this utility is to allow users to create and execute stored procedur
 
 ## Package Management
 
-##### In SQL Server 2017, only R package management in Windows is supported.
-##### R and Python package management on both Windows and Linux platforms is supported in SQL Server 2019 CTP 2.4 and later.
+##### Package management with sqlmlutils is supported in SQL Server 2019 CTP 2.4 and later.
 
 With package management users can install packages to a remote SQL database from a client machine. The packages are downloaded on the client and then sent over to SQL databases where they will be installed into library folders. The folders are per-database so packages will always be installed and made available for a specific database. The package management APIs provided a PUBLIC and PRIVATE folders. Packages in the PUBLIC folder are accessible to all database users. Packages in the PRIVATE folder are only accessible by the user who installed the package.
