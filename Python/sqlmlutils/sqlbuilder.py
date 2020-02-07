@@ -65,8 +65,8 @@ class SpeesBuilder(SQLBuilder):
         return """
 exec sp_execute_external_script
 @language = N'Python',
-@script = %s,
-@input_data_1 = %s
+@script = ?,
+@input_data_1 = ?
 {script_parameters}
 {with_results_text}
         """.format(script_parameters=self._script_parameters_text,
@@ -195,15 +195,12 @@ CREATE PROCEDURE {name}
 AS
 EXEC sp_execute_external_script
 @language = N'Python',
-@script = %s
+@script = N'{script}'
 {script_parameters}
 """.format(name=self._name,
            parameter_declarations=self._param_declarations,
+           script=self._script,
            script_parameters=self._script_parameter_text)
-
-    @property
-    def params(self):
-        return self._script
 
     def script_parameter_text(self, in_names: List[str], in_types: dict, out_names: List[str], out_types: dict) -> str:
         if not in_names and not out_names:

@@ -7,7 +7,7 @@ import zipfile
 import warnings
 
 from sqlmlutils import ConnectionInfo, SQLPythonExecutor
-from sqlmlutils.sqlqueryexecutor import execute_query, SQLTransaction
+from sqlmlutils.sqlqueryexecutor import execute_query
 from sqlmlutils.packagemanagement.packagesqlbuilder import clean_library_name
 from sqlmlutils.packagemanagement import servermethods
 from sqlmlutils.sqlqueryexecutor import SQLQueryExecutor
@@ -98,6 +98,7 @@ class SQLPackageManager:
 
         :return: List of tuples, each tuple[0] is package name and tuple[1] is package version.
         """
+        print("listing")
         return self._pyexecutor.execute_function_in_sql(servermethods.show_installed_packages)
 
     def _get_default_scope(self):
@@ -113,7 +114,7 @@ class SQLPackageManager:
                 SELECT @currentUser = "
 
         if has_user:
-            query += "%s;\n"
+            query += "?;\n"
         else:
             query += "CURRENT_USER;\n"
 
@@ -170,28 +171,31 @@ class SQLPackageManager:
             # Resolve which package dependencies need to be installed or upgraded on server.
             required_installs = resolver.get_required_installs(target_package_requirements)
             dependencies_to_install = self._get_required_files_to_install(requirements_downloaded, required_installs)
-            
             self._install_many(target_package_file, dependencies_to_install, scope, out_file=out_file)
 
     def _install_many(self, target_package_file: str, dependency_files, scope: Scope, out_file:str=None):
+        print("install_many")
         target_name = get_package_name_from_file(target_package_file)
 
         with SQLQueryExecutor(connection=self._connection_info) as sqlexecutor:
-            transaction = SQLTransaction(sqlexecutor, clean_library_name(target_name) + "InstallTransaction")
-            transaction.begin()
+            sqlexecutor._cnxn.autocommit = False
             try:
+                print("Installing dependencies...")
                 for pkgfile in dependency_files:
                     self._install_single(sqlexecutor, pkgfile, scope, out_file=out_file)
+                print("Done with dependencies, installing main package...")
                 self._install_single(sqlexecutor, target_package_file, scope, True, out_file=out_file)
-                transaction.commit()
+                sqlexecutor._cnxn.commit()
             except Exception as e:
-                transaction.rollback()
+                print("Rolling back!")
+                sqlexecutor._cnxn.rollback()
                 raise RuntimeError("Package installation failed, installed dependencies were rolled back.") from e
 
     @staticmethod
     def _install_single(sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):
         name = get_package_name_from_file(package_file)
         version = get_package_version_from_file(package_file)
+        print("Installing " + name + " version: " + version)
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             prezip = os.path.join(temporary_directory, name + "PREZIP.zip")

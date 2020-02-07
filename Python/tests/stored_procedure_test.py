@@ -297,10 +297,10 @@ def test_in_df_out_df_dict():
 # Script Tests #
 ################
 
-def test_script_no_params():
-    script = os.path.join(script_dir, "test_script_no_params.py")
+def exec_script_no_params():
+    script = os.path.join(script_dir, "exec_script_no_params.py")
 
-    name = "test_script_no_params"
+    name = "exec_script_no_params"
     sqlpy.drop_sproc(name)
 
     sqlpy.create_sproc_from_script(name, script)
@@ -318,10 +318,10 @@ def test_script_no_params():
     assert not sqlpy.check_sproc(name)
 
 
-def test_script_no_out_params():
-    script = os.path.join(script_dir, "test_script_no_out_params.py")
+def exec_script_no_out_params():
+    script = os.path.join(script_dir, "exec_script_no_out_params.py")
 
-    name = "test_script_no_out_params"
+    name = "exec_script_no_out_params"
     sqlpy.drop_sproc(name)
 
     input_params = {"t1": str, "t2": str, "t3": int}
@@ -340,10 +340,10 @@ def test_script_no_out_params():
     assert not sqlpy.check_sproc(name)
 
 
-def test_script_out_df():
-    script = os.path.join(script_dir, "test_script_sproc_out_df.py")
+def exec_script_out_df():
+    script = os.path.join(script_dir, "exec_script_sproc_out_df.py")
 
-    name = "test_script_out_df"
+    name = "exec_script_out_df"
     sqlpy.drop_sproc(name)
 
     input_params = {"t1": str, "t2": int, "t3": DataFrame}
@@ -361,10 +361,10 @@ def test_script_out_df():
 
 
 #TODO: Output Params execution not currently supported
-def test_script_out_param():
-    script = os.path.join(script_dir, "test_script_out_param.py")
+def exec_script_out_param():
+    script = os.path.join(script_dir, "exec_script_out_param.py")
 
-    name = "test_script_out_param"
+    name = "exec_script_out_param"
     sqlpy.drop_sproc(name)
 
     input_params = {"t1": str, "t2": int, "t3": DataFrame}
@@ -374,7 +374,7 @@ def test_script_out_param():
     assert sqlpy.check_sproc(name)
 
     # Out params don't currently work so we use sqlcmd to test the output param sproc
-    sql_str = "DECLARE @res nvarchar(max)  EXEC test_script_out_param @t2 = 123, @t1 = N'Hello', " \
+    sql_str = "DECLARE @res nvarchar(max)  EXEC exec_script_out_param @t2 = 123, @t1 = N'Hello', " \
               "@t3 = N'select top 10 * from airline5000', @res = @res OUTPUT SELECT @res as N'@res'"
     p = Popen(["sqlcmd", "-S", connection.server, "-E", "-d", connection.database, "-Q", sql_str],
               shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT)

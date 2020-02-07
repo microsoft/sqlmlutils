@@ -4,3 +4,4 @@
 from .connectioninfo import ConnectionInfo
 from .sqlpythonexecutor import SQLPythonExecutor
 from .packagemanagement.sqlpackagemanager import SQLPackageManager
+from .packagemanagement.scope import Scope

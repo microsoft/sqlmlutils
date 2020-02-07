@@ -44,8 +44,8 @@ class SQLPythonExecutor:
         >>> print(ret)
         [0.28366218546322625, 0.28366218546322625]
         """
-        rows = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
-        return self._get_results(rows)
+        df = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
+        return self._get_results(df)
 
     def execute_script_in_sql(self,
                               path_to_script: str,
@@ -74,16 +74,7 @@ class SQLPythonExecutor:
         :param sql_query: the sql query to execute in the server
         :return: table returned by the sql_query
         """
-        rows = execute_raw_query(conn=self._connection_info, query=sql_query, params=params)
-        df = DataFrame(rows)
-
-        # _mssql's execute_query() returns duplicate keys for indexing, we remove them because they are extraneous
-        for i in range(len(df.columns)):
-            try:
-                del df[i]
-            except KeyError:
-                pass
-
+        df = execute_raw_query(conn=self._connection_info, query=sql_query, params=params)
         return df
 
     def create_sproc_from_function(self, name: str, func: Callable,
@@ -180,9 +171,10 @@ class SQLPythonExecutor:
         :param name: name of stored procedure.
         :return: boolean whether the Stored Procedure exists in the database
         """
-        check_query = "SELECT OBJECT_ID (%s, N'P')"
+        check_query = "SELECT OBJECT_ID (?, N'P')"
         rows = execute_raw_query(conn=self._connection_info, query=check_query, params=name)
-        return rows[0][0] is not None
+        print(rows)
+        return rows.loc[0].iloc[0] is not None
 
     def execute_sproc(self, name: str, **kwargs) -> DataFrame:
         """Call a stored procedure on a SQL Server database.
@@ -193,7 +185,7 @@ class SQLPythonExecutor:
         :param kwargs: keyword arguments to pass to stored procedure
         :return: DataFrame representing the output data set of the stored procedure (or empty)
         """
-        return DataFrame(execute_query(ExecuteStoredProcedureBuilder(name, **kwargs), self._connection_info))
+        return execute_query(ExecuteStoredProcedureBuilder(name, **kwargs), self._connection_info)
 
     def drop_sproc(self, name: str):
         """Drop a SQL Server stored procedure if it exists.
@@ -205,6 +197,6 @@ class SQLPythonExecutor:
             execute_query(DropStoredProcedureBuilder(name), self._connection_info)
 
     @staticmethod
-    def _get_results(rows):
-        hexstring = rows[0][RETURN_COLUMN_NAME]
+    def _get_results(df : DataFrame):
+        hexstring = df[RETURN_COLUMN_NAME][0]
         return dill.loads(bytes.fromhex(hexstring))

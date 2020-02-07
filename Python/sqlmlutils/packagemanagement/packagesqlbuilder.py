@@ -21,10 +21,8 @@ import re
 _ENV_NAME_USER_PATH = "MRS_EXTLIB_USER_PATH"
 _ENV_NAME_SHARED_PATH = "MRS_EXTLIB_SHARED_PATH"
 
-
 def _is_dist_info_file(name, file):
     return re.match(name + r"-.*egg", file) or re.match(name + r"-.*dist-info", file)
-
 
 def _is_package_match(package_name, file):
     package_name = package_name.lower()
@@ -49,7 +47,6 @@ def package_exists_in_scope(sql_package_name: str, scope=None) -> bool:
     package_files = package_files_in_scope(scope)
     return any([_is_package_match(sql_package_name, package_file) for package_file in package_files])
 
-        
 assert package_exists_in_scope("{sqlpkgname}", "{scopestr}")
 """.format(sqlpkgname=self._name, scopestr=self._scope._name)
 
@@ -66,7 +63,8 @@ BEGIN CATCH
 END CATCH
 
 -- Parameter bind the package data
-DECLARE @content varbinary(MAX) = convert(varbinary(MAX), %s, 1);
+DECLARE @hexContent nvarchar(MAX) = ?;
+DECLARE @content varbinary(MAX) = convert(varbinary(MAX), @hexContent, 1);
         
 -- Create the library
 CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
@@ -79,7 +77,7 @@ FROM (CONTENT = @content) WITH (LANGUAGE = 'Python');
 BEGIN TRY
     exec sp_execute_external_script
     @language = N'Python',
-    @script = %s
+    @script = ?
     print('Package successfully installed.')
 END TRY
 BEGIN CATCH
