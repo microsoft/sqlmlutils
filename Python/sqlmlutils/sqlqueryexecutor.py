@@ -24,11 +24,6 @@ def execute_raw_query(conn: ConnectionInfo, query, params=()):
     with SQLQueryExecutor(connection=conn) as executor:
         return executor.execute_query(query, params)
 
-
-def _sql_msg_handler(msgstate, severity, srvname, procname, line, msgtext):
-    print(msgtext.decode())
-
-
 class SQLQueryExecutor:
     """_SQLQueryExecutor objects keep a SQL connection open in order to execute_function_in_sql one or more queries.
 

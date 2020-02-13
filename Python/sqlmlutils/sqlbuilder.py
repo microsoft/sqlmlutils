@@ -9,9 +9,6 @@ import textwrap
 from pandas import DataFrame
 import warnings
 
-RETURN_COLUMN_NAME = "return_val"
-
-
 """
 _SQLBuilder implementations are used to generate SQL scripts to execute_function_in_sql Python functions and 
 create/drop/execute_function_in_sql stored procedures. 
@@ -83,7 +80,7 @@ class SpeesBuilderFromFunction(SpeesBuilder):
     _SpeesBuilderFromFunction objects are used to generate SPEES queries based on a function and given arguments.
     """
 
-    _WITH_RESULTS_TEXT = "with result sets((return_val varchar(MAX)))"
+    _WITH_RESULTS_TEXT = "with result sets((return_val varchar(MAX), stdout varchar(MAX), stderr varchar(MAX)))"
 
     def __init__(self, func: Callable, input_data_query: str = "", *args, **kwargs):
         """Instantiate a _SpeesBuilderFromFunction object.
@@ -117,6 +114,14 @@ class SpeesBuilderFromFunction(SpeesBuilder):
         
 import dill
 import pandas as pd
+import sys
+from io import StringIO
+
+temp_out = StringIO()
+temp_err = StringIO()
+
+sys.stdout = temp_out
+sys.stderr = temp_err
 
 # serialized keyword arguments
 args_dill = bytes.fromhex("{args_dill}")
@@ -135,6 +140,8 @@ return_val = func{func_arguments}
 return_frame = pd.DataFrame()
 # serialize results of user function and put in DataFrame for return through SQL Satellite channel
 return_frame["return_val"] = [dill.dumps(return_val).hex()]
+return_frame["stdout"] = [temp_out.getvalue()]
+return_frame["stderr"] = [temp_err.getvalue()]
 OutputDataSet = return_frame
 """.format(user_function_text=function_text,
            args_dill=args_dill,
@@ -169,6 +176,7 @@ class StoredProcedureBuilder(SQLBuilder):
             input_params = {}
         if output_params is None:
             output_params = {}
+        
         self._script = script
         self._name = name
         self._input_params = input_params

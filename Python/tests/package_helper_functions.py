@@ -10,4 +10,5 @@ def _get_sql_package_table(connection):
 
 
 def _get_package_names_list(connection):
-    return {dic['name']: dic['scope'] for dic in _get_sql_package_table(connection)}
+    df = _get_sql_package_table(connection)
+    return  {x: y for x, y in zip(df['name'], df['scope'])}

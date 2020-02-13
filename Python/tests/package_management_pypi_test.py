@@ -46,7 +46,7 @@ def test_install_tensorflow_and_keras():
     def use_keras():
         import keras
 
-    pkgmanager.install("tensorflow==1.1.0")
+    pkgmanager.install("tensorflow==1.13.1")
     val = pyexecutor.execute_function_in_sql(use_tensorflow)
     assert 'float32' in val
 
@@ -208,7 +208,7 @@ def test_already_installed_popular_ml_packages():
 
 
 def test_installing_popular_ml_packages():
-    newpackages = ["plotly", "cntk", "gensim"]
+    newpackages = ["plotly", "gensim"]
 
     def checkit(pkgname):
         val = __import__(pkgname)

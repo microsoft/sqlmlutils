@@ -1,6 +1,7 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
+import sys
 from typing import Callable
 import dill
 from pandas import DataFrame
@@ -9,8 +10,12 @@ from .connectioninfo import ConnectionInfo
 from .sqlqueryexecutor import execute_query, execute_raw_query
 from .sqlbuilder import SpeesBuilder, SpeesBuilderFromFunction, StoredProcedureBuilder, \
     ExecuteStoredProcedureBuilder, DropStoredProcedureBuilder
-from .sqlbuilder import StoredProcedureBuilderFromFunction, RETURN_COLUMN_NAME
+from .sqlbuilder import StoredProcedureBuilderFromFunction
 
+
+RETURN_COLUMN_NAME = "return_val"
+STDOUT_COLUMN_NAME = "stdout"
+STDERR_COLUMN_NAME = "stderr"
 
 class SQLPythonExecutor:
 
@@ -45,7 +50,12 @@ class SQLPythonExecutor:
         [0.28366218546322625, 0.28366218546322625]
         """
         df = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
-        return self._get_results(df)
+        results, output, error = self._get_results(df)
+        if output is not None: 
+            print(output)
+        if error is not None:
+            print(error, file=sys.stderr)
+        return results
 
     def execute_script_in_sql(self,
                               path_to_script: str,
@@ -199,4 +209,6 @@ class SQLPythonExecutor:
     @staticmethod
     def _get_results(df : DataFrame):
         hexstring = df[RETURN_COLUMN_NAME][0]
-        return dill.loads(bytes.fromhex(hexstring))
+        stdout_string = df[STDOUT_COLUMN_NAME][0]
+        stderr_string = df[STDERR_COLUMN_NAME][0]
+        return dill.loads(bytes.fromhex(hexstring)), stdout_string, stderr_string
