@@ -174,7 +174,6 @@ class SQLPackageManager:
             self._install_many(target_package_file, dependencies_to_install, scope, out_file=out_file)
 
     def _install_many(self, target_package_file: str, dependency_files, scope: Scope, out_file:str=None):
-        print("install_many")
         target_name = get_package_name_from_file(target_package_file)
 
         with SQLQueryExecutor(connection=self._connection_info) as sqlexecutor:
@@ -203,7 +202,7 @@ class SQLPackageManager:
                 zipf.write(package_file, os.path.basename(package_file))
 
             builder = CreateLibraryBuilder(pkg_name=name, pkg_filename=prezip, scope=scope)
-            sqlexecutor.execute(builder, out_file=out_file, getResults=False)
+            sqlexecutor.execute(builder, out_file=out_file)
 
     @staticmethod
     def _get_required_files_to_install(pkgfiles, requirements):

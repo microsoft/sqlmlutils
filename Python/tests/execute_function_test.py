@@ -20,9 +20,7 @@ connection = ConnectionInfo(driver=driver,
 current_dir = os.path.dirname(__file__)
 script_dir = os.path.join(current_dir, "scripts")
 
-print(connection)
 sqlpy = SQLPythonExecutor(connection)
-
 
 def test_with_named_args():
     def func_with_args(arg1, arg2):

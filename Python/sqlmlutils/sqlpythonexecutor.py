@@ -125,9 +125,13 @@ class SQLPythonExecutor:
             input_params = {}
         if output_params is None:
             output_params = {}
+
+        in_copy = input_params.copy() if input_params is not None else None
+        out_copy = output_params.copy() if output_params is not None else None
+
         # Save the stored procedure in database
-        execute_query(StoredProcedureBuilderFromFunction(name, func,
-                                                         input_params, output_params), self._connection_info)
+        execute_query(StoredProcedureBuilderFromFunction(name, func, in_copy, out_copy), 
+                        self._connection_info)
         return True
 
     def create_sproc_from_script(self, name: str, path_to_script: str,
@@ -163,8 +167,11 @@ class SQLPythonExecutor:
         except FileNotFoundError:
             raise FileNotFoundError("File does not exist!")
 
-        execute_query(StoredProcedureBuilder(name, content,
-                                             input_params, output_params), self._connection_info)
+        in_copy = input_params.copy() if input_params is not None else None
+        out_copy = output_params.copy() if output_params is not None else None
+        
+        execute_query(StoredProcedureBuilder(name, content, in_copy, out_copy),
+                        self._connection_info)
         return True
 
     def check_sproc(self, name: str) -> bool:
@@ -183,19 +190,21 @@ class SQLPythonExecutor:
         """
         check_query = "SELECT OBJECT_ID (?, N'P')"
         rows = execute_raw_query(conn=self._connection_info, query=check_query, params=name)
-        print(rows)
         return rows.loc[0].iloc[0] is not None
 
-    def execute_sproc(self, name: str, **kwargs) -> DataFrame:
+    def execute_sproc(self, name: str, output_params: dict = None, **kwargs) -> DataFrame:
         """Call a stored procedure on a SQL Server database.
         WARNING: Output parameters can be used when creating the stored procedure, but Stored Procedures with
         output parameters other than a single DataFrame cannot be executed with sqlmlutils
 
-        :param name: name of stored procedure.
+        :param name: name of stored procedure
+        :param output_params: output parameters (if any) for the stored procedure
         :param kwargs: keyword arguments to pass to stored procedure
         :return: DataFrame representing the output data set of the stored procedure (or empty)
         """
-        return execute_query(ExecuteStoredProcedureBuilder(name, **kwargs), self._connection_info)
+        out_copy = output_params.copy() if output_params is not None else None
+        return execute_query(ExecuteStoredProcedureBuilder(name, out_copy, **kwargs), 
+                            self._connection_info)
 
     def drop_sproc(self, name: str):
         """Drop a SQL Server stored procedure if it exists.

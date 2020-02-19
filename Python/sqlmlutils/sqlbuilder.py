@@ -177,6 +177,9 @@ class StoredProcedureBuilder(SQLBuilder):
         if output_params is None:
             output_params = {}
         
+        output_params["_stdout_"] = str
+        output_params["_stderr_"] = str
+
         self._script = script
         self._name = name
         self._input_params = input_params
@@ -201,9 +204,19 @@ class StoredProcedureBuilder(SQLBuilder):
 CREATE PROCEDURE {name} 
     {parameter_declarations} 
 AS
+SET NOCOUNT ON;
 EXEC sp_execute_external_script
 @language = N'Python',
-@script = N'{script}'
+@script = N'
+from io import StringIO
+import sys
+_stdout = StringIO()
+_stderr = StringIO()
+sys.stdout = _stdout
+sys.stderr = _stderr
+{script}
+_stdout_ = _stdout.getvalue()
+_stderr_ = _stderr.getvalue()'
 {script_parameters}
 """.format(name=self._name,
            parameter_declarations=self._param_declarations,
@@ -233,16 +246,17 @@ EXEC sp_execute_external_script
                 break
 
         if in_data_name != "":
-            script_params += ",\n" + StoredProcedureBuilderFromFunction.get_input_data_set(in_data_name)
+            script_params += ",\n" + self.get_input_data_set(in_data_name)
 
         if out_data_name != "":
-            script_params += ",\n" + StoredProcedureBuilderFromFunction.get_output_data_set(out_data_name)
+            script_params += ",\n" + self.get_output_data_set(out_data_name)
 
-        if len(in_names) > 0:
+        if len(in_names) > 0 or len(out_names) > 0:
             script_params += ","
 
         in_params_declaration = out_params_declaration = ""
         in_params_passing = out_params_passing = ""
+
         if len(in_names) > 0:
             in_params_declaration = self.get_declarations(in_names, in_types)
             in_params_passing = self.get_params_passing(in_names)
@@ -307,28 +321,28 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
 
     """Build query text for stored procedures creation based on Python functions.
 
-ex:
+    ex:
 
-name: "MyStoredProcedure"
-func:
-def foobar(arg1: str, arg2: str, arg3: str):
-    print(arg1, arg2, arg3)
+    name: "MyStoredProcedure"
+    func:
+    def foobar(arg1: str, arg2: str, arg3: str):
+        print(arg1, arg2, arg3)
 
-===========becomes===================
+    ===========becomes===================
 
-create procedure MyStoredProcedure @arg1 varchar(MAX), @arg2 varchar(MAX), @arg3 varchar(MAX) as
+    create procedure MyStoredProcedure @arg1 varchar(MAX), @arg2 varchar(MAX), @arg3 varchar(MAX) as
 
-exec sp_execute_external_script
-@language = N'Python',
-@script=N'
-def foobar(arg1, arg2, arg3):
-    print(arg1, arg2, arg3)
-foobar(arg1=arg1, arg2=arg2, arg3=arg3)
-',
-@params = N'@arg1 varchar(MAX), @arg2 varchar(MAX), @arg3 varchar(MAX)',
-@arg1 = @arg1,
-@arg2 = @arg2,
-@arg3 = @arg3
+    exec sp_execute_external_script
+    @language = N'Python',
+    @script=N'
+    def foobar(arg1, arg2, arg3):
+        print(arg1, arg2, arg3)
+    foobar(arg1=arg1, arg2=arg2, arg3=arg3)
+    ',
+    @params = N'@arg1 varchar(MAX), @arg2 varchar(MAX), @arg3 varchar(MAX)',
+    @arg1 = @arg1,
+    @arg2 = @arg2,
+    @arg3 = @arg3
     """
 
     def __init__(self, name: str, func: Callable,
@@ -345,6 +359,10 @@ foobar(arg1=arg1, arg2=arg2, arg3=arg3)
             input_params = {}
         if output_params is None:
             output_params = {}
+            
+        output_params["_stdout_"] = str
+        output_params["_stderr_"] = str
+
         self._func = func
         self._name = name
         self._output_params = output_params
@@ -370,7 +388,7 @@ foobar(arg1=arg1, arg2=arg2, arg3=arg3)
             self._input_params = {}
 
         names_of_output_args = list(self._output_params)
-
+        
         if len(names_of_input_args) != len(self._input_params):
             raise ValueError("Number of argument annotations doesn't match the number of arguments!")
         if set(names_of_input_args) != set(self._input_params.keys()):
@@ -420,13 +438,17 @@ if type(result) == DataFrame:
     {result_val}""".format(result_val="{out_df} = result".format(out_df=output_data_set
                                                                  if output_data_set is not None else "OutputDataSet"))
 
-        if len(output_params) > 0 or output_data_set is not None:
+        trimmed_output_params = output_params.copy()
+        trimmed_output_params.pop("_stdout_", None)
+        trimmed_output_params.pop("_stderr_", None)
+
+        if len(trimmed_output_params) > 0 or output_data_set is not None:
             res += """
 elif type(result) == dict:
     {output_params}
 elif result is not None:
     raise TypeError("Must return a DataFrame or dictionary with output parameters or None") 
-""".format(output_params=self.get_output_params(output_params) if len(output_params) > 0 else "pass")
+""".format(output_params=self.get_output_params(trimmed_output_params) if len(trimmed_output_params) > 0 else "pass")
         return res
 
     @staticmethod
@@ -436,17 +458,46 @@ elif result is not None:
 
 class ExecuteStoredProcedureBuilder(SQLBuilder):
 
-    def __init__(self, name: str, **kwargs):
+    def __init__(self, name: str, output_params: dict = None, **kwargs):
         self._name = name
         self._kwargs = kwargs
+        self._output_params = output_params
 
     # Execute the query: exec sproc @var1 = val1, @var2 = val2...
     # Does not work with output parameters
     @property
     def base_script(self) -> str:
-        parameters = ", ".join(["@{name} = {value}".format(name=name, value=self.format_value(self._kwargs[name]))
-                                for name in self._kwargs])
-        return """exec {}  {}""".format(self._name, parameters)
+        if self._output_params is not None:
+            # Remove DataFrame from the output parameters, the DataFrame will be the OutputDataSet 
+            for name, py_type in list(self._output_params.items()):
+                if py_type == DataFrame:
+                    del self._output_params[name]
+
+            print(self._output_params)
+
+        parameters = " ".join(["@{name} = {value},".format(name=name, value=self.format_value(self._kwargs[name]))
+                                for name in self._kwargs]) 
+
+        retval = """        
+                DECLARE	@_stdout_ nvarchar(MAX),
+                        @_stderr_ nvarchar(MAX)
+                        {output_declarations}
+                        
+                exec {sproc_name}  {parameters}
+                @_stdout_ = @_stdout_ OUTPUT,
+                @_stderr_ = @_stderr_ OUTPUT
+                {output_calls}
+
+                SELECT	@_stdout_ as _stdout_,
+                        @_stderr_ as _stderr_
+                        {output_selects}
+                """.format(output_declarations=self.output_declarations(self._output_params), 
+                            sproc_name=self._name, 
+                            parameters=parameters,
+                            output_calls=self.output_calls(self._output_params),
+                            output_selects=self.output_selects(self._output_params))
+        print(retval)
+        return retval
 
     @staticmethod
     def format_value(value) -> str:
@@ -458,6 +509,31 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
             return str(int(value))
         else:
             raise ValueError("Parameter type {} not supported.".format(str(type(value))))
+    
+    def output_declarations(self, output_params):
+        retval = ""
+        print(output_params)
+        if output_params is not None and len(output_params) > 0:
+            retval += "".join([", @{name} {type}".format(name=name, 
+                                                            type=StoredProcedureBuilderFromFunction.to_sql_type(output_params[name]))
+                                for name in output_params])
+        return retval
+
+    def output_calls(self, output_params):
+        retval = ""
+        print(output_params)
+        if output_params is not None and len(output_params) > 0:
+            retval += "".join([", @{name} = @{name} OUTPUT".format(name=name)
+                                for name in output_params])
+        return retval
+
+    def output_selects(self, output_params):
+        retval = ""
+        print(output_params)
+        if output_params is not None and len(output_params) > 0:
+            retval += "".join([", @{name} as {name}".format(name=name)
+                                for name in output_params])
+        return retval
 
 
 class DropStoredProcedureBuilder(SQLBuilder):

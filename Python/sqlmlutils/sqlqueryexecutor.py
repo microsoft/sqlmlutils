@@ -1,6 +1,7 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
+import sys
 import pyodbc
 from pandas import DataFrame
 from .connectioninfo import ConnectionInfo
@@ -33,8 +34,9 @@ class SQLQueryExecutor:
     def __init__(self, connection: ConnectionInfo):
         self._connection = connection
 
-    def execute(self, builder: SQLBuilder, out_file=None, getResults=True):
+    def execute(self, builder: SQLBuilder, out_file=None):
         df = DataFrame()
+        output_params = None
         try:
             if out_file is not None:
                 with open(out_file,"a") as f:
@@ -45,19 +47,38 @@ class SQLQueryExecutor:
                         f.write(builder.base_script)
                     f.write("GO\n")
                     f.write("-----------------------------")
-            else:    
+            else:
                 if builder.params is not None:
                     self._cursor.execute(builder.base_script, builder.params)
                 else:
                     self._cursor.execute(builder.base_script)
-                if getResults and self._cursor.description is not None:
+
+                # Get the first resultset (OutputDataSet)
+                #
+                if self._cursor.description is not None:
                     column_names = [element[0] for element in self._cursor.description]
                     rows = [tuple(t) for t in self._cursor.fetchall()]
                     df = DataFrame(rows, columns=column_names)
+                
+                # Get output parameters
+                #
+                while self._cursor.nextset(): 
+                    try:
+                        if self._cursor.description is not None:
+                            column_names = [element[0] for element in self._cursor.description]
+                            rows = [tuple(t) for t in self._cursor.fetchall()]
+                            output_params = dict(zip(column_names, rows[0])) 
+                            
+                            if "_stdout_" in column_names:
+                                self.extract_output(output_params)
+                            
+                    except pyodbc.ProgrammingError:
+                        continue
+                
         except Exception as e:
             raise RuntimeError("Error in SQL Execution") from e
         
-        return df
+        return df, output_params
 
     def execute_query(self, query, params, out_file=None):
         if out_file is not None:
@@ -99,3 +120,11 @@ class SQLQueryExecutor:
 
     def __exit__(self, exception_type, exception_value, traceback):
         self._cnxn.close()
+    
+    def extract_output(self, output_params : dict):
+        out = output_params.pop("_stdout_", None)
+        err = output_params.pop("_stderr_", None)
+        if out is not None:
+            print(out)
+        if err is not None:
+            print(err, file=sys.stderr)
