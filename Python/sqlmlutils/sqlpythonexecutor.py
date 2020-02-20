@@ -14,8 +14,8 @@ from .sqlbuilder import StoredProcedureBuilderFromFunction
 
 
 RETURN_COLUMN_NAME = "return_val"
-STDOUT_COLUMN_NAME = "stdout"
-STDERR_COLUMN_NAME = "stderr"
+STDOUT_COLUMN_NAME = "_stdout_"
+STDERR_COLUMN_NAME = "_stderr_"
 
 class SQLPythonExecutor:
 
@@ -50,7 +50,7 @@ class SQLPythonExecutor:
         [0.28366218546322625, 0.28366218546322625]
         """
         df = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
-        results, output, error = self._get_results(df)
+        results, output, error = self._get_results(df[0])
         if output is not None: 
             print(output)
         if error is not None:
@@ -71,7 +71,6 @@ class SQLPythonExecutor:
         try:
             with open(path_to_script, 'r') as script_file:
                 content = script_file.read()
-            print("File does exist, using " + path_to_script)
         except FileNotFoundError:
             raise FileNotFoundError("File does not exist!")
         execute_query(SpeesBuilder(content, input_data_query=input_data_query), connection=self._connection_info)
@@ -84,7 +83,7 @@ class SQLPythonExecutor:
         :param sql_query: the sql query to execute in the server
         :return: table returned by the sql_query
         """
-        df = execute_raw_query(conn=self._connection_info, query=sql_query, params=params)
+        df, _ = execute_raw_query(conn=self._connection_info, query=sql_query, params=params)
         return df
 
     def create_sproc_from_function(self, name: str, func: Callable,
@@ -189,7 +188,7 @@ class SQLPythonExecutor:
         :return: boolean whether the Stored Procedure exists in the database
         """
         check_query = "SELECT OBJECT_ID (?, N'P')"
-        rows = execute_raw_query(conn=self._connection_info, query=check_query, params=name)
+        rows = execute_raw_query(conn=self._connection_info, query=check_query, params=name)[0]
         return rows.loc[0].iloc[0] is not None
 
     def execute_sproc(self, name: str, output_params: dict = None, **kwargs) -> DataFrame:

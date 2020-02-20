@@ -40,9 +40,11 @@ class SpeesBuilder(SQLBuilder):
 
     """
 
+    _WITH_RESULTS_TEXT = "with result sets((_stdout_ varchar(MAX), _stderr_ varchar(MAX)))"
+
     def __init__(self,
                  script: str,
-                 with_results_text: str = "",
+                 with_results_text: str = _WITH_RESULTS_TEXT,
                  input_data_query: str = "",
                  script_parameters_text: str = ""):
         """Instantiate a _SpeesBuilder object.
@@ -52,7 +54,7 @@ class SpeesBuilder(SQLBuilder):
         :param input_data_query: maps to @input_data_1 SQL query parameter
         :param script_parameters_text: maps to @params SQL query parameter
         """
-        self._script = script
+        self._script = self.modify_script(script)
         self._input_data_query = input_data_query
         self._script_parameters_text = script_parameters_text
         self._with_results_text = with_results_text
@@ -72,7 +74,25 @@ exec sp_execute_external_script
     @property
     def params(self):
         return self._script, self._input_data_query
+        
+    def modify_script(self, script):
+        return """
+import sys
+from io import StringIO
+from pandas import DataFrame
 
+temp_out = StringIO()
+temp_err = StringIO()
+
+sys.stdout = temp_out
+sys.stderr = temp_err
+OutputDataSet = DataFrame()
+
+{script}
+
+OutputDataSet["_stdout_"] = [temp_out.getvalue()]
+OutputDataSet["_stderr_"] = [temp_err.getvalue()]
+""".format(script=script)
 
 class SpeesBuilderFromFunction(SpeesBuilder):
 
@@ -80,7 +100,7 @@ class SpeesBuilderFromFunction(SpeesBuilder):
     _SpeesBuilderFromFunction objects are used to generate SPEES queries based on a function and given arguments.
     """
 
-    _WITH_RESULTS_TEXT = "with result sets((return_val varchar(MAX), stdout varchar(MAX), stderr varchar(MAX)))"
+    _WITH_RESULTS_TEXT = "with result sets((return_val varchar(MAX), _stdout_ varchar(MAX), _stderr_ varchar(MAX)))"
 
     def __init__(self, func: Callable, input_data_query: str = "", *args, **kwargs):
         """Instantiate a _SpeesBuilderFromFunction object.
@@ -113,15 +133,6 @@ class SpeesBuilderFromFunction(SpeesBuilder):
 {user_function_text} 
         
 import dill
-import pandas as pd
-import sys
-from io import StringIO
-
-temp_out = StringIO()
-temp_err = StringIO()
-
-sys.stdout = temp_out
-sys.stderr = temp_err
 
 # serialized keyword arguments
 args_dill = bytes.fromhex("{args_dill}")
@@ -137,12 +148,8 @@ func = {user_function_name}
 # call user function with serialized arguments
 return_val = func{func_arguments}
 
-return_frame = pd.DataFrame()
 # serialize results of user function and put in DataFrame for return through SQL Satellite channel
-return_frame["return_val"] = [dill.dumps(return_val).hex()]
-return_frame["stdout"] = [temp_out.getvalue()]
-return_frame["stderr"] = [temp_err.getvalue()]
-OutputDataSet = return_frame
+OutputDataSet["return_val"] = [dill.dumps(return_val).hex()]
 """.format(user_function_text=function_text,
            args_dill=args_dill,
            pos_args_dill=pos_args_dill,

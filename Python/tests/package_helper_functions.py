@@ -6,7 +6,8 @@ from sqlmlutils.sqlqueryexecutor import execute_raw_query
 
 def _get_sql_package_table(connection):
     query = "select * from sys.external_libraries"
-    return execute_raw_query(connection, query)
+    out_df, outparams = execute_raw_query(connection, query)
+    return out_df
 
 
 def _get_package_names_list(connection):

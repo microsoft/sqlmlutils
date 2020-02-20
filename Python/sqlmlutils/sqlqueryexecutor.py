@@ -35,23 +35,26 @@ class SQLQueryExecutor:
         self._connection = connection
 
     def execute(self, builder: SQLBuilder, out_file=None):
+        return self.execute_query(builder.base_script, builder.params, out_file=out_file)
+
+    def execute_query(self, query, params, out_file=None):
         df = DataFrame()
         output_params = None
         try:
             if out_file is not None:
                 with open(out_file,"a") as f:
-                    if builder.params is not None:
-                        script = builder.base_script.replace("?", "N'%s'")
-                        f.write(script % builder.params)
+                    if params is not None:
+                        script = query.replace("?", "N'%s'")
+                        f.write(script % params)
                     else:
-                        f.write(builder.base_script)
+                        f.write(query)
                     f.write("GO\n")
                     f.write("-----------------------------")
             else:
-                if builder.params is not None:
-                    self._cursor.execute(builder.base_script, builder.params)
+                if params is not None:
+                    self._cursor.execute(query, params)
                 else:
-                    self._cursor.execute(builder.base_script)
+                    self._cursor.execute(query)
 
                 # Get the first resultset (OutputDataSet)
                 #
@@ -59,6 +62,8 @@ class SQLQueryExecutor:
                     column_names = [element[0] for element in self._cursor.description]
                     rows = [tuple(t) for t in self._cursor.fetchall()]
                     df = DataFrame(rows, columns=column_names)
+                    if "_stdout_" in column_names:
+                        self.extract_output(dict(zip(column_names, rows[0])))
                 
                 # Get output parameters
                 #
@@ -79,31 +84,6 @@ class SQLQueryExecutor:
             raise RuntimeError("Error in SQL Execution") from e
         
         return df, output_params
-
-    def execute_query(self, query, params, out_file=None):
-        if out_file is not None:
-            with open(out_file, "a") as f:
-                if params is not None:
-                    script = query.replace("?", "'%s'")
-                    f.write(script % params)
-                else:
-                    f.write(query)
-                f.write("GO\n")
-                f.write("-----------------------------")
-
-        if params is not None:
-            self._cursor.execute(query, params)
-        else:
-            self._cursor.execute(query)
-
-        df = DataFrame()
-
-        if self._cursor.description is not None:
-            column_names = [element[0] for element in self._cursor.description]
-            rows = [tuple(t) for t in self._cursor.fetchall()]
-            df = DataFrame(rows, columns=column_names)
-        
-        return df
 
     def __enter__(self):
         server=self._connection._server if self._connection._port == "" \
