@@ -98,7 +98,6 @@ class SQLPackageManager:
 
         :return: List of tuples, each tuple[0] is package name and tuple[1] is package version.
         """
-        print("listing")
         return self._pyexecutor.execute_function_in_sql(servermethods.show_installed_packages)
 
     def _get_default_scope(self):

@@ -37,30 +37,30 @@ def _package_no_exist(module_name: str):
     return True
 
 
-def test_install_tensorflow_and_keras():
-    def use_tensorflow():
-        import tensorflow as tf
-        node1 = tf.constant(3.0, tf.float32)
-        return str(node1.dtype)
+# def test_install_tensorflow_and_keras():
+    # def use_tensorflow():
+        # import tensorflow as tf
+        # node1 = tf.constant(3.0, tf.float32)
+        # return str(node1.dtype)
 
-    def use_keras():
-        import keras
+    # def use_keras():
+        # import keras
 
-    pkgmanager.install("tensorflow==1.13.1")
-    val = pyexecutor.execute_function_in_sql(use_tensorflow)
-    assert 'float32' in val
+    # pkgmanager.install("tensorflow==1.13.1")
+    # val = pyexecutor.execute_function_in_sql(use_tensorflow)
+    # assert 'float32' in val
 
-    pkgmanager.install("keras")
-    pyexecutor.execute_function_in_sql(use_keras)
-    pkgmanager.uninstall("keras")
-    val = pyexecutor.execute_function_in_sql(_package_no_exist, "keras")
-    assert val
+    # pkgmanager.install("keras")
+    # pyexecutor.execute_function_in_sql(use_keras)
+    # pkgmanager.uninstall("keras")
+    # val = pyexecutor.execute_function_in_sql(_package_no_exist, "keras")
+    # assert val
 
-    pkgmanager.uninstall("tensorflow")
-    val = pyexecutor.execute_function_in_sql(_package_no_exist, "tensorflow")
-    assert val
+    # pkgmanager.uninstall("tensorflow")
+    # val = pyexecutor.execute_function_in_sql(_package_no_exist, "tensorflow")
+    # assert val
 
-    _drop_all_ddl_packages(connection)
+    # _drop_all_ddl_packages(connection)
 
 
 def test_install_many_packages():
@@ -98,7 +98,7 @@ def test_install_version():
 
 
 def test_dependency_resolution():
-    package = "multiprocessing_on_dill"
+    package = "latex"
 
     pkgmanager.install(package, upgrade=True)
     val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
@@ -107,7 +107,7 @@ def test_dependency_resolution():
     pkgs = _get_package_names_list(connection)
 
     assert package in pkgs
-    assert "pyreadline" in pkgs
+    assert "funcsigs" in pkgs
 
     pkgmanager.uninstall(package)
     val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
@@ -120,15 +120,21 @@ def test_upgrade_parameter():
 
     pkg = "cryptography"
 
+    first_version = "2.7"
+    second_version = "2.8"
+    
+    # Install package first so we can test upgrade param
+    pkgmanager.install(pkg, version=first_version)
+    
     # Get sql packages
     originalsqlpkgs = _get_sql_package_table(connection)
 
     output = io.StringIO()
     with redirect_stdout(output):
-        pkgmanager.install(pkg, upgrade=False)
-    assert "exists on server. Set upgrade to True to force upgrade." in output.getvalue()
+        pkgmanager.install(pkg, upgrade=False, version=second_version)
+    assert "exists on server. Set upgrade to True" in output.getvalue()
 
-    # Assert no additional packages were installed
+    # Make sure nothing excess was accidentally installed
 
     sqlpkgs = _get_sql_package_table(connection)
     assert len(sqlpkgs) == len(originalsqlpkgs)
@@ -141,10 +147,10 @@ def test_upgrade_parameter():
 
     oldversion = pyexecutor.execute_function_in_sql(check_version)
 
-    pkgmanager.install(pkg, upgrade=True)
+    pkgmanager.install(pkg, upgrade=True, version=second_version)
 
     afterinstall = _get_sql_package_table(connection)
-    assert len(afterinstall) > len(originalsqlpkgs)
+    assert len(afterinstall) >= len(originalsqlpkgs)
 
     version = pyexecutor.execute_function_in_sql(check_version)
     assert version > oldversion
@@ -178,7 +184,6 @@ def test_install_abslpy():
     _drop_all_ddl_packages(connection)
 
 
-@pytest.mark.skip(reason="Theano depends on a conda package libpython? lazylinker issue")
 def test_install_theano():
     pkgmanager.install("Theano")
 
