@@ -7,7 +7,6 @@ class CreateLibraryBuilder(SQLBuilder):
     def __init__(self, pkg_name: str, pkg_filename: str, scope: Scope):
         self._name = clean_library_name(pkg_name)
         self._filename = pkg_filename
-        self._has_params = True
         self._scope = scope
 
     @property
@@ -15,7 +14,42 @@ class CreateLibraryBuilder(SQLBuilder):
         with open(self._filename, "rb") as f:
             pkgdatastr = "0x" + f.read().hex()
 
-        installcheckscript = """
+        return pkgdatastr
+
+    @property
+    def base_script(self) -> str:
+        return """         
+-- Drop the library if it exists
+BEGIN TRY
+DROP EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
+END TRY
+BEGIN CATCH
+END CATCH
+
+-- Parameter bind the package data
+DECLARE @hexContent nvarchar(MAX) = ?;
+DECLARE @content varbinary(MAX) = convert(varbinary(MAX), @hexContent, 1);
+        
+-- Create the library
+CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
+FROM (CONTENT = @content) WITH (LANGUAGE = 'Python');
+
+-- Dummy SPEES
+{dummy_spees}
+""".format(sqlpkgname=self._name,
+           authorization=_get_authorization(self._scope),
+           dummy_spees=_get_dummy_spees())
+
+
+class CheckLibraryBuilder(SQLBuilder):
+
+    def __init__(self, pkg_name: str, scope: Scope):
+        self._name = clean_library_name(pkg_name)
+        self._scope = scope
+
+    @property
+    def params(self):
+        return """ 
 import os
 import re
 _ENV_NAME_USER_PATH = "MRS_EXTLIB_USER_PATH"
@@ -50,29 +84,9 @@ def package_exists_in_scope(sql_package_name: str, scope=None) -> bool:
 assert package_exists_in_scope("{sqlpkgname}", "{scopestr}")
 """.format(sqlpkgname=self._name, scopestr=self._scope._name)
 
-        return pkgdatastr, installcheckscript
-
     @property
     def base_script(self) -> str:
-        return """         
--- Drop the library if it exists
-BEGIN TRY
-DROP EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
-END TRY
-BEGIN CATCH
-END CATCH
-
--- Parameter bind the package data
-DECLARE @hexContent nvarchar(MAX) = ?;
-DECLARE @content varbinary(MAX) = convert(varbinary(MAX), @hexContent, 1);
-        
--- Create the library
-CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
-FROM (CONTENT = @content) WITH (LANGUAGE = 'Python');
-
--- Dummy SPEES
-{dummy_spees}
-
+        return """    
 -- Check to make sure the package was installed
 BEGIN TRY
     exec sp_execute_external_script
@@ -84,9 +98,7 @@ BEGIN CATCH
     print('Package installation failed.');
     THROW;
 END CATCH
-""".format(sqlpkgname=self._name,
-           authorization=_get_authorization(self._scope),
-           dummy_spees=_get_dummy_spees())
+"""
 
 
 class DropLibraryBuilder(SQLBuilder):

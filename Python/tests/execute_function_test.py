@@ -136,7 +136,7 @@ def test_with_variables():
         var_s = "World"
         sqlpy.execute_function_in_sql(func_with_variables, s=var_s)
 
-    assert "World" in output.getvalue()
+    assert 'World' in output.getvalue()
 
 
 def test_execute_query():

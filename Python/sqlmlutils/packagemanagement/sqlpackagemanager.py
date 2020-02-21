@@ -16,7 +16,7 @@ from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 from sqlmlutils.packagemanagement.scope import Scope
 from sqlmlutils.packagemanagement import messages
 from sqlmlutils.packagemanagement.pkgutils import get_package_name_from_file, get_package_version_from_file
-from sqlmlutils.packagemanagement.packagesqlbuilder import CreateLibraryBuilder, DropLibraryBuilder
+from sqlmlutils.packagemanagement.packagesqlbuilder import CreateLibraryBuilder, CheckLibraryBuilder, DropLibraryBuilder
 
 
 class SQLPackageManager:
@@ -186,7 +186,8 @@ class SQLPackageManager:
                 sqlexecutor._cnxn.commit()
             except Exception as e:
                 print("Rolling back!")
-                sqlexecutor._cnxn.rollback()
+                sqlexecutor._cnxn.commit()
+                #sqlexecutor._cnxn.rollback()
                 raise RuntimeError("Package installation failed, installed dependencies were rolled back.") from e
 
     @staticmethod
@@ -201,6 +202,8 @@ class SQLPackageManager:
                 zipf.write(package_file, os.path.basename(package_file))
 
             builder = CreateLibraryBuilder(pkg_name=name, pkg_filename=prezip, scope=scope)
+            sqlexecutor.execute(builder, out_file=out_file)
+            builder = CheckLibraryBuilder(pkg_name=name, scope=scope)
             sqlexecutor.execute(builder, out_file=out_file)
 
     @staticmethod
