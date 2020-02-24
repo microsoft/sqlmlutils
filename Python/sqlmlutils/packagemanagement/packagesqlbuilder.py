@@ -18,7 +18,8 @@ class CreateLibraryBuilder(SQLBuilder):
 
     @property
     def base_script(self) -> str:
-        return """         
+        return """
+set NOCOUNT on  
 -- Drop the library if it exists
 BEGIN TRY
 DROP EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
@@ -81,7 +82,9 @@ def package_exists_in_scope(sql_package_name: str, scope=None) -> bool:
     package_files = package_files_in_scope(scope)
     return any([_is_package_match(sql_package_name, package_file) for package_file in package_files])
 
-assert package_exists_in_scope("{sqlpkgname}", "{scopestr}")
+# Check that the package exists in scope.
+# For some reason this check works but there is a bug in pyODBC when asserting this is True.
+assert package_exists_in_scope("{sqlpkgname}", "{scopestr}") != False
 """.format(sqlpkgname=self._name, scopestr=self._scope._name)
 
     @property

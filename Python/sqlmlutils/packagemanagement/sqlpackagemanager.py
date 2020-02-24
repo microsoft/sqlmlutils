@@ -185,7 +185,6 @@ class SQLPackageManager:
                 self._install_single(sqlexecutor, target_package_file, scope, True, out_file=out_file)
                 sqlexecutor._cnxn.commit()
             except Exception as e:
-                print("Rolling back!")
                 sqlexecutor._cnxn.commit()
                 #sqlexecutor._cnxn.rollback()
                 raise RuntimeError("Package installation failed, installed dependencies were rolled back.") from e

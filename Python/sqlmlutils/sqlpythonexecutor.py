@@ -199,7 +199,8 @@ class SQLPythonExecutor:
         :param name: name of stored procedure
         :param output_params: output parameters (if any) for the stored procedure
         :param kwargs: keyword arguments to pass to stored procedure
-        :return: DataFrame representing the output data set of the stored procedure (or empty)
+        :return: tuple with a DataFrame representing the output data set of the stored procedure 
+                 and a dictionary of output parameters
         """
         out_copy = output_params.copy() if output_params is not None else None
         return execute_query(ExecuteStoredProcedureBuilder(name, out_copy, **kwargs), 

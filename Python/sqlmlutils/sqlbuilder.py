@@ -480,13 +480,11 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
                 if py_type == DataFrame:
                     del self._output_params[name]
 
-            print(self._output_params)
-
         parameters = " ".join(["@{name} = {value},".format(name=name, value=self.format_value(self._kwargs[name]))
                                 for name in self._kwargs]) 
 
         retval = """        
-                DECLARE	@_stdout_ nvarchar(MAX),
+                DECLARE @_stdout_ nvarchar(MAX),
                         @_stderr_ nvarchar(MAX)
                         {output_declarations}
                         
@@ -495,15 +493,14 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
                 @_stderr_ = @_stderr_ OUTPUT
                 {output_calls}
 
-                SELECT	@_stdout_ as _stdout_,
-                        @_stderr_ as _stderr_
-                        {output_selects}
+                SELECT @_stdout_ as _stdout_,
+                       @_stderr_ as _stderr_
+                       {output_selects}
                 """.format(output_declarations=self.output_declarations(self._output_params), 
                             sproc_name=self._name, 
                             parameters=parameters,
                             output_calls=self.output_calls(self._output_params),
                             output_selects=self.output_selects(self._output_params))
-        print(retval)
         return retval
 
     @staticmethod
@@ -519,7 +516,6 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
     
     def output_declarations(self, output_params):
         retval = ""
-        print(output_params)
         if output_params is not None and len(output_params) > 0:
             retval += "".join([", @{name} {type}".format(name=name, 
                                                             type=StoredProcedureBuilderFromFunction.to_sql_type(output_params[name]))
@@ -528,7 +524,6 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
 
     def output_calls(self, output_params):
         retval = ""
-        print(output_params)
         if output_params is not None and len(output_params) > 0:
             retval += "".join([", @{name} = @{name} OUTPUT".format(name=name)
                                 for name in output_params])
@@ -536,7 +531,6 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
 
     def output_selects(self, output_params):
         retval = ""
-        print(output_params)
         if output_params is not None and len(output_params) > 0:
             retval += "".join([", @{name} as {name}".format(name=name)
                                 for name in output_params])

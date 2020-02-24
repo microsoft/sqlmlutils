@@ -37,30 +37,21 @@ def _package_no_exist(module_name: str):
     return True
 
 
-# def test_install_tensorflow_and_keras():
-    # def use_tensorflow():
-        # import tensorflow as tf
-        # node1 = tf.constant(3.0, tf.float32)
-        # return str(node1.dtype)
+def test_install_tensorflow():
+    def use_tensorflow():
+        import tensorflow as tf
+        node1 = tf.constant(3.0, tf.float32)
+        return str(node1.dtype)
+        
+    pkgmanager.install("tensorflow", upgrade=True)
+    val = pyexecutor.execute_function_in_sql(use_tensorflow)
+    assert 'float32' in val
 
-    # def use_keras():
-        # import keras
+    pkgmanager.uninstall("tensorflow")
+    val = pyexecutor.execute_function_in_sql(_package_no_exist, "tensorflow")
+    assert val
 
-    # pkgmanager.install("tensorflow==1.13.1")
-    # val = pyexecutor.execute_function_in_sql(use_tensorflow)
-    # assert 'float32' in val
-
-    # pkgmanager.install("keras")
-    # pyexecutor.execute_function_in_sql(use_keras)
-    # pkgmanager.uninstall("keras")
-    # val = pyexecutor.execute_function_in_sql(_package_no_exist, "keras")
-    # assert val
-
-    # pkgmanager.uninstall("tensorflow")
-    # val = pyexecutor.execute_function_in_sql(_package_no_exist, "tensorflow")
-    # assert val
-
-    # _drop_all_ddl_packages(connection)
+    _drop_all_ddl_packages(connection)
 
 
 def test_install_many_packages():

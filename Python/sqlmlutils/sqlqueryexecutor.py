@@ -40,6 +40,7 @@ class SQLQueryExecutor:
     def execute_query(self, query, params, out_file=None):
         df = DataFrame()
         output_params = None
+
         try:
             if out_file is not None:
                 with open(out_file,"a") as f:
