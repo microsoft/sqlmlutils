@@ -90,7 +90,7 @@ class SQLPackageManager:
         if scope is None:
             scope = self._get_default_scope()
             
-        print("Uninstalling " + package_name + " only, not dependencies")
+        print("Uninstalling {} only, not dependencies".format(str(package_name)))
         self._drop_sql_package(package_name, scope, out_file)
 
     def list(self):
@@ -193,7 +193,7 @@ class SQLPackageManager:
     def _install_single(sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):
         name = get_package_name_from_file(package_file)
         version = get_package_version_from_file(package_file)
-        print("Installing " + name + " version: " + version)
+        print("Installing {name} version: {version}".format(name=str(name), version=str(version)))
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             prezip = os.path.join(temporary_directory, name + "PREZIP.zip")
