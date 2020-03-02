@@ -1,5 +1,6 @@
 from sqlmlutils.sqlbuilder import SQLBuilder
 from sqlmlutils.packagemanagement.scope import Scope
+import pyodbc
 
 
 class CreateLibraryBuilder(SQLBuilder):
@@ -12,13 +13,17 @@ class CreateLibraryBuilder(SQLBuilder):
     @property
     def params(self):
         with open(self._filename, "rb") as f:
-            pkgdatastr = "0x" + f.read().hex()
-
+            bits = f.read()
+        pkgdatastr = pyodbc.Binary(bits)
         return pkgdatastr
 
     @property
     def base_script(self) -> str:
-        return """
+        sqlpkgname=self._name
+        authorization=_get_authorization(self._scope)
+        dummy_spees=_get_dummy_spees()
+
+        return f"""
 set NOCOUNT on  
 -- Drop the library if it exists
 BEGIN TRY
@@ -26,20 +31,14 @@ DROP EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
 END TRY
 BEGIN CATCH
 END CATCH
-
--- Parameter bind the package data
-DECLARE @hexContent nvarchar(MAX) = ?;
-DECLARE @content varbinary(MAX) = convert(varbinary(MAX), @hexContent, 1);
         
 -- Create the library
 CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
-FROM (CONTENT = @content) WITH (LANGUAGE = 'Python');
+FROM (CONTENT = ?) WITH (LANGUAGE = 'Python');
 
 -- Dummy SPEES
 {dummy_spees}
-""".format(sqlpkgname=self._name,
-           authorization=_get_authorization(self._scope),
-           dummy_spees=_get_dummy_spees())
+"""
 
 
 class CheckLibraryBuilder(SQLBuilder):
@@ -50,7 +49,7 @@ class CheckLibraryBuilder(SQLBuilder):
 
     @property
     def params(self):
-        return """ 
+        return f""" 
 import os
 import re
 _ENV_NAME_USER_PATH = "MRS_EXTLIB_USER_PATH"
@@ -84,8 +83,8 @@ def package_exists_in_scope(sql_package_name: str, scope=None) -> bool:
 
 # Check that the package exists in scope.
 # For some reason this check works but there is a bug in pyODBC when asserting this is True.
-assert package_exists_in_scope("{sqlpkgname}", "{scopestr}") != False
-""".format(sqlpkgname=self._name, scopestr=self._scope._name)
+assert package_exists_in_scope("{self._name}", "{self._scope._name}") != False
+"""
 
     @property
     def base_script(self) -> str:
@@ -112,11 +111,11 @@ class DropLibraryBuilder(SQLBuilder):
 
     @property
     def base_script(self) -> str:
-        return """
-DROP EXTERNAL LIBRARY [{}] {authorization}
+        return f"""
+DROP EXTERNAL LIBRARY [{self._name}] {_get_authorization(self._scope)}
 
-{dummy_spees}
-""".format(self._name, authorization=_get_authorization(self._scope), dummy_spees=_get_dummy_spees())
+{_get_dummy_spees()}
+"""
 
 
 def clean_library_name(pkgname: str):

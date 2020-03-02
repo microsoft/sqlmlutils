@@ -88,7 +88,7 @@ class SQLQueryExecutor:
 
     def __enter__(self):
         server=self._connection._server if self._connection._port == "" \
-            else "{servername},{port}".format(servername=self._connection._server, port=self._connection._port)
+            else f"{self._connection._server},{self._connection._port}"
 
         self._cnxn = pyodbc.connect(driver=self._connection._driver,
                                     server=server,

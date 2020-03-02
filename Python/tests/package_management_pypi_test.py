@@ -36,7 +36,7 @@ def _package_no_exist(module_name: str):
         __import__(module_name)
     return True
 
-
+@pytest.mark.skip(reason="No version of tensorflow works with currently installed numpy (1.15.4)")
 def test_install_tensorflow():
     def use_tensorflow():
         import tensorflow as tf

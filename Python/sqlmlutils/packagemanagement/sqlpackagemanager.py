@@ -90,7 +90,7 @@ class SQLPackageManager:
         if scope is None:
             scope = self._get_default_scope()
             
-        print("Uninstalling {} only, not dependencies".format(str(package_name)))
+        print(f"Uninstalling {package_name} only, not dependencies")
         self._drop_sql_package(package_name, scope, out_file)
 
     def list(self):
@@ -116,13 +116,15 @@ class SQLPackageManager:
             query += "?;\n"
         else:
             query += "CURRENT_USER;\n"
+        
+        scope_num = 1 if scope == Scope.private_scope() else 0
 
-        query += "SELECT @principalId = USER_ID(@currentUser);  \
+        query += f"SELECT @principalId = USER_ID(@currentUser);  \
                        SELECT name, language, scope   \
                        FROM sys.external_libraries AS elib   \
                        WHERE elib.principal_id=@principalId   \
-                       AND elib.language='Python' AND elib.scope={0}   \
-                       ORDER BY elib.name ASC;".format(1 if scope == Scope.private_scope() else 0)
+                       AND elib.language='Python' AND elib.scope={scope_num}   \
+                       ORDER BY elib.name ASC;"
         return self._pyexecutor.execute_sql_query(query, owner)
 
     def _drop_sql_package(self, sql_package_name: str, scope: Scope, out_file: str):
@@ -186,14 +188,13 @@ class SQLPackageManager:
                 sqlexecutor._cnxn.commit()
             except Exception as e:
                 sqlexecutor._cnxn.commit()
-                #sqlexecutor._cnxn.rollback()
                 raise RuntimeError("Package installation failed, installed dependencies were rolled back.") from e
 
     @staticmethod
     def _install_single(sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):
-        name = get_package_name_from_file(package_file)
-        version = get_package_version_from_file(package_file)
-        print("Installing {name} version: {version}".format(name=str(name), version=str(version)))
+        name = str(get_package_name_from_file(package_file))
+        version = str(get_package_version_from_file(package_file))
+        print(f"Installing {name} version: {version}")
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             prezip = os.path.join(temporary_directory, name + "PREZIP.zip")
