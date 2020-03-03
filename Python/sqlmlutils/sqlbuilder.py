@@ -22,6 +22,9 @@ All _SQLBuilder classes implement a base_script property. This is the text of th
 return values in their params property.
 """
 
+RETURN_COLUMN_NAME = "return_val"
+STDOUT_COLUMN_NAME = "_stdout_"
+STDERR_COLUMN_NAME = "_stderr_"
 
 class SQLBuilder:
 
@@ -40,7 +43,7 @@ class SpeesBuilder(SQLBuilder):
 
     """
 
-    _WITH_RESULTS_TEXT = "with result sets((_stdout_ varchar(MAX), _stderr_ varchar(MAX)))"
+    _WITH_RESULTS_TEXT = f"with result sets(({STDOUT_COLUMN_NAME} varchar(MAX), {STDERR_COLUMN_NAME} varchar(MAX)))"
 
     def __init__(self,
                  script: str,
@@ -89,8 +92,8 @@ OutputDataSet = DataFrame()
 
 {script}
 
-OutputDataSet["_stdout_"] = [temp_out.getvalue()]
-OutputDataSet["_stderr_"] = [temp_err.getvalue()]
+OutputDataSet["{STDOUT_COLUMN_NAME}"] = [temp_out.getvalue()]
+OutputDataSet["{STDERR_COLUMN_NAME}"] = [temp_err.getvalue()]
 """
 
 class SpeesBuilderFromFunction(SpeesBuilder):
@@ -99,7 +102,7 @@ class SpeesBuilderFromFunction(SpeesBuilder):
     _SpeesBuilderFromFunction objects are used to generate SPEES queries based on a function and given arguments.
     """
 
-    _WITH_RESULTS_TEXT = "with result sets((return_val varchar(MAX), _stdout_ varchar(MAX), _stderr_ varchar(MAX)))"
+    _WITH_RESULTS_TEXT = f"with result sets(({RETURN_COLUMN_NAME} varchar(MAX), {STDOUT_COLUMN_NAME} varchar(MAX), {STDERR_COLUMN_NAME} varchar(MAX)))"
 
     def __init__(self, func: Callable, input_data_query: str = "", *args, **kwargs):
         """Instantiate a _SpeesBuilderFromFunction object.
@@ -146,10 +149,10 @@ pos_args = dill.loads(pos_args_dill)
 func = {function_name}
     
 # call user function with serialized arguments
-return_val = func{func_arguments}
+{RETURN_COLUMN_NAME} = func{func_arguments}
 
 # serialize results of user function and put in DataFrame for return through SQL Satellite channel
-OutputDataSet["return_val"] = [dill.dumps(return_val).hex()]
+OutputDataSet["{RETURN_COLUMN_NAME}"] = [dill.dumps({RETURN_COLUMN_NAME}).hex()]
 """
 
     # Call syntax of the user function
@@ -180,8 +183,8 @@ class StoredProcedureBuilder(SQLBuilder):
         if output_params is None:
             output_params = {}
         
-        output_params["_stdout_"] = str
-        output_params["_stderr_"] = str
+        output_params[STDOUT_COLUMN_NAME] = str
+        output_params[STDERR_COLUMN_NAME] = str
 
         self._script = script
         self._name = name
@@ -218,8 +221,8 @@ _stderr = StringIO()
 sys.stdout = _stdout
 sys.stderr = _stderr
 {self._script}
-_stdout_ = _stdout.getvalue()
-_stderr_ = _stderr.getvalue()'
+{STDOUT_COLUMN_NAME} = _stdout.getvalue()
+{STDERR_COLUMN_NAME} = _stderr.getvalue()'
 {self._script_parameter_text}
 """
 
@@ -358,8 +361,8 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
         if output_params is None:
             output_params = {}
             
-        output_params["_stdout_"] = str
-        output_params["_stderr_"] = str
+        output_params[STDOUT_COLUMN_NAME] = str
+        output_params[STDERR_COLUMN_NAME] = str
 
         self._func = func
         self._name = name
@@ -438,8 +441,8 @@ if type(result) == DataFrame:
 """
 
         trimmed_output_params = output_params.copy()
-        trimmed_output_params.pop("_stdout_", None)
-        trimmed_output_params.pop("_stderr_", None)
+        trimmed_output_params.pop(STDOUT_COLUMN_NAME, None)
+        trimmed_output_params.pop(STDERR_COLUMN_NAME, None)
 
         if len(trimmed_output_params) > 0 or output_data_set_name is not None:
             output_params = self.get_output_params(trimmed_output_params) if len(trimmed_output_params) > 0 else "pass"
@@ -477,19 +480,21 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
                                 for name in self._kwargs]) 
 
         retval = """        
-                DECLARE @_stdout_ nvarchar(MAX),
-                        @_stderr_ nvarchar(MAX)
+                DECLARE @{stdout} nvarchar(MAX),
+                        @{stderr} nvarchar(MAX)
                         {output_declarations}
                         
                 exec {sproc_name}  {parameters}
-                @_stdout_ = @_stdout_ OUTPUT,
-                @_stderr_ = @_stderr_ OUTPUT
+                @{stdout} = @{stdout} OUTPUT,
+                @{stderr} = @{stderr} OUTPUT
                 {output_calls}
 
-                SELECT @_stdout_ as _stdout_,
-                       @_stderr_ as _stderr_
+                SELECT @{stdout} as {stdout},
+                       @{stderr} as {stderr}
                        {output_selects}
-                """.format(output_declarations=self.output_declarations(self._output_params), 
+                """.format(stdout=STDOUT_COLUMN_NAME, 
+                            stderr=STDERR_COLUMN_NAME,
+                            output_declarations=self.output_declarations(self._output_params), 
                             sproc_name=self._name, 
                             parameters=parameters,
                             output_calls=self.output_calls(self._output_params),

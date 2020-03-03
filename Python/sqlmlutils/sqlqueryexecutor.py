@@ -6,6 +6,7 @@ import pyodbc
 from pandas import DataFrame
 from .connectioninfo import ConnectionInfo
 from .sqlbuilder import SQLBuilder
+from .sqlbuilder import STDOUT_COLUMN_NAME, STDERR_COLUMN_NAME
 
 """This module is used to actually execute sql queries. It uses the pymssql module under the hood.
 
@@ -103,8 +104,8 @@ class SQLQueryExecutor:
         self._cnxn.close()
     
     def extract_output(self, output_params : dict):
-        out = output_params.pop("_stdout_", None)
-        err = output_params.pop("_stderr_", None)
+        out = output_params.pop(STDOUT_COLUMN_NAME, None)
+        err = output_params.pop(STDERR_COLUMN_NAME, None)
         if out is not None:
             print(out)
         if err is not None:

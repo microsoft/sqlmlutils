@@ -11,11 +11,8 @@ from .sqlqueryexecutor import execute_query, execute_raw_query
 from .sqlbuilder import SpeesBuilder, SpeesBuilderFromFunction, StoredProcedureBuilder, \
     ExecuteStoredProcedureBuilder, DropStoredProcedureBuilder
 from .sqlbuilder import StoredProcedureBuilderFromFunction
+from .sqlbuilder import RETURN_COLUMN_NAME, STDOUT_COLUMN_NAME, STDERR_COLUMN_NAME
 
-
-RETURN_COLUMN_NAME = "return_val"
-STDOUT_COLUMN_NAME = "_stdout_"
-STDERR_COLUMN_NAME = "_stderr_"
 
 class SQLPythonExecutor:
 
