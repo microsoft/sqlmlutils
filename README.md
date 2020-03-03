@@ -10,17 +10,20 @@ Currently, only the R version of sqlmlutils is supported in Azure SQL Database. 
 To install sqlmlutils, follow the instructions below for Python and R, respectively.
 
 Python:
-1. If your client is a Linux machine, you can skip this step. 
-If your client is a Windows machine: go to https://www.lfd.uci.edu/~gohlke/pythonlibs/#pymssql and download the correct version of pymssql for your client. Run ```pip install pymssql-2.1.4.dev5-cpXX-cpXXm-win_amd64.whl``` on that file to install pymssql.
-2. Run
+To install from PyPI:
+Run
 ```
 pip install sqlmlutils
+```
+To install from file:
+```
+pip install Python/dist/sqlmlutils-0.8.0.zip
 ```
 
 R:
 ```
 R -e "install.packages('RODBCext', repos='https://cran.microsoft.com')"
-R CMD INSTALL sqlmlutils_0.7.1.zip
+R CMD INSTALL R/dist/sqlmlutils_0.7.1.zip
 ```
 
 # Details
@@ -42,7 +45,6 @@ The goal of this utility is to allow users to create and execute stored procedur
 
 ## Package Management
 
-##### In SQL Server 2017, only R package management in Windows is supported.
-##### R and Python package management on both Windows and Linux platforms is supported in SQL Server 2019 CTP 2.4 and later.
+##### R and Python package management with sqlmlutils is supported in SQL Server 2019 CTP 2.4 and later.
 
 With package management users can install packages to a remote SQL database from a client machine. The packages are downloaded on the client and then sent over to SQL databases where they will be installed into library folders. The folders are per-database so packages will always be installed and made available for a specific database. The package management APIs provided a PUBLIC and PRIVATE folders. Packages in the PUBLIC folder are accessible to all database users. Packages in the PRIVATE folder are only accessible by the user who installed the package.

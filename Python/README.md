@@ -4,11 +4,16 @@ sqlmlutils is a python package to help execute Python code on a SQL Server machi
 
 # Installation
 
-Download the zip package file from the dist folder.
-From a command prompt, run
+To install from PyPI, run:
 ```
 pip install sqlmlutils
 ```
+To install from file, run:
+```
+pip install Python/dist/sqlmlutils-0.8.0.zip
+```
+
+
 
 Note: If you encounter errors installing the pymssql dependency and your client is a Windows machine, consider 
 installing the .whl file at the below link (download the file for your Python version and run pip install): 
@@ -201,8 +206,7 @@ assert not sqlpy.check_sproc(sp_name)
 
 ### Package Management
 
-##### In SQL Server 2017, only R package management in Windows is supported.
-##### R and Python package management on both Windows and Linux platforms is supported in SQL Server 2019 CTP 2.4 and later.
+##### Python package management with sqlmlutils is supported in SQL Server 2019 CTP 2.4 and later.
 
 ##### Install and remove packages from SQL Server
 
@@ -234,7 +238,7 @@ pkgmanager.uninstall("astor")
 1. Make sure a SQL Server with an updated ML Services Python is running on localhost. 
 2. Restore the AirlineTestDB from the .bak file in this repo 
 3. Make sure Trusted (Windows) authentication works for connecting to the database
-4. Setup a user with db_owner role with uid: "Tester" and password "FakeT3sterPwd!"
+4. Setup a user with db_owner role (and not server admin) with uid: "Tester" and password "FakeT3sterPwd!"
     
 ### Notable TODOs and open issues
 
