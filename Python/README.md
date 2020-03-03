@@ -230,7 +230,6 @@ val = sqlpy.execute_function_in_sql(import_astor)
 pkgmanager.uninstall("astor")
 ```
 
-
 # Notes for Developers
 
 ### Running the tests

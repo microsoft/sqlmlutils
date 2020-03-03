@@ -120,9 +120,7 @@ dropSproc(connectionString = connection, name = name)
 
 ### Package Management 
 
-
-##### In SQL Server 2017, only R package management in Windows is supported.
-##### R and Python package management on both Windows and Linux platforms is supported in SQL Server 2019 CTP 2.4 and later.
+##### Package management with sqlmlutils is supported in SQL Server 2019 CTP 2.4 and later.
 
 ##### Install and remove packages from the SQL database
 
