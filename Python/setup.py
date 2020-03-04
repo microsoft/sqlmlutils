@@ -16,7 +16,7 @@ setup(
     author_email='joz@microsoft.com',
     install_requires=[
         'pip',
-        'pymssql',
+        'pyodbc',
         'dill',
         'pkginfo',
         'requirements-parser',
