@@ -8,7 +8,7 @@ from .connectioninfo import ConnectionInfo
 from .sqlbuilder import SQLBuilder
 from .sqlbuilder import STDOUT_COLUMN_NAME, STDERR_COLUMN_NAME
 
-"""This module is used to actually execute sql queries. It uses the pymssql module under the hood.
+"""This module is used to actually execute sql queries. It uses the pyodbc module under the hood.
 
 It is mostly setup to work with SQLBuilder objects as defined in sqlbuilder.
 """
