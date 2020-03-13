@@ -368,9 +368,10 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
         self._name = name
         self._output_params = output_params
 
-        # Get function information
-        function_text = textwrap.dedent(inspect.getsource(self._func))
+        # Get function text and escape single quotes
+        function_text = textwrap.dedent(inspect.getsource(self._func)).replace("'","''")
 
+        # Get function arguments and type annotations
         argspec = inspect.getfullargspec(self._func)
         names_of_input_args = argspec.args
         annotations = argspec.annotations
