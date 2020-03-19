@@ -54,11 +54,13 @@ def _drop(package_name: str, ddl_name: str):
 
 
 def _create(module_name: str, package_file: str, class_to_check: str, drop: bool = True):
-    pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=False)
-    pkgmanager.install(package_file)
-    pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=True, class_to_check=class_to_check)
-    if drop:
-        _drop(package_name=module_name, ddl_name=module_name)
+    try:
+        pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=False)
+        pkgmanager.install(package_file)
+        pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=True, class_to_check=class_to_check)
+    finally:
+        if drop:
+            _drop(package_name=module_name, ddl_name=module_name)
 
 
 def _remove_all_new_packages(manager):
@@ -118,10 +120,7 @@ def test_install_whl_files():
 
     for package, module, class_to_check in zip(packages, module_names, classes_to_check):
         full_package = os.path.join(path_to_packages, package)
-        _create(module_name=module, package_file=full_package, class_to_check=class_to_check, drop=False)
-
-    for name in module_names:
-        _drop(package_name=name, ddl_name=name)
+        _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
 
 def test_install_targz_files():

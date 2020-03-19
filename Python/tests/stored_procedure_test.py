@@ -341,7 +341,7 @@ def test_in_df_out_df_dict():
 
 ################
 # Script Tests #
-# ################
+#################
 
 def test_script_no_params():
     script = os.path.join(script_dir, "exec_script_no_params.py")

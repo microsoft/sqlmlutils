@@ -23,7 +23,7 @@ class CreateLibraryBuilder(SQLBuilder):
         authorization=_get_authorization(self._scope)
         dummy_spees=_get_dummy_spees()
 
-        return f"""
+        return """
 set NOCOUNT on  
 -- Drop the library if it exists
 BEGIN TRY
@@ -38,7 +38,11 @@ FROM (CONTENT = ?) WITH (LANGUAGE = 'Python');
 
 -- Dummy SPEES
 {dummy_spees}
-"""
+""".format(
+    sqlpkgname=sqlpkgname,
+    authorization=authorization,
+    dummy_spees=dummy_spees
+)
 
 
 class CheckLibraryBuilder(SQLBuilder):
@@ -49,7 +53,7 @@ class CheckLibraryBuilder(SQLBuilder):
 
     @property
     def params(self):
-        return f""" 
+        return """ 
 import os
 import re
 _ENV_NAME_USER_PATH = "MRS_EXTLIB_USER_PATH"
@@ -83,8 +87,8 @@ def package_exists_in_scope(sql_package_name: str, scope=None) -> bool:
 
 # Check that the package exists in scope.
 # For some reason this check works but there is a bug in pyODBC when asserting this is True.
-assert package_exists_in_scope("{self._name}", "{self._scope._name}") != False
-"""
+assert package_exists_in_scope("{name}", "{scope}") != False
+""".format(name=self._name, scope=self._scope._name)
 
     @property
     def base_script(self) -> str:
@@ -111,11 +115,15 @@ class DropLibraryBuilder(SQLBuilder):
 
     @property
     def base_script(self) -> str:
-        return f"""
-DROP EXTERNAL LIBRARY [{self._name}] {_get_authorization(self._scope)}
+        return """
+DROP EXTERNAL LIBRARY [{name}] {auth}
 
-{_get_dummy_spees()}
-"""
+{dummy_spees}
+""".format(
+    name=self._name,
+    auth=_get_authorization(self._scope),
+    dummy_spees=_get_dummy_spees()
+)
 
 
 def clean_library_name(pkgname: str):

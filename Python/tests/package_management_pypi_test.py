@@ -4,25 +4,30 @@
 import sqlmlutils
 import os
 import pytest
-from sqlmlutils import SQLPythonExecutor, SQLPackageManager
-from sqlmlutils.packagemanagement.scope import Scope
+from sqlmlutils import SQLPythonExecutor, SQLPackageManager, Scope
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
 import io
 from contextlib import redirect_stdout
 
-from conftest import connection
+from conftest import connection, scope
 
-def _drop_all_ddl_packages(conn):
+def _drop_all_ddl_packages(conn, scope):
     pkgs = _get_sql_package_table(conn)
-    for pkg in pkgs:
-        try:
-            SQLPackageManager(conn)._drop_sql_package(pkg['name'], scope=Scope.private_scope())
-        except Exception:
-            pass
+    if(len(pkgs.index) > 0 ):
+        for pkg in pkgs['name']:
+            if pkg not in initial_list:
+                try:
+                    SQLPackageManager(conn)._drop_sql_package(pkg, scope=scope)
+                except Exception as e:
+                    pass
+
+def _get_initial_list(conn, scope):
+    pkgs = _get_sql_package_table(conn)
+    return pkgs['name']
 
 pyexecutor = SQLPythonExecutor(connection)
 pkgmanager = SQLPackageManager(connection)
-_drop_all_ddl_packages(connection)
+initial_list = _get_sql_package_table(connection)['name']
 
 
 def _package_exists(module_name: str):
@@ -42,31 +47,33 @@ def test_install_tensorflow():
         import tensorflow as tf
         node1 = tf.constant(3.0, tf.float32)
         return str(node1.dtype)
-        
-    pkgmanager.install("tensorflow", upgrade=True)
-    val = pyexecutor.execute_function_in_sql(use_tensorflow)
-    assert 'float32' in val
+    
+    try:
+        pkgmanager.install("tensorflow", upgrade=True)
+        val = pyexecutor.execute_function_in_sql(use_tensorflow)
+        assert 'float32' in val
 
-    pkgmanager.uninstall("tensorflow")
-    val = pyexecutor.execute_function_in_sql(_package_no_exist, "tensorflow")
-    assert val
-
-    _drop_all_ddl_packages(connection)
+        pkgmanager.uninstall("tensorflow")
+        val = pyexecutor.execute_function_in_sql(_package_no_exist, "tensorflow")
+        assert val
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 
 def test_install_many_packages():
     packages = ["multiprocessing_on_dill", "simplejson"]
+    
+    try:
+        for package in packages:
+            pkgmanager.install(package, upgrade=True)
+            val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
+            assert val
 
-    for package in packages:
-        pkgmanager.install(package, upgrade=True)
-        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
-        assert val
-
-        pkgmanager.uninstall(package)
-        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
-        assert val
-
-        _drop_all_ddl_packages(connection)
+            pkgmanager.uninstall(package)
+            val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
+            assert val
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 
 def test_install_version():
@@ -77,102 +84,109 @@ def test_install_version():
         mod = __import__(module_name)
         return mod.__version__ == version
 
-    pkgmanager.install(package, version=v)
-    val = pyexecutor.execute_function_in_sql(_package_version_exists, module_name=package, version=v)
-    assert val
+    try:
+        pkgmanager.install(package, version=v)
+        val = pyexecutor.execute_function_in_sql(_package_version_exists, module_name=package, version=v)
+        assert val
 
-    pkgmanager.uninstall(package)
-    val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
-    assert val
-
-    _drop_all_ddl_packages(connection)
+        pkgmanager.uninstall(package)
+        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
+        assert val
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 
 def test_dependency_resolution():
     package = "latex"
 
-    pkgmanager.install(package, upgrade=True)
-    val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
-    assert val
+    try:
+        pkgmanager.install(package, upgrade=True)
+        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
+        assert val
 
-    pkgs = _get_package_names_list(connection)
+        pkgs = _get_package_names_list(connection)
 
-    assert package in pkgs
-    assert "funcsigs" in pkgs
+        assert package in pkgs
+        assert "funcsigs" in pkgs
 
-    pkgmanager.uninstall(package)
-    val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
-    assert val
+        pkgmanager.uninstall(package)
+        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
+        assert val
 
-    _drop_all_ddl_packages(connection)
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 
 def test_upgrade_parameter():
 
-    pkg = "cryptography"
+    try:
+        pkg = "cryptography"
 
-    first_version = "2.7"
-    second_version = "2.8"
-    
-    # Install package first so we can test upgrade param
-    pkgmanager.install(pkg, version=first_version)
-    
-    # Get sql packages
-    originalsqlpkgs = _get_sql_package_table(connection)
+        first_version = "2.7"
+        second_version = "2.8"
+        
+        # Install package first so we can test upgrade param
+        pkgmanager.install(pkg, version=first_version)
+        
+        # Get sql packages
+        originalsqlpkgs = _get_sql_package_table(connection)
 
-    output = io.StringIO()
-    with redirect_stdout(output):
-        pkgmanager.install(pkg, upgrade=False, version=second_version)
-    assert "exists on server. Set upgrade to True" in output.getvalue()
+        output = io.StringIO()
+        with redirect_stdout(output):
+            pkgmanager.install(pkg, upgrade=False, version=second_version)
+        assert "exists on server. Set upgrade to True" in output.getvalue()
 
-    # Make sure nothing excess was accidentally installed
+        # Make sure nothing excess was accidentally installed
 
-    sqlpkgs = _get_sql_package_table(connection)
-    assert len(sqlpkgs) == len(originalsqlpkgs)
+        sqlpkgs = _get_sql_package_table(connection)
+        assert len(sqlpkgs) == len(originalsqlpkgs)
 
-    #################
+        #################
 
-    def check_version():
-        import cryptography as cp
-        return cp.__version__
+        def check_version():
+            import cryptography as cp
+            return cp.__version__
 
-    oldversion = pyexecutor.execute_function_in_sql(check_version)
+        oldversion = pyexecutor.execute_function_in_sql(check_version)
 
-    pkgmanager.install(pkg, upgrade=True, version=second_version)
+        pkgmanager.install(pkg, upgrade=True, version=second_version)
 
-    afterinstall = _get_sql_package_table(connection)
-    assert len(afterinstall) >= len(originalsqlpkgs)
+        afterinstall = _get_sql_package_table(connection)
+        assert len(afterinstall) >= len(originalsqlpkgs)
 
-    version = pyexecutor.execute_function_in_sql(check_version)
-    assert version > oldversion
+        version = pyexecutor.execute_function_in_sql(check_version)
+        assert version > oldversion
 
-    pkgmanager.uninstall("cryptography")
+        pkgmanager.uninstall("cryptography")
 
-    sqlpkgs = _get_sql_package_table(connection)
-    assert len(sqlpkgs) == len(afterinstall) - 1
+        sqlpkgs = _get_sql_package_table(connection)
+        assert len(sqlpkgs) == len(afterinstall) - 1
 
-    _drop_all_ddl_packages(connection)
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 
 def test_install_abslpy():
-    pkgmanager.install("absl-py")
-
     def useit():
         import absl
         return absl.__file__
-
-    pyexecutor.execute_function_in_sql(useit)
-
-    pkgmanager.uninstall("absl-py")
 
     def dontuseit():
         import pytest
         with pytest.raises(Exception):
             import absl
+        
+    try:
+        pkgmanager.install("absl-py")
 
-    pyexecutor.execute_function_in_sql(dontuseit)
+        pyexecutor.execute_function_in_sql(useit)
 
-    _drop_all_ddl_packages(connection)
+        pkgmanager.uninstall("absl-py")
+
+        pyexecutor.execute_function_in_sql(dontuseit)
+
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 
 def test_install_theano():
@@ -182,15 +196,17 @@ def test_install_theano():
         import theano.tensor as T
         return str(T)
 
-    pyexecutor.execute_function_in_sql(useit)
+    try:
+        pyexecutor.execute_function_in_sql(useit)
 
-    pkgmanager.uninstall("Theano")
+        pkgmanager.uninstall("Theano")
 
-    pkgmanager.install("theano")
-    pyexecutor.execute_function_in_sql(useit)
-    pkgmanager.uninstall("theano")
+        pkgmanager.install("theano")
+        pyexecutor.execute_function_in_sql(useit)
+        pkgmanager.uninstall("theano")
 
-    _drop_all_ddl_packages(connection)
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 
 def test_already_installed_popular_ml_packages():
@@ -210,11 +226,12 @@ def test_installing_popular_ml_packages():
         val = __import__(pkgname)
         return str(val)
 
-    for package in newpackages:
-        pkgmanager.install(package)
-        pyexecutor.execute_function_in_sql(checkit, pkgname=package)
-
-    _drop_all_ddl_packages(connection)
+    try:
+        for package in newpackages:
+            pkgmanager.install(package)
+            pyexecutor.execute_function_in_sql(checkit, pkgname=package)
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 
 # TODO: find a bad pypi package to test this scenario

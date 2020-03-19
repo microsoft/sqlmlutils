@@ -90,7 +90,7 @@ class SQLPackageManager:
         if scope is None:
             scope = self._get_default_scope()
             
-        print(f"Uninstalling {package_name} only, not dependencies")
+        print("Uninstalling {package_name} only, not dependencies".format(package_name=package_name))
         self._drop_sql_package(package_name, scope, out_file)
 
     def list(self):
@@ -119,15 +119,15 @@ class SQLPackageManager:
         
         scope_num = 1 if scope == Scope.private_scope() else 0
 
-        query += f"SELECT @principalId = USER_ID(@currentUser);  \
+        query += "SELECT @principalId = USER_ID(@currentUser);  \
                        SELECT name, language, scope   \
                        FROM sys.external_libraries AS elib   \
                        WHERE elib.principal_id=@principalId   \
                        AND elib.language='Python' AND elib.scope={scope_num}   \
-                       ORDER BY elib.name ASC;"
+                       ORDER BY elib.name ASC;".format(scope_num=scope_num)
         return self._pyexecutor.execute_sql_query(query, owner)
 
-    def _drop_sql_package(self, sql_package_name: str, scope: Scope, out_file: str):
+    def _drop_sql_package(self, sql_package_name: str, scope: Scope, out_file: str = None):
         builder = DropLibraryBuilder(sql_package_name=sql_package_name, scope=scope)
         execute_query(builder, self._connection_info, out_file)
 
@@ -183,18 +183,19 @@ class SQLPackageManager:
                 print("Installing dependencies...")
                 for pkgfile in dependency_files:
                     self._install_single(sqlexecutor, pkgfile, scope, out_file=out_file)
+
                 print("Done with dependencies, installing main package...")
                 self._install_single(sqlexecutor, target_package_file, scope, True, out_file=out_file)
                 sqlexecutor._cnxn.commit()
             except Exception as e:
-                sqlexecutor._cnxn.commit()
+                sqlexecutor._cnxn.rollback()
                 raise RuntimeError("Package installation failed, installed dependencies were rolled back.") from e
 
     @staticmethod
     def _install_single(sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):
         name = str(get_package_name_from_file(package_file))
         version = str(get_package_version_from_file(package_file))
-        print(f"Installing {name} version: {version}")
+        print("Installing {name} version: {version}".format(name=name, version=version))
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             prezip = os.path.join(temporary_directory, name + "PREZIP.zip")

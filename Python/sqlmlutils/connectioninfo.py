@@ -52,9 +52,15 @@ class ConnectionInfo:
 
     @property
     def connection_string(self):
-        server=self._server if self._port == "" else f"{self._server},{self._port}"
+        server=self._server if self._port == "" \
+            else "{server},{port}".format(server=self._server, port=self._port)
         
         auth="Trusted_Connection=Yes" if self._uid == "" \
-            else f"uid={self._uid};pwd={self._pwd}"
+            else "uid={uid};pwd={pwd}".format(uid=self._uid, pwd=self._pwd)
 
-        return f"Driver={self._driver};Server={server};Database={self._database};{auth};"
+        return "Driver={driver};Server={server};Database={database};{auth};".format(
+            driver = self._driver,
+            server = server,
+            database = self._database,
+            auth = auth
+        )

@@ -43,7 +43,8 @@ class SpeesBuilder(SQLBuilder):
 
     """
 
-    _WITH_RESULTS_TEXT = f"with result sets(({STDOUT_COLUMN_NAME} varchar(MAX), {STDERR_COLUMN_NAME} varchar(MAX)))"
+    _WITH_RESULTS_TEXT = "with result sets(({stdout} varchar(MAX), {stderr} varchar(MAX)))".format(
+        stdout=STDOUT_COLUMN_NAME, stderr=STDERR_COLUMN_NAME)
 
     def __init__(self,
                  script: str,
@@ -64,37 +65,40 @@ class SpeesBuilder(SQLBuilder):
 
     @property
     def base_script(self):
-        return f"""
+        return """
 exec sp_execute_external_script
 @language = N'Python',
 @script = ?,
 @input_data_1 = ?
-{self._script_parameters_text}
-{self._with_results_text}
-        """
+{script_parameters_text}
+{with_results_text}
+""".format(script_parameters_text=self._script_parameters_text,
+            with_results_text=self._with_results_text)
 
     @property
     def params(self):
         return self._script, self._input_data_query
         
     def modify_script(self, script):
-        return f"""
+        return """
 import sys
 from io import StringIO
 from pandas import DataFrame
 
-temp_out = StringIO()
-temp_err = StringIO()
+_temp_out = StringIO()
+_temp_err = StringIO()
 
-sys.stdout = temp_out
-sys.stderr = temp_err
+sys.stdout = _temp_out
+sys.stderr = _temp_err
 OutputDataSet = DataFrame()
 
 {script}
 
-OutputDataSet["{STDOUT_COLUMN_NAME}"] = [temp_out.getvalue()]
-OutputDataSet["{STDERR_COLUMN_NAME}"] = [temp_err.getvalue()]
-"""
+OutputDataSet["{stdout}"] = [_temp_out.getvalue()]
+OutputDataSet["{stderr}"] = [_temp_err.getvalue()]
+""".format(script=script,
+        stdout=STDOUT_COLUMN_NAME,
+        stderr=STDERR_COLUMN_NAME)
 
 class SpeesBuilderFromFunction(SpeesBuilder):
 
@@ -102,7 +106,11 @@ class SpeesBuilderFromFunction(SpeesBuilder):
     _SpeesBuilderFromFunction objects are used to generate SPEES queries based on a function and given arguments.
     """
 
-    _WITH_RESULTS_TEXT = f"with result sets(({RETURN_COLUMN_NAME} varchar(MAX), {STDOUT_COLUMN_NAME} varchar(MAX), {STDERR_COLUMN_NAME} varchar(MAX)))"
+    _WITH_RESULTS_TEXT = "with result sets(({returncol} varchar(MAX), {stdout} varchar(MAX), {stderr} varchar(MAX)))".format(
+        returncol=RETURN_COLUMN_NAME,
+        stdout=STDOUT_COLUMN_NAME,
+        stderr=STDERR_COLUMN_NAME
+    )
 
     def __init__(self, func: Callable, input_data_query: str = "", *args, **kwargs):
         """Instantiate a _SpeesBuilderFromFunction object.
@@ -132,7 +140,8 @@ class SpeesBuilderFromFunction(SpeesBuilder):
         pos_args_dill = dill.dumps(args).hex()
         function_name = func.__name__
         func_arguments=SpeesBuilderFromFunction._func_arguments(with_inputdf)
-        return f"""
+
+        return """
 {function_text} 
         
 import dill
@@ -149,11 +158,18 @@ pos_args = dill.loads(pos_args_dill)
 func = {function_name}
     
 # call user function with serialized arguments
-{RETURN_COLUMN_NAME} = func{func_arguments}
+{returncol} = func{func_arguments}
 
 # serialize results of user function and put in DataFrame for return through SQL Satellite channel
-OutputDataSet["{RETURN_COLUMN_NAME}"] = [dill.dumps({RETURN_COLUMN_NAME}).hex()]
-"""
+OutputDataSet["{returncol}"] = [dill.dumps({returncol}).hex()]
+""".format(
+    function_text=function_text,
+    args_dill=args_dill,
+    pos_args_dill=pos_args_dill,
+    function_name=function_name,
+    returncol=RETURN_COLUMN_NAME,
+    func_arguments=func_arguments
+)
 
     # Call syntax of the user function
     # When with_inputdf is true, the user function will always take the "InputDataSet" magic variable as its first
@@ -206,9 +222,9 @@ class StoredProcedureBuilder(SQLBuilder):
         self._param_declarations = self.combine_in_out(
             self._in_parameter_declarations, self._out_parameter_declarations)
 
-        return f"""
-CREATE PROCEDURE {self._name} 
-    {self._param_declarations} 
+        return """
+CREATE PROCEDURE {name} 
+    {param_declarations} 
 AS
 SET NOCOUNT ON;
 EXEC sp_execute_external_script
@@ -220,11 +236,18 @@ _stdout = StringIO()
 _stderr = StringIO()
 sys.stdout = _stdout
 sys.stderr = _stderr
-{self._script}
-{STDOUT_COLUMN_NAME} = _stdout.getvalue()
-{STDERR_COLUMN_NAME} = _stderr.getvalue()'
-{self._script_parameter_text}
-"""
+{script}
+{stdout} = _stdout.getvalue()
+{stderr} = _stderr.getvalue()'
+{script_parameter_text}
+""".format(
+    name=self._name,
+    param_declarations=self._param_declarations,
+    script=self._script,
+    stdout=STDOUT_COLUMN_NAME,
+    stderr=STDERR_COLUMN_NAME,
+    script_parameter_text=self._script_parameter_text
+)
 
     def script_parameter_text(self, in_names: List[str], in_types: dict, out_names: List[str], out_types: dict) -> str:
         if not in_names and not out_names:
@@ -272,7 +295,10 @@ sys.stderr = _stderr
         params_passing = self.combine_in_out(in_params_passing, out_params_passing)
 
         if params_declaration != "":
-            script_params += f"\n@params = N'{params_declaration}',\n    {params_passing}"
+            script_params += "\n@params = N'{params_declaration}',\n    {params_passing}".format(
+                params_declaration=params_declaration,
+                params_passing=params_passing
+            )
 
         return script_params
 
@@ -286,15 +312,16 @@ sys.stderr = _stderr
 
     @staticmethod
     def get_input_data_set(name):
-        return f"@input_data_1 = @{name},\n@input_data_1_name = N'{name}'"
+        return "@input_data_1 = @{name},\n@input_data_1_name = N'{name}'".format(name=name)
 
     @staticmethod
     def get_output_data_set(name):
-        return f"@output_data_1_name = N'{name}'"
+        return "@output_data_1_name = N'{name}'".format(name=name)
 
     @staticmethod
     def get_declarations(names_of_args: List[str], type_annotations: dict, outputs: bool = False):
-            return ",\n    ".join([f"@{name}" + " {sqltype}{output}".format(
+            return ",\n    ".join(["@{name} {sqltype}{output}".format(
+                                        name = name,
                                         sqltype = StoredProcedureBuilder.to_sql_type(type_annotations.get(name, None)),
                                         output = " OUTPUT" if outputs else "") 
                 for name in names_of_args])
@@ -314,8 +341,10 @@ sys.stderr = _stderr
 
     @staticmethod
     def get_params_passing(names_of_args, outputs: bool = False):
-        return ",\n    ".join([f"@{name} = @{name}" + "{output}".format(output=" OUTPUT" if outputs else "")
-                               for name in names_of_args])
+        return ",\n    ".join(["@{name} = @{name} {output}".format(
+                                    name=name,
+                                    output=" OUTPUT" if outputs else "")
+                for name in names_of_args])
 
 
 class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
@@ -395,7 +424,7 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
             raise ValueError("Number of argument annotations doesn't match the number of arguments!")
         if set(names_of_input_args) != set(self._input_params.keys()):
             raise ValueError("Names of arguments do not match the annotation keys!")
-
+                
         calling_text = self.get_function_calling_text(self._func, names_of_input_args)
 
         output_data_set = None
@@ -408,11 +437,15 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
         ending = self.get_ending(self._output_params, output_data_set)
         # Creates the base python script to put in the SPEES query.
         # Arguments to function are passed by name into script using SPEES @params argument.
-        self._script = f"""          
+        self._script = """          
 {function_text}
 {calling_text}
 {ending}
-"""
+""".format(
+    function_text=function_text,
+    calling_text=calling_text,
+    ending=ending
+)
 
         self._in_parameter_declarations = self.get_declarations(names_of_input_args, self._input_params)
         self._out_parameter_declarations = self.get_declarations(names_of_output_args, self._output_params,
@@ -429,17 +462,18 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
     def get_function_calling_text(func: Callable, names_of_args: List[str]):
         # For a function named foo with signature def foo(arg1, arg2, arg3)...
         # kwargs_text is 'arg1=arg1, arg2=arg2, arg3=arg3'
-        kwargs_text = ", ".join(f"{name}={name}" for name in names_of_args)
+        kwargs_text = ", ".join("{name}={name}".format(name=name) for name in names_of_args)
+
         # returns 'foo(arg1=arg2, arg2=arg2, arg3=arg3)'
-        return "result = " + func.__name__ + f"({kwargs_text})"
+        return "result = {name}({kwargs})".format(name=func.__name__, kwargs=kwargs_text)
 
     # Convert results to Output data frame and Output parameters
     def get_ending(self, output_params: dict, output_data_set_name: str):
         out_df = output_data_set_name if output_data_set_name is not None else "OutputDataSet"
-        res = f"""
+        res = """
 if type(result) == DataFrame:
     {out_df} = result
-"""
+""".format(out_df = out_df)
 
         trimmed_output_params = output_params.copy()
         trimmed_output_params.pop(STDOUT_COLUMN_NAME, None)
@@ -447,17 +481,18 @@ if type(result) == DataFrame:
 
         if len(trimmed_output_params) > 0 or output_data_set_name is not None:
             output_params = self.get_output_params(trimmed_output_params) if len(trimmed_output_params) > 0 else "pass"
-            res += f"""
+            res += """
 elif type(result) == dict:
     {output_params}
 elif result is not None:
     raise TypeError("Must return a DataFrame or dictionary with output parameters or None") 
-"""
+""".format(output_params = output_params)
         return res
 
     @staticmethod
     def get_output_params(output_params: dict):
-        return "\n    ".join([f'{name} = result["{name}"]' for name in list(output_params)])
+        return "\n    ".join(['{name} = result["{name}"]'.format(name=name) 
+                                for name in list(output_params)])
 
 
 class ExecuteStoredProcedureBuilder(SQLBuilder):
@@ -505,13 +540,13 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
     @staticmethod
     def format_value(value) -> str:
         if isinstance(value, str):
-            return f"'{value}'"
+            return "'{value}'".format(value=value)
         elif isinstance(value, int) or isinstance(value, float):
             return str(value)
         elif isinstance(value, bool):
             return str(int(value))
         else:
-            raise ValueError(f"Parameter type {str(type(value))} not supported.")
+            raise ValueError("Parameter type {value_type} not supported.".format(value_type = str(type(value))))
     
     def output_declarations(self, output_params):
         retval = ""
@@ -524,14 +559,14 @@ class ExecuteStoredProcedureBuilder(SQLBuilder):
     def output_calls(self, output_params):
         retval = ""
         if output_params is not None and len(output_params) > 0:
-            retval += "".join([f", @{name} = @{name} OUTPUT"
+            retval += "".join([", @{name} = @{name} OUTPUT".format(name=name)
                                 for name in output_params])
         return retval
 
     def output_selects(self, output_params):
         retval = ""
         if output_params is not None and len(output_params) > 0:
-            retval += "".join([f", @{name} as {name}"
+            retval += "".join([", @{name} as {name}".format(name=name)
                                 for name in output_params])
         return retval
 
@@ -543,6 +578,4 @@ class DropStoredProcedureBuilder(SQLBuilder):
 
     @property
     def base_script(self) -> str:
-        return f"""
-drop procedure {self._name}
-"""
+        return "drop procedure {name}".format(name=self._name)

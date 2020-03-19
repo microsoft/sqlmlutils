@@ -46,8 +46,8 @@ class SQLPythonExecutor:
         >>> print(ret)
         [0.28366218546322625, 0.28366218546322625]
         """
-        df = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
-        results, output, error = self._get_results(df[0])
+        df, _ = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
+        results, output, error = self._get_results(df)
         if output is not None: 
             print(output)
         if error is not None:

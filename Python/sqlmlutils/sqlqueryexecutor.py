@@ -64,7 +64,7 @@ class SQLQueryExecutor:
                     column_names = [element[0] for element in self._cursor.description]
                     rows = [tuple(t) for t in self._cursor.fetchall()]
                     df = DataFrame(rows, columns=column_names)
-                    if "_stdout_" in column_names:
+                    if STDOUT_COLUMN_NAME in column_names:
                         self.extract_output(dict(zip(column_names, rows[0])))
                 
                 # Get output parameters
@@ -76,20 +76,23 @@ class SQLQueryExecutor:
                             rows = [tuple(t) for t in self._cursor.fetchall()]
                             output_params = dict(zip(column_names, rows[0])) 
                             
-                            if "_stdout_" in column_names:
+                            if STDOUT_COLUMN_NAME in column_names:
                                 self.extract_output(output_params)
                             
                     except pyodbc.ProgrammingError:
                         continue
                 
         except Exception as e:
-            raise RuntimeError("Error in SQL Execution") from e
+            raise RuntimeError("Error in SQL Execution: " + str(e))
         
         return df, output_params
 
     def __enter__(self):
         server=self._connection._server if self._connection._port == "" \
-            else f"{self._connection._server},{self._connection._port}"
+            else "{server},{port}".format(
+                server=self._connection._server, 
+                port=self._connection._port
+            )
 
         self._cnxn = pyodbc.connect(driver=self._connection._driver,
                                     server=server,
