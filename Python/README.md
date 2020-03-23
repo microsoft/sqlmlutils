@@ -10,7 +10,7 @@ pip install sqlmlutils
 ```
 To install from file, run:
 ```
-pip install Python/dist/sqlmlutils-0.8.0.zip
+pip install Python/dist/sqlmlutils-1.0.0.zip
 ```
 
 
