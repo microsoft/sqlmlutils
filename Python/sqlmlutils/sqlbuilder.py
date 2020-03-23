@@ -1,13 +1,13 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Callable, List
 import abc
 import dill
 import inspect
 import textwrap
-from pandas import DataFrame
 import warnings
+from pandas import DataFrame
+from typing import Callable, List
 
 """
 _SQLBuilder implementations are used to generate SQL scripts to execute_function_in_sql Python functions and 

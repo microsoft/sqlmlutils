@@ -1,4 +1,4 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
 import io
@@ -9,10 +9,8 @@ from contextlib import redirect_stdout
 
 import pytest
 
-import sqlmlutils
-from sqlmlutils import SQLPackageManager, SQLPythonExecutor
+from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Scope
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
-from sqlmlutils.packagemanagement.scope import Scope
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
 from conftest import connection
@@ -205,7 +203,7 @@ def test_scope():
         import testpackageA
         return testpackageA.__file__
 
-    _revotesterconnection = sqlmlutils.ConnectionInfo(server="localhost",
+    _revotesterconnection = ConnectionInfo(server="localhost",
                                                       database="AirlineTestDB",
                                                       uid="Tester",
                                                       pwd="FakeT3sterPwd!")

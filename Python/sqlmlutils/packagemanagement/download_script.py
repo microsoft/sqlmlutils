@@ -1,10 +1,11 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from distutils.version import LooseVersion
 import pip
-import warnings
 import sys
+import warnings
+
+from distutils.version import LooseVersion
 
 pipversion = LooseVersion(pip.__version__ )
 

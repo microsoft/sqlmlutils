@@ -1,9 +1,11 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import sys
 import pyodbc
+import sys
+
 from pandas import DataFrame
+
 from .connectioninfo import ConnectionInfo
 from .sqlbuilder import SQLBuilder
 from .sqlbuilder import STDOUT_COLUMN_NAME, STDERR_COLUMN_NAME
@@ -47,6 +49,12 @@ class SQLQueryExecutor:
                 with open(out_file,"a") as f:
                     if params is not None:
                         script = query.replace("?", "N'%s'")
+
+                        # Convert bytearray to hex so user can run as a script
+                        #
+                        if type(params) is bytearray:
+                            params = str('0x' + params.hex())
+                            
                         f.write(script % params)
                     else:
                         f.write(query)

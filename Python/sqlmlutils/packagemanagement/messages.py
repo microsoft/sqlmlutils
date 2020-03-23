@@ -1,6 +1,9 @@
+# Copyright(c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 def no_upgrade(pkgname: str, serverversion: str, pkgversion: str = ""):
     return """
-Package {pkgname} exists on server. Set upgrade to True in install to force upgrade."
+Package {pkgname} exists on server. Set upgrade to True in install to force upgrade.
 The version of {pkgname} you are trying to install is {pkgversion}.
 The version installed on the server is {serverversion}
     """.format(

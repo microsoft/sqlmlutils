@@ -1,4 +1,8 @@
+# Copyright(c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import os
+
 from sqlmlutils import ConnectionInfo, Scope
 
 driver = os.environ['DRIVER'] if 'DRIVER' in os.environ else "SQL Server"

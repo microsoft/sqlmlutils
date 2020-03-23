@@ -1,9 +1,10 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from sqlmlutils.packagemanagement.scope import Scope
 import os
 import re
+
+from sqlmlutils.packagemanagement.scope import Scope
 
 _ENV_NAME_USER_PATH = "MRS_EXTLIB_USER_PATH"
 _ENV_NAME_SHARED_PATH = "MRS_EXTLIB_SHARED_PATH"

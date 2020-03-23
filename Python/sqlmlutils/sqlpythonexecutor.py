@@ -1,9 +1,10 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import sys
-from typing import Callable
 import dill
+import sys
+
+from typing import Callable
 from pandas import DataFrame
 
 from .connectioninfo import ConnectionInfo
@@ -122,6 +123,9 @@ class SQLPythonExecutor:
         if output_params is None:
             output_params = {}
 
+        # We modify input_params/output_params because we add stdout and stderr as params. 
+        # We copy here to avoid modifying the underlying contents.
+        #
         in_copy = input_params.copy() if input_params is not None else None
         out_copy = output_params.copy() if output_params is not None else None
 
@@ -163,6 +167,9 @@ class SQLPythonExecutor:
         except FileNotFoundError:
             raise FileNotFoundError("File does not exist!")
 
+        # We modify input_params/output_params because we add stdout and stderr as params. 
+        # We copy here to avoid modifying the underlying contents.
+        #
         in_copy = input_params.copy() if input_params is not None else None
         out_copy = output_params.copy() if output_params is not None else None
         
@@ -199,6 +206,10 @@ class SQLPythonExecutor:
         :return: tuple with a DataFrame representing the output data set of the stored procedure 
                  and a dictionary of output parameters
         """
+        
+        # We modify output_params because we add stdout and stderr as output params. 
+        # We copy here to avoid modifying the underlying contents.
+        #
         out_copy = output_params.copy() if output_params is not None else None
         return execute_query(ExecuteStoredProcedureBuilder(name, out_copy, **kwargs), 
                             self._connection_info)

@@ -1,22 +1,20 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
 import os
 import tempfile
-import zipfile
 import warnings
+import zipfile
 
 from sqlmlutils import ConnectionInfo, SQLPythonExecutor
-from sqlmlutils.sqlqueryexecutor import execute_query
-from sqlmlutils.packagemanagement.packagesqlbuilder import clean_library_name
-from sqlmlutils.packagemanagement import servermethods
-from sqlmlutils.sqlqueryexecutor import SQLQueryExecutor
+from sqlmlutils.packagemanagement import messages, servermethods
 from sqlmlutils.packagemanagement.dependencyresolver import DependencyResolver
+from sqlmlutils.packagemanagement.packagesqlbuilder import CreateLibraryBuilder, CheckLibraryBuilder, \
+    DropLibraryBuilder, clean_library_name
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
-from sqlmlutils.packagemanagement.scope import Scope
-from sqlmlutils.packagemanagement import messages
 from sqlmlutils.packagemanagement.pkgutils import get_package_name_from_file, get_package_version_from_file
-from sqlmlutils.packagemanagement.packagesqlbuilder import CreateLibraryBuilder, CheckLibraryBuilder, DropLibraryBuilder
+from sqlmlutils.packagemanagement.scope import Scope
+from sqlmlutils.sqlqueryexecutor import execute_query, SQLQueryExecutor
 
 
 class SQLPackageManager:

@@ -1,7 +1,7 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
 from .connectioninfo import ConnectionInfo
 from .sqlpythonexecutor import SQLPythonExecutor
-from .packagemanagement.sqlpackagemanager import SQLPackageManager
 from .packagemanagement.scope import Scope
+from .packagemanagement.sqlpackagemanager import SQLPackageManager

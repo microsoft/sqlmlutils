@@ -1,10 +1,9 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
 import operator
 
 from distutils.version import LooseVersion
-
 
 class DependencyResolver:
 

@@ -1,6 +1,10 @@
+# Copyright(c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+import pyodbc
+
 from sqlmlutils.sqlbuilder import SQLBuilder
 from sqlmlutils.packagemanagement.scope import Scope
-import pyodbc
 
 
 class CreateLibraryBuilder(SQLBuilder):
@@ -13,8 +17,8 @@ class CreateLibraryBuilder(SQLBuilder):
     @property
     def params(self):
         with open(self._filename, "rb") as f:
-            bits = f.read()
-        pkgdatastr = pyodbc.Binary(bits)
+            package_bits = f.read()
+        pkgdatastr = pyodbc.Binary(package_bits)
         return pkgdatastr
 
     @property

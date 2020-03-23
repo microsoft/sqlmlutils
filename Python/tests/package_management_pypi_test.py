@@ -1,13 +1,13 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import sqlmlutils
+import io
 import os
 import pytest
-from sqlmlutils import SQLPythonExecutor, SQLPackageManager, Scope
-from package_helper_functions import _get_sql_package_table, _get_package_names_list
-import io
+
 from contextlib import redirect_stdout
+from package_helper_functions import _get_sql_package_table, _get_package_names_list
+from sqlmlutils import SQLPythonExecutor, SQLPackageManager, Scope
 
 from conftest import connection, scope
 
@@ -28,7 +28,6 @@ def _get_initial_list(conn, scope):
 pyexecutor = SQLPythonExecutor(connection)
 pkgmanager = SQLPackageManager(connection)
 initial_list = _get_sql_package_table(connection)['name']
-
 
 def _package_exists(module_name: str):
     mod = __import__(module_name)

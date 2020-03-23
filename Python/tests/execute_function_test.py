@@ -1,14 +1,14 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import pytest
-from contextlib import redirect_stdout, redirect_stderr
 import io
 import os
+import pytest
 
-from sqlmlutils import SQLPythonExecutor
-from sqlmlutils import ConnectionInfo
+from contextlib import redirect_stdout, redirect_stderr
 from pandas import DataFrame
+
+from sqlmlutils import ConnectionInfo, SQLPythonExecutor
 from conftest import driver, server, database, uid, pwd
 
 connection = ConnectionInfo(driver=driver,
