@@ -1,3 +1,8 @@
+# Copyright(c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+import pyodbc
+
 from sqlmlutils.sqlbuilder import SQLBuilder
 from sqlmlutils.packagemanagement.scope import Scope
 
@@ -7,24 +12,59 @@ class CreateLibraryBuilder(SQLBuilder):
     def __init__(self, pkg_name: str, pkg_filename: str, scope: Scope):
         self._name = clean_library_name(pkg_name)
         self._filename = pkg_filename
-        self._has_params = True
         self._scope = scope
 
     @property
     def params(self):
         with open(self._filename, "rb") as f:
-            pkgdatastr = "0x" + f.read().hex()
+            package_bits = f.read()
+        pkgdatastr = pyodbc.Binary(package_bits)
+        return pkgdatastr
 
-        installcheckscript = """
+    @property
+    def base_script(self) -> str:
+        sqlpkgname = self._name
+        authorization = _get_authorization(self._scope)
+        dummy_spees = _get_dummy_spees()
+
+        return """
+set NOCOUNT on  
+-- Drop the library if it exists
+BEGIN TRY
+DROP EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
+END TRY
+BEGIN CATCH
+END CATCH
+        
+-- Create the library
+CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
+FROM (CONTENT = ?) WITH (LANGUAGE = 'Python');
+
+-- Dummy SPEES
+{dummy_spees}
+""".format(
+    sqlpkgname=sqlpkgname,
+    authorization=authorization,
+    dummy_spees=dummy_spees
+)
+
+
+class CheckLibraryBuilder(SQLBuilder):
+
+    def __init__(self, pkg_name: str, scope: Scope):
+        self._name = clean_library_name(pkg_name)
+        self._scope = scope
+
+    @property
+    def params(self):
+        return """ 
 import os
 import re
 _ENV_NAME_USER_PATH = "MRS_EXTLIB_USER_PATH"
 _ENV_NAME_SHARED_PATH = "MRS_EXTLIB_SHARED_PATH"
 
-
 def _is_dist_info_file(name, file):
     return re.match(name + r"-.*egg", file) or re.match(name + r"-.*dist-info", file)
-
 
 def _is_package_match(package_name, file):
     package_name = package_name.lower()
@@ -49,46 +89,26 @@ def package_exists_in_scope(sql_package_name: str, scope=None) -> bool:
     package_files = package_files_in_scope(scope)
     return any([_is_package_match(sql_package_name, package_file) for package_file in package_files])
 
-        
-assert package_exists_in_scope("{sqlpkgname}", "{scopestr}")
-""".format(sqlpkgname=self._name, scopestr=self._scope._name)
-
-        return pkgdatastr, installcheckscript
+# Check that the package exists in scope.
+# For some reason this check works but there is a bug in pyODBC when asserting this is True.
+assert package_exists_in_scope("{name}", "{scope}") != False
+""".format(name=self._name, scope=self._scope._name)
 
     @property
     def base_script(self) -> str:
-        return """         
--- Drop the library if it exists
-BEGIN TRY
-DROP EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
-END TRY
-BEGIN CATCH
-END CATCH
-
--- Parameter bind the package data
-DECLARE @content varbinary(MAX) = convert(varbinary(MAX), %s, 1);
-        
--- Create the library
-CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
-FROM (CONTENT = @content) WITH (LANGUAGE = 'Python');
-
--- Dummy SPEES
-{dummy_spees}
-
+        return """    
 -- Check to make sure the package was installed
 BEGIN TRY
     exec sp_execute_external_script
     @language = N'Python',
-    @script = %s
+    @script = ?
     print('Package successfully installed.')
 END TRY
 BEGIN CATCH
     print('Package installation failed.');
     THROW;
 END CATCH
-""".format(sqlpkgname=self._name,
-           authorization=_get_authorization(self._scope),
-           dummy_spees=_get_dummy_spees())
+"""
 
 
 class DropLibraryBuilder(SQLBuilder):
@@ -100,10 +120,14 @@ class DropLibraryBuilder(SQLBuilder):
     @property
     def base_script(self) -> str:
         return """
-DROP EXTERNAL LIBRARY [{}] {authorization}
+DROP EXTERNAL LIBRARY [{name}] {auth}
 
 {dummy_spees}
-""".format(self._name, authorization=_get_authorization(self._scope), dummy_spees=_get_dummy_spees())
+""".format(
+    name=self._name,
+    auth=_get_authorization(self._scope),
+    dummy_spees=_get_dummy_spees()
+)
 
 
 def clean_library_name(pkgname: str):

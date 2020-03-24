@@ -1,4 +1,4 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
 from setuptools import setup
@@ -6,7 +6,7 @@ from setuptools import setup
 setup(
     name='sqlmlutils',
     packages=['sqlmlutils', 'sqlmlutils/packagemanagement'],
-    version='0.7.3',
+    version='1.0.0',
     url='https://github.com/Microsoft/sqlmlutils/Python',
     license='MIT License',
     desciption='A client side package for working with SQL Server',
@@ -16,7 +16,7 @@ setup(
     author_email='joz@microsoft.com',
     install_requires=[
         'pip',
-        'pymssql',
+        'pyodbc',
         'dill',
         'pkginfo',
         'requirements-parser',

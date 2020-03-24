@@ -1,15 +1,18 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Callable
 import dill
+import sys
+
+from typing import Callable
 from pandas import DataFrame
 
 from .connectioninfo import ConnectionInfo
 from .sqlqueryexecutor import execute_query, execute_raw_query
 from .sqlbuilder import SpeesBuilder, SpeesBuilderFromFunction, StoredProcedureBuilder, \
     ExecuteStoredProcedureBuilder, DropStoredProcedureBuilder
-from .sqlbuilder import StoredProcedureBuilderFromFunction, RETURN_COLUMN_NAME
+from .sqlbuilder import StoredProcedureBuilderFromFunction
+from .sqlbuilder import RETURN_COLUMN_NAME, STDOUT_COLUMN_NAME, STDERR_COLUMN_NAME
 
 
 class SQLPythonExecutor:
@@ -44,8 +47,13 @@ class SQLPythonExecutor:
         >>> print(ret)
         [0.28366218546322625, 0.28366218546322625]
         """
-        rows = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
-        return self._get_results(rows)
+        df, _ = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
+        results, output, error = self._get_results(df)
+        if output is not None: 
+            print(output)
+        if error is not None:
+            print(error, file=sys.stderr)
+        return results
 
     def execute_script_in_sql(self,
                               path_to_script: str,
@@ -61,7 +69,6 @@ class SQLPythonExecutor:
         try:
             with open(path_to_script, 'r') as script_file:
                 content = script_file.read()
-            print("File does exist, using " + path_to_script)
         except FileNotFoundError:
             raise FileNotFoundError("File does not exist!")
         execute_query(SpeesBuilder(content, input_data_query=input_data_query), connection=self._connection_info)
@@ -74,16 +81,7 @@ class SQLPythonExecutor:
         :param sql_query: the sql query to execute in the server
         :return: table returned by the sql_query
         """
-        rows = execute_raw_query(conn=self._connection_info, query=sql_query, params=params)
-        df = DataFrame(rows)
-
-        # _mssql's execute_query() returns duplicate keys for indexing, we remove them because they are extraneous
-        for i in range(len(df.columns)):
-            try:
-                del df[i]
-            except KeyError:
-                pass
-
+        df, _ = execute_raw_query(conn=self._connection_info, query=sql_query, params=params)
         return df
 
     def create_sproc_from_function(self, name: str, func: Callable,
@@ -124,9 +122,16 @@ class SQLPythonExecutor:
             input_params = {}
         if output_params is None:
             output_params = {}
+
+        # We modify input_params/output_params because we add stdout and stderr as params. 
+        # We copy here to avoid modifying the underlying contents.
+        #
+        in_copy = input_params.copy() if input_params is not None else None
+        out_copy = output_params.copy() if output_params is not None else None
+
         # Save the stored procedure in database
-        execute_query(StoredProcedureBuilderFromFunction(name, func,
-                                                         input_params, output_params), self._connection_info)
+        execute_query(StoredProcedureBuilderFromFunction(name, func, in_copy, out_copy), 
+                        self._connection_info)
         return True
 
     def create_sproc_from_script(self, name: str, path_to_script: str,
@@ -162,8 +167,14 @@ class SQLPythonExecutor:
         except FileNotFoundError:
             raise FileNotFoundError("File does not exist!")
 
-        execute_query(StoredProcedureBuilder(name, content,
-                                             input_params, output_params), self._connection_info)
+        # We modify input_params/output_params because we add stdout and stderr as params. 
+        # We copy here to avoid modifying the underlying contents.
+        #
+        in_copy = input_params.copy() if input_params is not None else None
+        out_copy = output_params.copy() if output_params is not None else None
+        
+        execute_query(StoredProcedureBuilder(name, content, in_copy, out_copy),
+                        self._connection_info)
         return True
 
     def check_sproc(self, name: str) -> bool:
@@ -180,20 +191,28 @@ class SQLPythonExecutor:
         :param name: name of stored procedure.
         :return: boolean whether the Stored Procedure exists in the database
         """
-        check_query = "SELECT OBJECT_ID (%s, N'P')"
-        rows = execute_raw_query(conn=self._connection_info, query=check_query, params=name)
-        return rows[0][0] is not None
+        check_query = "SELECT OBJECT_ID (?, N'P')"
+        rows = execute_raw_query(conn=self._connection_info, query=check_query, params=name)[0]
+        return rows.loc[0].iloc[0] is not None
 
-    def execute_sproc(self, name: str, **kwargs) -> DataFrame:
+    def execute_sproc(self, name: str, output_params: dict = None, **kwargs) -> DataFrame:
         """Call a stored procedure on a SQL Server database.
         WARNING: Output parameters can be used when creating the stored procedure, but Stored Procedures with
         output parameters other than a single DataFrame cannot be executed with sqlmlutils
 
-        :param name: name of stored procedure.
+        :param name: name of stored procedure
+        :param output_params: output parameters (if any) for the stored procedure
         :param kwargs: keyword arguments to pass to stored procedure
-        :return: DataFrame representing the output data set of the stored procedure (or empty)
+        :return: tuple with a DataFrame representing the output data set of the stored procedure 
+                 and a dictionary of output parameters
         """
-        return DataFrame(execute_query(ExecuteStoredProcedureBuilder(name, **kwargs), self._connection_info))
+        
+        # We modify output_params because we add stdout and stderr as output params. 
+        # We copy here to avoid modifying the underlying contents.
+        #
+        out_copy = output_params.copy() if output_params is not None else None
+        return execute_query(ExecuteStoredProcedureBuilder(name, out_copy, **kwargs), 
+                            self._connection_info)
 
     def drop_sproc(self, name: str):
         """Drop a SQL Server stored procedure if it exists.
@@ -205,6 +224,8 @@ class SQLPythonExecutor:
             execute_query(DropStoredProcedureBuilder(name), self._connection_info)
 
     @staticmethod
-    def _get_results(rows):
-        hexstring = rows[0][RETURN_COLUMN_NAME]
-        return dill.loads(bytes.fromhex(hexstring))
+    def _get_results(df : DataFrame):
+        hexstring = df[RETURN_COLUMN_NAME][0]
+        stdout_string = df[STDOUT_COLUMN_NAME][0]
+        stderr_string = df[STDERR_COLUMN_NAME][0]
+        return dill.loads(bytes.fromhex(hexstring)), stdout_string, stderr_string

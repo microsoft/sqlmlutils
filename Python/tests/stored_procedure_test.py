@@ -1,19 +1,25 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import pytest
-import sqlmlutils
-from contextlib import redirect_stdout
-from subprocess import Popen, PIPE, STDOUT
-from pandas import DataFrame
 import io
 import os
+import pytest
+import sqlmlutils
+
+from contextlib import redirect_stdout
+from subprocess import Popen, PIPE, STDOUT
+from pandas import DataFrame, set_option
 
 from conftest import connection
 
 current_dir = os.path.dirname(__file__)
 script_dir = os.path.join(current_dir, "scripts")
 sqlpy = sqlmlutils.SQLPythonExecutor(connection)
+
+# Prevent truncation of DataFrame when printing 
+#
+set_option("display.max_colwidth", -1)
+set_option("display.max_columns", None)
 
 
 ###################
@@ -23,6 +29,9 @@ sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 def test_no_output():
     def my_func():
         print("blah blah blah")
+        
+        # Test single quotes as well
+        print('Hello')
 
     name = "test_no_output"
     sqlpy.drop_sproc(name)
@@ -30,9 +39,10 @@ def test_no_output():
     sqlpy.create_sproc_from_function(name, my_func)
     assert sqlpy.check_sproc(name)
 
-    x = sqlpy.execute_sproc(name)
+    x, outparams = sqlpy.execute_sproc(name)
     assert type(x) == DataFrame
     assert x.empty
+    assert not outparams
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
@@ -49,14 +59,21 @@ def test_no_output_mixed_args():
     buf = io.StringIO()
     with redirect_stdout(buf):
         sqlpy.execute_sproc(name, val1=5, val2="blah", val3=15.5, val4=True)
+        
     assert "5 blah 15.5 True" in buf.getvalue()
-
+    
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
 
 
 def test_no_output_mixed_args_in_df():
     def mixed(val1: int, val2: str, val3: float, val4: bool, val5: DataFrame):
+        # Prevent truncation of DataFrame when printing
+        #
+        import pandas as pd
+        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_columns", None)
+        
         print(val1, val2, val3, val4)
         print(val5)
 
@@ -64,9 +81,11 @@ def test_no_output_mixed_args_in_df():
     sqlpy.drop_sproc(name)
 
     sqlpy.create_sproc_from_function(name, mixed)
+    
     buf = io.StringIO()
     with redirect_stdout(buf):
         sqlpy.execute_sproc(name, val1=5, val2="blah", val3=15.5, val4=False, val5="SELECT TOP 2 * FROM airline5000")
+    
     assert "5 blah 15.5 False" in buf.getvalue()
     assert "ArrTime" in buf.getvalue()
     assert "CRSDepTime" in buf.getvalue()
@@ -79,18 +98,26 @@ def test_no_output_mixed_args_in_df():
 
 
 def test_no_output_mixed_args_in_df_in_params():
-    def mixed(val1, val2, val3, val4, val5):
-        print(val1, val2, val3, val5)
-        print(val4)
+    def mixed(val1: int, val2: str, val3: float, val4: bool, val5: DataFrame):
+        # Prevent truncation of DataFrame when printing
+        #
+        import pandas as pd
+        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_columns", None)
+        
+        print(val1, val2, val3, val4)
+        print(val5)
 
-    in_params = {"val1": int, "val2": str, "val3": float, "val4": DataFrame, "val5": bool}
+    in_params = {"val1": int, "val2": str, "val3": float, "val4": bool, "val5": DataFrame}
     name = "test_no_output_mixed_args_in_df_in_params"
     sqlpy.drop_sproc(name)
 
     sqlpy.create_sproc_from_function(name=name, func=mixed, input_params=in_params)
+    
     buf = io.StringIO()
     with redirect_stdout(buf):
-        sqlpy.execute_sproc(name, val1=5, val2="blah", val3=15.5, val4="SELECT TOP 2 * FROM airline5000", val5=False)
+        sqlpy.execute_sproc(name, val1=5, val2="blah", val3=15.5, val4=False, val5="SELECT TOP 2 * FROM airline5000")
+        
     assert "5 blah 15.5 False" in buf.getvalue()
     assert "ArrTime" in buf.getvalue()
     assert "CRSDepTime" in buf.getvalue()
@@ -118,8 +145,9 @@ def test_out_df_no_params():
     sqlpy.create_sproc_from_function(name, no_params)
     assert sqlpy.check_sproc(name)
 
-    df = sqlpy.execute_sproc(name)
+    df, outparams = sqlpy.execute_sproc(name)
     assert list(df.iloc[:,0] == [1, 2, 3, 4, 5])
+    assert not outparams
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
@@ -140,9 +168,10 @@ def test_out_df_with_args():
     for values in vals:
         arg1 = values[0]
         arg2 = values[1]
-        res = sqlpy.execute_sproc(name, arg1=arg1, arg2=arg2)
-        assert res[0][0] == arg1
-        assert res[1][0] == arg2
+        res, outparams = sqlpy.execute_sproc(name, arg1=arg1, arg2=arg2)
+        assert res.loc[0].iloc[0] == arg1
+        assert res.loc[0].iloc[1] == arg2
+        assert not outparams
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
@@ -158,10 +187,11 @@ def test_out_df_in_df():
     sqlpy.create_sproc_from_function(name, in_data)
     assert sqlpy.check_sproc(name)
 
-    res = sqlpy.execute_sproc(name, in_df="SELECT TOP 10 * FROM airline5000")
+    res, outparams = sqlpy.execute_sproc(name, in_df="SELECT TOP 10 * FROM airline5000")
 
     assert type(res) == DataFrame
     assert res.shape == (10, 30)
+    assert not outparams
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
@@ -169,7 +199,14 @@ def test_out_df_in_df():
 
 def test_out_df_mixed_args_in_df():
     def mixed(val1: int, val2: str, val3: float, val4: DataFrame, val5: bool):
+        # Prevent truncation of DataFrame when printing
+        #
+        import pandas as pd
+        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_columns", None)
+        
         print(val1, val2, val3, val5)
+        
         if val5 and val1 == 5 and val2 == "blah" and val3 == 15.5:
             return val4
         else:
@@ -180,11 +217,12 @@ def test_out_df_mixed_args_in_df():
 
     sqlpy.create_sproc_from_function(name, mixed)
 
-    res = sqlpy.execute_sproc(name, val1=5, val2="blah", val3=15.5,
+    res, outparams = sqlpy.execute_sproc(name, val1=5, val2="blah", val3=15.5,
                               val4="SELECT TOP 10 * FROM airline5000", val5=True)
 
     assert type(res) == DataFrame
     assert res.shape == (10, 30)
+    assert not outparams
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
@@ -192,6 +230,12 @@ def test_out_df_mixed_args_in_df():
 
 def test_out_df_mixed_in_params_in_df():
     def mixed(val1, val2, val3, val4, val5):
+        # Prevent truncation of DataFrame when printing
+        #
+        import pandas as pd
+        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_columns", None)
+        
         print(val1, val2, val3, val5)
         if val5 and val1 == 5 and val2 == "blah" and val3 == 15.5:
             return val4
@@ -206,11 +250,12 @@ def test_out_df_mixed_in_params_in_df():
     sqlpy.create_sproc_from_function(name, mixed, input_params=input_params)
     assert sqlpy.check_sproc(name)
 
-    res = sqlpy.execute_sproc(name, val1=5, val2="blah", val3=15.5,
+    res, outparams = sqlpy.execute_sproc(name, val1=5, val2="blah", val3=15.5,
                               val4="SELECT TOP 10 * FROM airline5000", val5=True)
 
     assert type(res) == DataFrame
     assert res.shape == (10, 30)
+    assert not outparams
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
@@ -232,41 +277,42 @@ def test_out_of_order_args():
     v2 = "blah"
     v3 = 15.5
     v4 = "SELECT TOP 10 * FROM airline5000"
-    res = sqlpy.execute_sproc(name, val5=False, val3=v3, val4=v4, val1=v1, val2=v2)
+    res, outparams = sqlpy.execute_sproc(name, val5=False, val3=v3, val4=v4, val1=v1, val2=v2)
 
-    assert res[0][0] == v1
-    assert res[1][0] == v2
-    assert res[2][0] == v3
-    assert not res[3][0]
-
+    assert res.loc[0].iloc[0] == v1
+    assert res.loc[0].iloc[1] == v2
+    assert res.loc[0].iloc[2] == v3
+    assert not res.loc[0].iloc[3]
+    assert not outparams
+    
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
 
 
-# TODO: Output Params execution not currently supported
 def test_in_param_out_param():
     def in_out(t1, t2, t3):
+        # Prevent truncation of DataFrame when printing
+        #
+        import pandas as pd
+        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_columns", None)
+        
         print(t2)
         print(t3)
-        res = "Hello " + t1
-        return {'out_df': t3, 'res': res}
+        param_str = "Hello " + t1
+        return {"out_df": t3, "param_str": param_str}
 
     name = "test_in_param_out_param"
     sqlpy.drop_sproc(name)
 
     input_params = {"t1": str, "t2": int, "t3": DataFrame}
-    output_params = {"res": str, "out_df": DataFrame}
+    output_params = {"param_str": str, "out_df": DataFrame}
 
     sqlpy.create_sproc_from_function(name, in_out, input_params=input_params, output_params=output_params)
     assert sqlpy.check_sproc(name)
 
-    # Out params don't currently work so we use sqlcmd to test the output param sproc
-    sql_str = "DECLARE @res nvarchar(max)  EXEC test_in_param_out_param @t2 = 213, @t1 = N'Hello', " \
-              "@t3 = N'select top 10 * from airline5000', @res = @res OUTPUT SELECT @res as N'@res'"
-    p = Popen(["sqlcmd", "-S", connection.server, "-E", "-d", connection.database, "-Q", sql_str],
-              shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-    output = p.stdout.read()
-    assert "Hello Hello" in output.decode()
+    res, outparams = sqlpy.execute_sproc(name, output_params = output_params, t1="Hello", t2 = 213, t3 = "select top 10 * from airline5000")
+    assert "Hello Hello" in outparams["param_str"]
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
@@ -284,10 +330,11 @@ def test_in_df_out_df_dict():
     sqlpy.create_sproc_from_function(name, func, output_params=output_params)
     assert sqlpy.check_sproc(name)
 
-    res = sqlpy.execute_sproc(name, in_df="SELECT TOP 10 * FROM airline5000")
+    res, outparams = sqlpy.execute_sproc(name, in_df="SELECT TOP 10 * FROM airline5000")
 
     assert type(res) == DataFrame
     assert res.shape == (10, 30)
+    assert not outparams
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
@@ -295,12 +342,12 @@ def test_in_df_out_df_dict():
 
 ################
 # Script Tests #
-################
+#################
 
 def test_script_no_params():
-    script = os.path.join(script_dir, "test_script_no_params.py")
+    script = os.path.join(script_dir, "exec_script_no_params.py")
 
-    name = "test_script_no_params"
+    name = "exec_script_no_params"
     sqlpy.drop_sproc(name)
 
     sqlpy.create_sproc_from_script(name, script)
@@ -309,6 +356,7 @@ def test_script_no_params():
     buf = io.StringIO()
     with redirect_stdout(buf):
         sqlpy.execute_sproc(name)
+        
     assert "No Inputs" in buf.getvalue()
     assert "Required" in buf.getvalue()
     assert "Testing output!" in buf.getvalue()
@@ -319,9 +367,9 @@ def test_script_no_params():
 
 
 def test_script_no_out_params():
-    script = os.path.join(script_dir, "test_script_no_out_params.py")
+    script = os.path.join(script_dir, "exec_script_no_out_params.py")
 
-    name = "test_script_no_out_params"
+    name = "exec_script_no_out_params"
     sqlpy.drop_sproc(name)
 
     input_params = {"t1": str, "t2": str, "t3": int}
@@ -332,6 +380,7 @@ def test_script_no_out_params():
     buf = io.StringIO()
     with redirect_stdout(buf):
         sqlpy.execute_sproc(name, t1="Hello", t2="World", t3=312)
+        
     assert "HelloWorld" in buf.getvalue()
     assert "312" in buf.getvalue()
     assert "Testing output!" in buf.getvalue()
@@ -341,9 +390,9 @@ def test_script_no_out_params():
 
 
 def test_script_out_df():
-    script = os.path.join(script_dir, "test_script_sproc_out_df.py")
+    script = os.path.join(script_dir, "exec_script_sproc_out_df.py")
 
-    name = "test_script_out_df"
+    name = "exec_script_out_df"
     sqlpy.drop_sproc(name)
 
     input_params = {"t1": str, "t2": int, "t3": DataFrame}
@@ -351,36 +400,31 @@ def test_script_out_df():
     sqlpy.create_sproc_from_script(name, script, input_params)
     assert sqlpy.check_sproc(name)
 
-    res = sqlpy.execute_sproc(name, t1="Hello", t2=2313, t3="SELECT TOP 10 * FROM airline5000")
-
+    res, outparams = sqlpy.execute_sproc(name, t1="Hello", t2=2313, t3="SELECT TOP 10 * FROM airline5000")
+    
     assert type(res) == DataFrame
     assert res.shape == (10, 30)
+    assert not outparams
 
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
 
 
-#TODO: Output Params execution not currently supported
 def test_script_out_param():
-    script = os.path.join(script_dir, "test_script_out_param.py")
+    script = os.path.join(script_dir, "exec_script_out_param.py")
 
-    name = "test_script_out_param"
+    name = "exec_script_out_param"
     sqlpy.drop_sproc(name)
 
     input_params = {"t1": str, "t2": int, "t3": DataFrame}
-    output_params = {"res": str}
+    output_params = {"param_str": str}
 
     sqlpy.create_sproc_from_script(name, script, input_params, output_params)
     assert sqlpy.check_sproc(name)
-
-    # Out params don't currently work so we use sqlcmd to test the output param sproc
-    sql_str = "DECLARE @res nvarchar(max)  EXEC test_script_out_param @t2 = 123, @t1 = N'Hello', " \
-              "@t3 = N'select top 10 * from airline5000', @res = @res OUTPUT SELECT @res as N'@res'"
-    p = Popen(["sqlcmd", "-S", connection.server, "-E", "-d", connection.database, "-Q", sql_str],
-              shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-    output = p.stdout.read()
-    assert "Hello123" in output.decode()
-
+    
+    res, outparams = sqlpy.execute_sproc(name, output_params = output_params, t1="Hello", t2 = 123, t3 = "select top 10 * from airline5000")
+    assert "Hello123" in outparams["param_str"]
+        
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
 
@@ -398,8 +442,10 @@ def test_execute_bad_param_types():
 
     def func(input1: bool):
         pass
+        
     name = "BadInput"
     sqlpy.drop_sproc(name)
+    
     sqlpy.create_sproc_from_function(name, func)
     assert sqlpy.check_sproc(name)
 

@@ -1,14 +1,14 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import pytest
-from contextlib import redirect_stdout, redirect_stderr
 import io
 import os
+import pytest
 
-from sqlmlutils import SQLPythonExecutor
-from sqlmlutils import ConnectionInfo
+from contextlib import redirect_stdout, redirect_stderr
 from pandas import DataFrame
+
+from sqlmlutils import ConnectionInfo, SQLPythonExecutor
 from conftest import driver, server, database, uid, pwd
 
 connection = ConnectionInfo(driver=driver,
@@ -20,9 +20,7 @@ connection = ConnectionInfo(driver=driver,
 current_dir = os.path.dirname(__file__)
 script_dir = os.path.join(current_dir, "scripts")
 
-print(connection)
 sqlpy = SQLPythonExecutor(connection)
-
 
 def test_with_named_args():
     def func_with_args(arg1, arg2):
@@ -138,7 +136,7 @@ def test_with_variables():
         var_s = "World"
         sqlpy.execute_function_in_sql(func_with_variables, s=var_s)
 
-    assert "World" in output.getvalue()
+    assert 'World' in output.getvalue()
 
 
 def test_execute_query():
@@ -149,7 +147,7 @@ def test_execute_query():
 
 
 def test_execute_script():
-    path = os.path.join(script_dir, "test_script.py")
+    path = os.path.join(script_dir, "exec_script.py")
 
     output = io.StringIO()
     with redirect_stderr(output), redirect_stdout(output):

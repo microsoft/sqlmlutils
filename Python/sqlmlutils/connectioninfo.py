@@ -1,4 +1,4 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
 class ConnectionInfo:
@@ -52,10 +52,15 @@ class ConnectionInfo:
 
     @property
     def connection_string(self):
+        server = self._server if self._port == "" \
+            else "{server},{port}".format(server=self._server, port=self._port)
+        
+        auth = "Trusted_Connection=Yes" if self._uid == "" \
+            else "uid={uid};pwd={pwd}".format(uid=self._uid, pwd=self._pwd)
+
         return "Driver={driver};Server={server};Database={database};{auth};".format(
-            driver=self._driver,
-            server=self._server if self._port == "" else "{servername},{port}".format(servername=self._server, port=self._port),
-            database=self._database,
-            auth="Trusted_Connection=Yes" if self._uid == "" else
-                 "uid={uid};pwd={pwd}".format(uid=self._uid, pwd=self._pwd)
+            driver = self._driver,
+            server = server,
+            database = self._database,
+            auth = auth
         )

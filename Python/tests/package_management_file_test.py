@@ -1,4 +1,4 @@
-# Copyright(c) Microsoft Corporation. All rights reserved.
+# Copyright(c) Microsoft Corporation.
 # Licensed under the MIT license.
 
 import io
@@ -9,10 +9,8 @@ from contextlib import redirect_stdout
 
 import pytest
 
-import sqlmlutils
-from sqlmlutils import SQLPackageManager, SQLPythonExecutor
+from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Scope
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
-from sqlmlutils.packagemanagement.scope import Scope
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
 from conftest import connection
@@ -54,16 +52,20 @@ def _drop(package_name: str, ddl_name: str):
 
 
 def _create(module_name: str, package_file: str, class_to_check: str, drop: bool = True):
-    pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=False)
-    pkgmanager.install(package_file)
-    pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=True, class_to_check=class_to_check)
-    if drop:
-        _drop(package_name=module_name, ddl_name=module_name)
+    try:
+        pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=False)
+        pkgmanager.install(package_file)
+        pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=True, class_to_check=class_to_check)
+    finally:
+        if drop:
+            _drop(package_name=module_name, ddl_name=module_name)
 
 
 def _remove_all_new_packages(manager):
-    libs = {dic['external_library_id']: (dic['name'], dic['scope']) for dic in _get_sql_package_table(connection)}
-    original_libs = {dic['external_library_id']: (dic['name'], dic['scope']) for dic in originals}
+    df = _get_sql_package_table(connection)
+    
+    libs = {df['external_library_id'][i]: (df['name'][i], df['scope'][i]) for i in range(len(df.index))}
+    original_libs = {originals['external_library_id'][i]: (originals['name'][i], originals['scope'][i]) for i in range(len(originals.index))}
 
     for lib in libs:
         pkg, sc = libs[lib]
@@ -81,8 +83,8 @@ def _remove_all_new_packages(manager):
                     manager.uninstall(pkg, scope=Scope.public_scope())
 
 
-packages = ["absl-py==0.1.13", "astor==0.6.2", "bleach==1.5.0", "cryptography==2.2.2",
-            "html5lib==1.0.1", "Markdown==2.6.11", "numpy==1.14.3", "termcolor==1.1.0", "webencodings==0.5.1"]
+packages = ["absl-py==0.1.13", "astor==0.8.1", "bleach==1.5.0",
+            "html5lib==1.0.1", "Markdown==2.6.11", "termcolor==1.1.0", "webencodings==0.5.1"]
 
 for package in packages:
     pipdownloader = PipDownloader(connection, path_to_packages, package)
@@ -102,12 +104,13 @@ def test_install_basic_zip_package_different_name():
     module_name = "testpackageA"
 
     _remove_all_new_packages(pkgmanager)
+    
     _create(module_name=module_name, package_file=package, class_to_check="ClassA")
 
 
 def test_install_whl_files():
     packages = ["webencodings-0.5.1-py2.py3-none-any.whl", "html5lib-1.0.1-py2.py3-none-any.whl",
-                "astor-0.6.2-py2.py3-none-any.whl"]
+                "astor-0.8.1-py2.py3-none-any.whl"]
     module_names = ["webencodings",  "html5lib", "astor"]
     classes_to_check = ["LABELS",  "parse", "code_gen"]
 
@@ -115,10 +118,7 @@ def test_install_whl_files():
 
     for package, module, class_to_check in zip(packages, module_names, classes_to_check):
         full_package = os.path.join(path_to_packages, package)
-        _create(module_name=module, package_file=full_package, class_to_check=class_to_check, drop=False)
-
-    for name in module_names:
-        _drop(package_name=name, ddl_name=name)
+        _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
 
 def test_install_targz_files():
@@ -161,22 +161,30 @@ def test_package_already_exists_on_sql_table():
 
     _remove_all_new_packages(pkgmanager)
 
+    # Install a downgraded version of the package first
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
     pkgmanager.install(package)
+    
+    def check_version():
+        import pkg_resources
+        return pkg_resources.get_distribution("testpackageA").version
+
+    version = pyexecutor.execute_function_in_sql(check_version)
+    assert version == "0.0.1"
+    
+    package = os.path.join(path_to_packages, "testpackageA-0.0.2.zip")
 
     # Without upgrade
     output = io.StringIO()
     with redirect_stdout(output):
         pkgmanager.install(package, upgrade=False)
-    assert "exists on server. Set upgrade to True to force upgrade." in output.getvalue()
+    assert "exists on server. Set upgrade to True" in output.getvalue()
 
+    version = pyexecutor.execute_function_in_sql(check_version)
+    assert version == "0.0.1"
+    
     # With upgrade
-    package = os.path.join(path_to_packages, "testpackageA-0.0.2.zip")
     pkgmanager.install(package, upgrade=True)
-
-    def check_version():
-        import testpackageA
-        return testpackageA.__version__
 
     version = pyexecutor.execute_function_in_sql(check_version)
     assert version == "0.0.2"
@@ -184,51 +192,7 @@ def test_package_already_exists_on_sql_table():
     pkgmanager.uninstall("testpackageA")
 
 
-def test_upgrade_parameter():
-
-    _remove_all_new_packages(pkgmanager)
-
-    # Get sql packages
-    originalsqlpkgs = _get_sql_package_table(connection)
-
-    pkg = os.path.join(path_to_packages, "cryptography-2.2.2-cp35-cp35m-win_amd64.whl")
-
-    output = io.StringIO()
-    with redirect_stdout(output):
-        pkgmanager.install(pkg, upgrade=False)
-    assert "exists on server. Set upgrade to True to force upgrade." in output.getvalue()
-
-    # Assert no additional packages were installed
-
-    sqlpkgs = _get_sql_package_table(connection)
-    assert len(sqlpkgs) == len(originalsqlpkgs)
-
-    #################
-
-    def check_version():
-        import cryptography as cp
-        return cp.__version__
-
-    oldversion = pyexecutor.execute_function_in_sql(check_version)
-
-    pkgmanager.install(pkg, upgrade=True)
-
-    sqlpkgs = _get_sql_package_table(connection)
-    assert len(sqlpkgs) == len(originalsqlpkgs) + 2
-
-    version = pyexecutor.execute_function_in_sql(check_version)
-    assert version == "2.2.2"
-    assert version > oldversion
-
-    pkgmanager.uninstall("cryptography")
-    pkgmanager.uninstall("asn1crypto")
-
-    sqlpkgs = _get_sql_package_table(connection)
-    assert len(sqlpkgs) == len(originalsqlpkgs)
-
-
 # TODO: more tests for drop external library
-
 def test_scope():
 
     _remove_all_new_packages(pkgmanager)
@@ -239,7 +203,7 @@ def test_scope():
         import testpackageA
         return testpackageA.__file__
 
-    _revotesterconnection = sqlmlutils.ConnectionInfo(server="localhost",
+    _revotesterconnection = ConnectionInfo(server="localhost",
                                                       database="AirlineTestDB",
                                                       uid="Tester",
                                                       pwd="FakeT3sterPwd!")
