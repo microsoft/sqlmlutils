@@ -7,7 +7,7 @@ sqlmlutils is an R package to help execute R code on a SQL database (SQL Server 
 From command prompt, run 
 ```
 R.exe -e "install.packages('RODBCext', repos='https://cran.microsoft.com')"
-R.exe CMD INSTALL dist/sqlmlutils_0.7.1.zip
+R.exe CMD INSTALL dist/sqlmlutils_1.0.0.zip
 ```
 OR
 To build a new package file and install, run
