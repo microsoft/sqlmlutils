@@ -23,9 +23,9 @@ class CreateLibraryBuilder(SQLBuilder):
 
     @property
     def base_script(self) -> str:
-        sqlpkgname=self._name
-        authorization=_get_authorization(self._scope)
-        dummy_spees=_get_dummy_spees()
+        sqlpkgname = self._name
+        authorization = _get_authorization(self._scope)
+        dummy_spees = _get_dummy_spees()
 
         return """
 set NOCOUNT on  
