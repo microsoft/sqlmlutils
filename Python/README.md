@@ -13,12 +13,6 @@ To install from file, run:
 pip install Python/dist/sqlmlutils-1.0.0.zip
 ```
 
-
-
-Note: If you encounter errors installing the pymssql dependency and your client is a Windows machine, consider 
-installing the .whl file at the below link (download the file for your Python version and run pip install): 
-https://www.lfd.uci.edu/~gohlke/pythonlibs/#pymssql
-
 If you are developing on your own branch and want to rebuild and install the package, you can use the buildandinstall.cmd script that is included.
 
 # Getting started
@@ -241,8 +235,5 @@ pkgmanager.uninstall("astor")
     
 ### Notable TODOs and open issues
 
-1. The pymssql library is hard to install. Users need to install the .whl files from the link above, not
-the .whl files currently hosted in PyPI. Because of this, we should consider moving to use pyodbc.
-2. Testing from a Linux client has not been performed.
-3. The way we get dependencies of a package to install is sort of hacky (parsing pip output)
-4. Output Parameter execution currently does not work - can potentially use MSSQLStoredProcedure binding
+1. Testing from a Linux client has not been performed.
+2. The way we get dependencies of a package to install is sort of hacky (parsing pip output)
