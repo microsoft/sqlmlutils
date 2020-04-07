@@ -23,9 +23,22 @@ pip install Python/dist/sqlmlutils-1.0.0.zip
 ```
 
 R:
+### Windows
+From command prompt, run 
 ```
-R -e "install.packages('RODBCext', repos='https://cran.microsoft.com')"
-R CMD INSTALL R/dist/sqlmlutils_0.7.1.zip
+R.exe -e "install.packages('RODBCext', repos='https://mran.microsoft.com/snapshot/2019-02-01/')"
+R.exe CMD INSTALL dist/sqlmlutils_0.7.1.zip
+```
+OR
+To build a new package file and install, run
+```
+.\buildandinstall.cmd
+```
+
+### Linux
+```
+R.exe -e "install.packages('RODBCext', repos='https://mran.microsoft.com/snapshot/2019-02-01/')"
+R.exe CMD INSTALL dist/sqlmlutils_0.7.1.tar.gz
 ```
 
 # Details
