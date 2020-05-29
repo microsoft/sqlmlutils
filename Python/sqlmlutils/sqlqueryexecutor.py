@@ -102,11 +102,7 @@ class SQLQueryExecutor:
                 port=self._connection._port
             )
 
-        self._cnxn = pyodbc.connect(driver=self._connection._driver,
-                                    server=server,
-                                    user=self._connection.uid,
-                                    password=self._connection.pwd,
-                                    database=self._connection.database,
+        self._cnxn = pyodbc.connect(self._connection.connection_string,
                                     autocommit=True)
         self._cursor = self._cnxn.cursor()
         return self
