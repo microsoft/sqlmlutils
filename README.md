@@ -19,7 +19,7 @@ pip install sqlmlutils
 ```
 To install from file:
 ```
-pip install Python/dist/sqlmlutils-1.0.0.zip
+pip install Python/dist/sqlmlutils-1.0.1.zip
 ```
 
 R:
