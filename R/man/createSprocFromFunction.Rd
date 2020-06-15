@@ -5,11 +5,23 @@
 \alias{createSprocFromScript}
 \title{Create a Stored Procedure}
 \usage{
-createSprocFromFunction(connectionString, name, func, inputParams = NULL,
-  outputParams = NULL, getScript = FALSE)
+createSprocFromFunction(
+  connectionString,
+  name,
+  func,
+  inputParams = NULL,
+  outputParams = NULL,
+  getScript = FALSE
+)
 
-createSprocFromScript(connectionString, name, script, inputParams = NULL,
-  outputParams = NULL, getScript = FALSE)
+createSprocFromScript(
+  connectionString,
+  name,
+  script,
+  inputParams = NULL,
+  outputParams = NULL,
+  getScript = FALSE
+)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString to the database}

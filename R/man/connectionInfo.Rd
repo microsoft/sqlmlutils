@@ -4,8 +4,13 @@
 \alias{connectionInfo}
 \title{Execute a function in SQL}
 \usage{
-connectionInfo(driver = "SQL Server", server = "localhost",
-  database = "master", uid = NULL, pwd = NULL)
+connectionInfo(
+  driver = "SQL Server",
+  server = "localhost",
+  database = "master",
+  uid = NULL,
+  pwd = NULL
+)
 }
 \arguments{
 \item{driver}{The driver to use for the connection - defaults to SQL Server}
