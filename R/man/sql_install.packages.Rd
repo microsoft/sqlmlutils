@@ -4,9 +4,16 @@
 \alias{sql_install.packages}
 \title{sql_install.packages}
 \usage{
-sql_install.packages(connectionString, pkgs, skipMissing = FALSE, repos,
-  verbose = getOption("verbose"), scope = "private", owner = "",
-  scriptFile = NULL)
+sql_install.packages(
+  connectionString,
+  pkgs,
+  skipMissing = FALSE,
+  repos,
+  verbose = getOption("verbose"),
+  scope = "private",
+  owner = "",
+  scriptFile = NULL
+)
 }
 \arguments{
 \item{connectionString}{ODBC connection string to Microsoft SQL Server database.}

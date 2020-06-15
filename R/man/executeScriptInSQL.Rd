@@ -4,8 +4,12 @@
 \alias{executeScriptInSQL}
 \title{Execute a script in SQL}
 \usage{
-executeScriptInSQL(connectionString, script, inputDataQuery = "",
-  getScript = FALSE)
+executeScriptInSQL(
+  connectionString,
+  script,
+  inputDataQuery = "",
+  getScript = FALSE
+)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString to the database}

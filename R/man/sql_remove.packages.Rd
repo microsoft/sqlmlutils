@@ -4,9 +4,16 @@
 \alias{sql_remove.packages}
 \title{sql_remove.packages}
 \usage{
-sql_remove.packages(connectionString, pkgs, dependencies = TRUE,
-  checkReferences = TRUE, verbose = getOption("verbose"),
-  scope = "private", owner = "", scriptFile = NULL)
+sql_remove.packages(
+  connectionString,
+  pkgs,
+  dependencies = TRUE,
+  checkReferences = TRUE,
+  verbose = getOption("verbose"),
+  scope = "private",
+  owner = "",
+  scriptFile = NULL
+)
 }
 \arguments{
 \item{connectionString}{ODBC connection string to SQL Server database.}
