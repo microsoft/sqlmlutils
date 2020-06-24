@@ -108,7 +108,7 @@ test_that("Print, Warning, Return test", {
     expect_warning(expect_output(result <- executeFunctionInSQL(connection, returnString), "hello"), "uh oh")
 
     expect_equal(result , "bar")
-    
+
 })
 
 test_that("Print, Warning, Return test, with args", {

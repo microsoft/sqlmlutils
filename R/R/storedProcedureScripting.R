@@ -200,19 +200,22 @@ getEnding <- function(outputParams) {
     ending <- c(ending, "}")
 }
 
-# @import RODBC
+# @import odbc
 # Execute the registration script
 register <- function(registrationScript, connectionString) {
     output <- character(0)
 
-    tryCatch({
-        dbhandle <- odbcDriverConnect(connectionString)
-        output <- sqlQuery(dbhandle, registrationScript)
-    }, error = function(e) {
-        stop(paste0("Error in SQL Execution:\n", e))
-    }, finally ={
-        odbcCloseAll()
-    })
+    # tryCatch({
+    #     dbhandle <- odbcDriverConnect(connectionString)
+    #     output <- sqlQuery(dbhandle, registrationScript)
+    # }, error = function(e) {
+    #     stop(paste0("Error in SQL Execution:\n", e))
+    # }, finally ={
+    #     odbcCloseAll()
+    # })
+
+    execute(connectionString, registrationScript)
+
     if (length(output) > 0 ) {
         stop(output)
     }

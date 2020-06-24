@@ -4,8 +4,13 @@
 \alias{executeFunctionInSQL}
 \title{Execute a function in SQL}
 \usage{
-executeFunctionInSQL(connectionString, func, ..., inputDataQuery = "",
-  getScript = FALSE)
+executeFunctionInSQL(
+  connectionString,
+  func,
+  ...,
+  inputDataQuery = "",
+  getScript = FALSE
+)
 }
 \arguments{
 \item{connectionString}{character string. The connectionString to the database}

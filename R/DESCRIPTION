@@ -7,13 +7,13 @@ Maintainer: Microsoft Corporation <msrpack@microsoft.com>
 Depends:
     R (>= 3.2.2)
 Imports:
-    RODBC, RODBCext, tools, methods, utils
+    odbc, tools, methods, utils
 Description: sqlmlutils is a package designed to help users interact with SQL Server and execute R or Python code 
              from an R/Python client. It provides a series of functions for executing functions in SQL, 
              creating and running stored procedures, and managing packages on the database.
 License: MIT + file LICENSE
 Copyright: Copyright 2016 Microsoft Corporation
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Encoding: UTF-8
 Suggests: testthat (>= 2.0.0),
     roxygen2

@@ -39,11 +39,43 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
         }
     }
 
-    connection <- sprintf("Driver={%s};Server=%s;Database=%s;%s;", driver, server, database, authorization)
+    connection <- sprintf("Driver=%s;Server=%s;Database=%s;%s;", driver, server, database, authorization)
     connection
 }
 
+splitConnection <- function(connString) {
+    sConn = strsplit(connString, ";")[[1]]
+    parsed = list()
+    for(l in sConn){
+        x = strsplit(l, "=")[[1]]
+        parsed[x[1]] = x[2]
+    }
+    parsed
+}
 
+#'
+#'Use odbc and connection string to connect to a server
+#'
+#'@import odbc
+connectToServer <- function(connectionString){
+    sConn <- splitConnection(connectionString)
+
+    if(!is.null(sConn$uid)) {
+        conn <- dbConnect(odbc(),
+                          Driver=sConn$Driver,
+                          Server=sConn$Server,
+                          Database=sConn$Database,
+                          UID = sConn$uid,
+                          PWD = sConn$pwd)
+    } else{
+        conn <- dbConnect(odbc(),
+                          Driver=sConn$Driver,
+                          Server=sConn$Server,
+                          Database=sConn$Database,
+                          Trusted_Connection = sConn$Trusted_Connection)
+    }
+    conn
+}
 
 #'
 #'Execute a function in SQL
@@ -162,7 +194,6 @@ executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
               "
     spees <- speesBuilder(script = script, inputDataQuery = sqlQuery, TRUE)
 
-
     if(getScript) {
         return(spees)
     } else {
@@ -177,21 +208,26 @@ executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
 #@param script character string. The script to execute
 #
 #
-execute <- function(connectionString, script)
+execute <- function(connectionString, script, ...)
 {
+    queryResult <- NULL
     tryCatch({
-        dbhandle <- odbcDriverConnect(connectionString)
-        res <- sqlQuery(dbhandle, script)
-        if (typeof(res) == "character") {
-            stop(res[1])
-        }
+        dbConnection <- connectToServer(connectionString)
+
+        queryResult <- dbSendQuery(dbConnection, script, ...)
+        res <- dbFetch(queryResult)
+
         binVal <- res$returnVal
     }, error = function(e) {
         stop(paste0("Error in SQL Execution: ", e, "\n"))
     }, finally ={
-        odbcCloseAll()
+        if(!is.null(queryResult)) {
+            dbClearResult(queryResult)
+        }
     })
+
     binVal <- res$returnVal
+
     if (!is.null(binVal)) {
         resVal <- unserialize(unlist(lapply(lapply(as.character(binVal),as.hexmode), as.raw)))
         len <- length(resVal)

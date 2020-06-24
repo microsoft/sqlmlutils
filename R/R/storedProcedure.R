@@ -165,8 +165,6 @@ createSprocFromScript <- function (connectionString, name, script,
 #'\code{\link{checkSproc}}
 #'}
 #'
-#'@importFrom RODBCext sqlExecute
-#'@import RODBC
 #'
 #'@export
 dropSproc <- function(connectionString, name, getScript = FALSE) {
@@ -176,19 +174,29 @@ dropSproc <- function(connectionString, name, getScript = FALSE) {
         return(query)
     }
 
-    tryCatch({
-        dbhandle <- odbcDriverConnect(connectionString)
-        output <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?)", name, fetch=TRUE)
-        if (!is.na(output)) {
-            output <- sqlQuery(dbhandle, sprintf("DROP PROCEDURE %s", name))
-        } else {
-            output <- "Named procedure doesn't exist"
-        }
-    }, error = function(e) {
-        stop(paste0("Error dropping the stored procedure\n"))
-    }, finally = {
-        odbcCloseAll()
-    })
+#     tryCatch({
+#         dbhandle <- odbcDriverConnect(connectionString)
+#         output <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?)", name, fetch=TRUE)
+#         if (!is.na(output)) {
+#             output <- sqlQuery(dbhandle, sprintf("DROP PROCEDURE %s", name))
+#         } else {
+#             output <- "Named procedure doesn't exist"
+#         }
+#     }, error = function(e) {
+#         stop(paste0("Error dropping the stored procedure\n"))
+#     }, finally = {
+#         odbcCloseAll()
+#     })
+
+    # Check to make sure this procedure exists before trying to drop.
+    # This also protexts against sql injection since we can't parameterize DROP PROC.
+    #
+    namedProcedureID <- execute(connectionString, "SELECT OBJECT_ID (?)", name)
+    if (!is.na(namedProcedureID)) {
+        output <- execute(connectionString, query)
+    } else {
+        output <- "Named procedure doesn't exist"
+    }
 
     if (length(output) > 0) {
         print(output)
@@ -232,25 +240,27 @@ dropSproc <- function(connectionString, name, getScript = FALSE) {
 #'
 #'}
 #'
-#'@importFrom RODBCext sqlExecute
-#'@import RODBC
 #'@export
 checkSproc <- function(connectionString, name, getScript=FALSE) {
 
-    query = c(sprintf("SELECT OBJECT_ID (%s, N'P')", name))
+
+    query = "SELECT OBJECT_ID (?, N'P')"
 
     if(getScript) {
-        return(query)
+        return(str_replace(query,"?", name))
     }
 
-    tryCatch({
-        dbhandle <- odbcDriverConnect(connectionString)
-        output <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?, N'P')", name, fetch = TRUE)
-    }, error = function(e) {
-        cat(paste0("Error executing the sqlExecute\n"))
-    }, finally = {
-        odbcCloseAll()
-    })
+    # tryCatch({
+    #     dbhandle <- odbcDriverConnect(connectionString)
+    #     output <- sqlExecute(dbhandle, query, name, fetch = TRUE)
+    # }, error = function(e) {
+    #     cat(paste0("Error executing the sqlExecute\n"))
+    # }, finally = {
+    #     odbcCloseAll()
+    # })
+
+    output <- execute(connectionString, query, name)
+
     if (is.na(output)) {
         return(FALSE)
     } else {
@@ -291,8 +301,6 @@ checkSproc <- function(connectionString, name, getScript=FALSE) {
 #'
 #'\code{\link{checkSproc}}
 #'}
-#'@importFrom RODBCext sqlExecute
-#'@import RODBC
 #'@export
 executeSproc <- function(connectionString, name, ..., getScript = FALSE) {
     if (class(name) != "character")
@@ -301,24 +309,39 @@ executeSproc <- function(connectionString, name, ..., getScript = FALSE) {
     res <- createQuery(connectionString = connectionString, name = name, ...)
     query <- res$query
     paramOrder <- res$inputParams
-    df = data.frame(...)
+    df = list(...)
 
     if(getScript) {
         return(query)
     }
 
-    if (nrow(df) != 0 && ncol(df) != 0) {
+    # Reorder the parameters to match the function param order
+    #
+    if(length(df) > 0) {
         df <- df[paramOrder]
     }
 
-    tryCatch({
-        dbhandle <- odbcDriverConnect(connectionString)
-        result <- sqlExecute(dbhandle, query, df, fetch = TRUE)
-    }, error = function(e) {
-        stop(paste0("Error in SQL Execution: ", e, "\n"))
-    }, finally ={
-        odbcCloseAll()
-    })
+    # if (nrow(df) != 0 && ncol(df) != 0) {
+    #     #df <- df[paramOrder]
+    #     print(df)
+    # }
+
+    # tryCatch({
+    #     dbhandle <- odbcDriverConnect(connectionString)
+    #     result <- sqlExecute(dbhandle, query, df, fetch = TRUE)
+    # }, error = function(e) {
+    #     stop(paste0("Error in SQL Execution: ", e, "\n"))
+    # }, finally ={
+    #     odbcCloseAll()
+    # })
+
+    if(length(df) > 0) {
+        result <- execute(connectionString, query, df)
+    }
+    else {
+        result <- execute(connectionString, query)
+    }
+
 
     if (is.list(result)) {
         return(result)
@@ -342,29 +365,48 @@ getSprocParams <- function(connectionString, name) {
     'Output' = is_output FROM sys.parameters WHERE OBJECT_ID = ?"
 
     inputDataName <- NULL
-    tryCatch({
-        dbhandle <- odbcDriverConnect(connectionString)
+    # tryCatch({
+    #     dbhandle <- odbcDriverConnect(connectionString)
+    #
+    #     number <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?)", name, fetch=TRUE)[[1]]
+    #
+    #     params <- sqlExecute(dbhandle, query, number, fetch=TRUE)
+    #     outputParams <- split(params,params$Output)[['1']]
+    #     inputParams <- split(params,params$Output)[['0']]
+    #
+    #     text <- paste0(collapse="", lapply(sqlExecute(dbhandle, "EXEC sp_helptext ?", name, fetch = TRUE), as.character))
+    #     matched <- regmatches(text, gregexpr("input_data_1_name = [^,]+",text))[[1]]
+    #     if (length(matched) == 1) {
+    #         inputDataName <- regmatches(matched, gregexpr("N'.*'",matched))[[1]]
+    #         inputDataName <- gsub("(N'|')","", inputDataName)
+    #     }
+    # }, error = function(e) {
+    #     cat(paste0("Error executing the sqlExecute\n"))
+    #     odbcCloseAll()
+    #     stop(e)
+    # }, finally ={
+    #     odbcCloseAll()
+    # })
 
-        number <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?)", name, fetch=TRUE)[[1]]
 
-        params <- sqlExecute(dbhandle, query, number, fetch=TRUE)
-        outputParams <- split(params,params$Output)[['1']]
-        inputParams <- split(params,params$Output)[['0']]
+    number <- execute(connectionString, "SELECT OBJECT_ID (?)", name)[[1]]
 
-        text <- paste0(collapse="", lapply(sqlExecute(dbhandle, "EXEC sp_helptext ?", name, fetch = TRUE), as.character))
-        matched <- regmatches(text, gregexpr("input_data_1_name = [^,]+",text))[[1]]
-        if (length(matched) == 1) {
-            inputDataName <- regmatches(matched, gregexpr("N'.*'",matched))[[1]]
-            inputDataName <- gsub("(N'|')","", inputDataName)
-        }
-    }, error = function(e) {
-        cat(paste0("Error executing the sqlExecute\n"))
-        odbcCloseAll()
-        stop(e)
-    }, finally ={
-        odbcCloseAll()
-    })
-    list(inputParams = inputParams, inputDataName = inputDataName, outputParams = outputParams)
+    params <- execute(connectionString, query, number)
+
+    outputParams <- split(params,params$Output)[['TRUE']]
+    inputParams <- split(params,params$Output)[['FALSE']]
+
+    val <- execute(connectionString, "EXEC sp_helptext ?", name)
+
+    text <- paste0(collapse="", lapply(val, as.character))
+    matched <- regmatches(text, gregexpr("input_data_1_name = [^,]+",text))[[1]]
+    if (length(matched) == 1) {
+        inputDataName <- regmatches(matched, gregexpr("N'.*'",matched))[[1]]
+        inputDataName <- gsub("(N'|')","", inputDataName)
+    }
+
+    x <- list(inputParams = inputParams, inputDataName = inputDataName, outputParams = outputParams)
+    x
 }
 
 #Create the necessary query to execute the stored procedure
