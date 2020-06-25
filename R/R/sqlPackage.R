@@ -832,7 +832,7 @@ sqlPackageManagementVersion <- function(connectionString)
         stop(sprintf("Failed to get SQL version using connection string '%s'", connectionString ), call. = FALSE)
     }
 
-    if(serverProperties[["edition"]] == "sql azure" && serverProperties[["engineEdition"]]==5)
+    if(serverProperties[["edition"]] == "sql azure" && (serverProperties[["engineEdition"]]==5 || serverProperties[["engineEdition"]]==8))
     {
         # sql azure
         pmversion <- append(list(serverType = "azure"), tail(serverProperties, -2))
