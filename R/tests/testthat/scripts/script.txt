@@ -1,4 +1,5 @@
-foo <- function(t1, t2, t3) {
+foo <- function(t1, t2, t3)
+{
     print(t1)
     warning(t2)
     return(t3)

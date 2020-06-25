@@ -20,7 +20,8 @@ helper_parseConnectionString <- function(connectionString)
 
 helper_getSetting <- function(key)
 {
-    if(is.null(Settings)){
+    if(is.null(Settings))
+    {
         testArgs <- options('TestArgs')$TestArgs
         connectionStringDBO <- testArgs$connectionString
         connSplit <- helper_parseConnectionString( connectionStringDBO )

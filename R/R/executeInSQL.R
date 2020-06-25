@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 
-
 #'
 #'Execute a function in SQL
 #'
@@ -48,27 +47,6 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
     connection
 }
 
-splitConnection <- function(connString)
-{
-    sConn = strsplit(connString, ";")[[1]]
-    parsed = list()
-    for(l in sConn){
-        x = strsplit(l, "=")[[1]]
-        parsed[x[1]] = x[2]
-    }
-
-    parsed
-}
-
-#'
-#'Use odbc and connection string to connect to a server
-#'
-#'@import odbc
-connectToServer <- function(connectionString)
-{
-    dbConnect(odbc(), .connection_string = connectionString)
-}
-
 #'
 #'Execute a function in SQL
 #'
@@ -98,7 +76,7 @@ connectToServer <- function(connectionString)
 #'                      inputDataQuery = "SELECT top 1 * from airline5000")
 #'}
 #'
-#'
+#'@import odbc
 #'@export
 executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "", getScript = FALSE)
 {
@@ -211,12 +189,21 @@ executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
     }
 }
 
+
 #
-#Execute and process a script
+# Use odbc and connection string to connect to a server
+# @param connectionString character string. The connection String to the database
 #
-#@param connectionString character string. The connectionString to the database
-#@param script character string. The script to execute
+connectToServer <- function(connectionString)
+{
+    dbConnect(odbc(), .connection_string = connectionString)
+}
+
 #
+# Execute and process a script
+#
+# @param connectionString character string. The connectionString to the database
+# @param script character string. The script to execute
 #
 execute <- function(connectionString, script, ...)
 {
@@ -256,7 +243,7 @@ execute <- function(connectionString, script, ...)
         # 3. The warnings of the function
         # 4. The errors of the function
         # We raise warnings and errors, print any output, and return the actual function results to the user
-
+        #
         if (len > 1)
         {
             output <- resVal[[2]]
@@ -291,11 +278,11 @@ execute <- function(connectionString, script, ...)
 }
 
 #
-#Build an R sp_execute_external_script
+# Build an R sp_execute_external_script
 #
-#@param script The script to execute
-#@param inputDataQuery The query on the database
-#@param withResults Whether to have a result set, outside of the OutputDataSet
+# @param script The script to execute
+# @param inputDataQuery The query on the database
+# @param withResults Whether to have a result set, outside of the OutputDataSet
 #
 speesBuilder <- function(script, inputDataQuery, withResults = FALSE)
 {
@@ -312,15 +299,15 @@ speesBuilder <- function(script, inputDataQuery, withResults = FALSE)
 }
 
 #
-#Build a spees call from a function
+# Build a spees call from a function
 #
-#@param func The function to make into a spees
-#@param inputDataQuery The input data query to the database
-#@param inputDataName The name of the variable to put the data frame from the query into in the script
-#@param binArgs The (binary) version of all arguments passed into the function
+# @param func The function to make into a spees
+# @param inputDataQuery The input data query to the database
+# @param inputDataName The name of the variable to put the data frame from the query into in the script
+# @param binArgs The (binary) version of all arguments passed into the function
 #
-#@return The spees script to execute
-#The spees script will return a data frame with the results, serialized
+# @return The spees script to execute
+# The spees script will return a data frame with the results, serialized
 #
 speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArgs)
 {

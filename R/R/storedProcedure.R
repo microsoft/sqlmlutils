@@ -34,7 +34,8 @@
 #' createSprocFromFunction(connectionString, name = "fun",
 #'                         func = func, inputParams = list(arg1="character"))
 #'
-#' if (checkSproc(connectionString, "fun")) {
+#' if (checkSproc(connectionString, "fun"))
+#' {
 #'     print("Function 'fun' exists!")
 #'     executeSproc(connectionString, "fun", arg1="WORLD")
 #' }
@@ -61,33 +62,40 @@
 #'@export
 createSprocFromFunction <- function (connectionString, name, func,
                                      inputParams = NULL, outputParams = NULL,
-                                     getScript = FALSE) {
-
+                                     getScript = FALSE)
+{
     possibleTypes <- c("posixct", "numeric", "character", "integer", "logical", "raw", "dataframe")
 
-    lapply(inputParams, function(x) {
+    lapply(inputParams, function(x)
+    {
         if (!tolower(x) %in% possibleTypes) stop("Possible types are POSIXct, numeric, character, integer, logical, raw, and DataFrame.")
     })
-    lapply(outputParams, function(x) {
+
+    lapply(outputParams, function(x)
+    {
         if (!tolower(x) %in% possibleTypes) stop("Possible types are POSIXct, numeric, character, integer, logical, raw, and DataFrame.")
     })
 
     inputParameters <- methods::formalArgs(func)
 
-    if (!setequal(names(inputParams), inputParameters)){
+    if (!setequal(names(inputParams), inputParameters))
+    {
         stop("inputParams and function arguments do not match!")
     }
 
     procScript <- generateTSQL(func = func, spName = name, inputParams = inputParams, outputParams = outputParams)
 
-
-    if(getScript) {
+    if(getScript)
+    {
         return(procScript)
     }
 
-    tryCatch({
+    tryCatch(
+    {
         register(procScript, connectionString = connectionString)
-    }, error = function(e) {
+    },
+    error = function(e)
+    {
         stop(paste0("Failed during registering procedure ", name, ": ", e))
     })
 }
@@ -98,11 +106,14 @@ createSprocFromFunction <- function (connectionString, name, func,
 #'@export
 createSprocFromScript <- function (connectionString, name, script,
                                    inputParams = NULL, outputParams = NULL,
-                                   getScript = FALSE) {
-
-    if (file.exists(script)){
+                                   getScript = FALSE)
+{
+    if (file.exists(script))
+    {
         print(paste0("Script path exists, using file ", script))
-    } else {
+    }
+    else
+    {
         stop("Script path doesn't exist")
     }
 
@@ -110,22 +121,29 @@ createSprocFromScript <- function (connectionString, name, script,
 
     possibleTypes = c("posixct", "numeric", "character", "integer", "logical", "raw", "dataframe")
 
-    lapply(inputParams, function(x) {
+    lapply(inputParams, function(x)
+    {
         if (!tolower(x) %in% possibleTypes) stop("Possible input types are POSIXct, numeric, character, integer, logical, raw, and DataFrame.")
     })
-    lapply(outputParams, function(x) {
+
+    lapply(outputParams, function(x)
+    {
         if (!tolower(x) %in% possibleTypes) stop("Possible output types are POSIXct, numeric, character, integer, logical, raw, and DataFrame.")
     })
 
     procScript <- generateTSQLFromScript(script = text, spName = name, inputParams = inputParams, outputParams = outputParams)
 
-    if(getScript) {
+    if(getScript)
+    {
         return(procScript)
     }
 
-    tryCatch({
+    tryCatch(
+    {
         register(procScript, connectionString = connectionString)
-    }, error = function(e) {
+    },
+    error = function(e)
+    {
         stop(paste0("Failed during registering procedure ", name, ": ", e))
     })
 
@@ -149,7 +167,8 @@ createSprocFromScript <- function (connectionString, name, script,
 #' createSprocFromFunction(connectionString, name = "fun",
 #'                         func = func, inputParams = list(arg1 = "character"))
 #'
-#' if (checkSproc(connectionString, "fun")) {
+#' if (checkSproc(connectionString, "fun"))
+#' {
 #'     print("Function 'fun' exists!")
 #'     executeSproc(connectionString, "fun", arg1="WORLD")
 #' }
@@ -167,41 +186,35 @@ createSprocFromScript <- function (connectionString, name, script,
 #'
 #'
 #'@export
-dropSproc <- function(connectionString, name, getScript = FALSE) {
+dropSproc <- function(connectionString, name, getScript = FALSE)
+{
     query = sprintf("DROP PROCEDURE %s", name)
 
-    if(getScript) {
+    if(getScript)
+    {
         return(query)
     }
-
-#     tryCatch({
-#         dbhandle <- odbcDriverConnect(connectionString)
-#         output <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?)", name, fetch=TRUE)
-#         if (!is.na(output)) {
-#             output <- sqlQuery(dbhandle, sprintf("DROP PROCEDURE %s", name))
-#         } else {
-#             output <- "Named procedure doesn't exist"
-#         }
-#     }, error = function(e) {
-#         stop(paste0("Error dropping the stored procedure\n"))
-#     }, finally = {
-#         odbcCloseAll()
-#     })
 
     # Check to make sure this procedure exists before trying to drop.
     # This also protexts against sql injection since we can't parameterize DROP PROC.
     #
     namedProcedureID <- execute(connectionString, "SELECT OBJECT_ID (?)", name)
-    if (!is.na(namedProcedureID)) {
+    if (!is.na(namedProcedureID))
+    {
         output <- execute(connectionString, query)
-    } else {
+    }
+    else
+    {
         output <- "Named procedure doesn't exist"
     }
 
-    if (length(output) > 0) {
+    if (length(output) > 0)
+    {
         print(output)
         return(FALSE)
-    } else {
+    }
+    else
+    {
         print(paste0("Successfully dropped procedure ", name))
         return(TRUE)
     }
@@ -224,7 +237,8 @@ dropSproc <- function(connectionString, name, getScript = FALSE) {
 #' func <- function(arg1) {return(data.frame(hello = arg1))}
 #' createSprocFromFunction(connectionString, name = "fun",
 #'                         func = func, inputParams = list(arg1="character"))
-#' if (checkSproc(connectionString, "fun")) {
+#' if (checkSproc(connectionString, "fun"))
+#' {
 #'     print("Function 'fun' exists!")
 #'     executeSproc(connectionString, "fun", arg1="WORLD")
 #' }
@@ -241,29 +255,23 @@ dropSproc <- function(connectionString, name, getScript = FALSE) {
 #'}
 #'
 #'@export
-checkSproc <- function(connectionString, name, getScript=FALSE) {
-
-
+checkSproc <- function(connectionString, name, getScript=FALSE)
+{
     query = "SELECT OBJECT_ID (?, N'P')"
 
-    if(getScript) {
-        return(str_replace(query,"?", name))
+    if(getScript)
+    {
+        return(gsub("?", paste0("N'", name, "'"), query, fixed=TRUE))
     }
-
-    # tryCatch({
-    #     dbhandle <- odbcDriverConnect(connectionString)
-    #     output <- sqlExecute(dbhandle, query, name, fetch = TRUE)
-    # }, error = function(e) {
-    #     cat(paste0("Error executing the sqlExecute\n"))
-    # }, finally = {
-    #     odbcCloseAll()
-    # })
 
     output <- execute(connectionString, query, name)
 
-    if (is.na(output)) {
+    if (is.na(output))
+    {
         return(FALSE)
-    } else {
+    }
+    else
+    {
         return(TRUE)
     }
 }
@@ -289,7 +297,8 @@ checkSproc <- function(connectionString, name, getScript=FALSE) {
 #' createSprocFromFunction(connectionString, name = "fun",
 #'                         func = func, inputParams = list(arg1="character"))
 #'
-#' if (checkSproc(connectionString, "fun")) {
+#' if (checkSproc(connectionString, "fun"))
+#' {
 #'     print("Function 'fun' exists!")
 #'     executeSproc(connectionString, "fun", arg1="WORLD")
 #' }
@@ -302,7 +311,8 @@ checkSproc <- function(connectionString, name, getScript=FALSE) {
 #'\code{\link{checkSproc}}
 #'}
 #'@export
-executeSproc <- function(connectionString, name, ..., getScript = FALSE) {
+executeSproc <- function(connectionString, name, ..., getScript = FALSE)
+{
     if (class(name) != "character")
         stop("the argument must be the name of a Sproc")
 
@@ -311,43 +321,38 @@ executeSproc <- function(connectionString, name, ..., getScript = FALSE) {
     paramOrder <- res$inputParams
     df = list(...)
 
-    if(getScript) {
+    if(getScript)
+    {
         return(query)
     }
 
     # Reorder the parameters to match the function param order
     #
-    if(length(df) > 0) {
+    if(length(df) > 0)
+    {
         df <- df[paramOrder]
     }
 
-    # if (nrow(df) != 0 && ncol(df) != 0) {
-    #     #df <- df[paramOrder]
-    #     print(df)
-    # }
-
-    # tryCatch({
-    #     dbhandle <- odbcDriverConnect(connectionString)
-    #     result <- sqlExecute(dbhandle, query, df, fetch = TRUE)
-    # }, error = function(e) {
-    #     stop(paste0("Error in SQL Execution: ", e, "\n"))
-    # }, finally ={
-    #     odbcCloseAll()
-    # })
-
-    if(length(df) > 0) {
+    if(length(df) > 0)
+    {
         result <- execute(connectionString, query, df)
     }
-    else {
+    else
+    {
         result <- execute(connectionString, query)
     }
 
 
-    if (is.list(result)) {
+    if (is.list(result))
+    {
         return(result)
-    } else if (!is.character(result)) {
+    }
+    else if (!is.character(result))
+    {
         stop(paste("Error executing the stored procedure:", name))
-    } else {
+    }
+    else
+    {
         return(NULL)
     }
 }
@@ -360,34 +365,12 @@ executeSproc <- function(connectionString, name, ..., getScript = FALSE) {
 #
 #@return the parameters
 #
-getSprocParams <- function(connectionString, name) {
+getSprocParams <- function(connectionString, name)
+{
     query <- "SELECT 'Parameter_name' = name, 'Type' = type_name(user_type_id),
     'Output' = is_output FROM sys.parameters WHERE OBJECT_ID = ?"
 
     inputDataName <- NULL
-    # tryCatch({
-    #     dbhandle <- odbcDriverConnect(connectionString)
-    #
-    #     number <- sqlExecute(dbhandle, "SELECT OBJECT_ID (?)", name, fetch=TRUE)[[1]]
-    #
-    #     params <- sqlExecute(dbhandle, query, number, fetch=TRUE)
-    #     outputParams <- split(params,params$Output)[['1']]
-    #     inputParams <- split(params,params$Output)[['0']]
-    #
-    #     text <- paste0(collapse="", lapply(sqlExecute(dbhandle, "EXEC sp_helptext ?", name, fetch = TRUE), as.character))
-    #     matched <- regmatches(text, gregexpr("input_data_1_name = [^,]+",text))[[1]]
-    #     if (length(matched) == 1) {
-    #         inputDataName <- regmatches(matched, gregexpr("N'.*'",matched))[[1]]
-    #         inputDataName <- gsub("(N'|')","", inputDataName)
-    #     }
-    # }, error = function(e) {
-    #     cat(paste0("Error executing the sqlExecute\n"))
-    #     odbcCloseAll()
-    #     stop(e)
-    # }, finally ={
-    #     odbcCloseAll()
-    # })
-
 
     number <- execute(connectionString, "SELECT OBJECT_ID (?)", name)[[1]]
 
@@ -400,13 +383,14 @@ getSprocParams <- function(connectionString, name) {
 
     text <- paste0(collapse="", lapply(val, as.character))
     matched <- regmatches(text, gregexpr("input_data_1_name = [^,]+",text))[[1]]
-    if (length(matched) == 1) {
+
+    if (length(matched) == 1)
+    {
         inputDataName <- regmatches(matched, gregexpr("N'.*'",matched))[[1]]
         inputDataName <- gsub("(N'|')","", inputDataName)
     }
 
-    x <- list(inputParams = inputParams, inputDataName = inputDataName, outputParams = outputParams)
-    x
+    list(inputParams = inputParams, inputDataName = inputDataName, outputParams = outputParams)
 }
 
 #Create the necessary query to execute the stored procedure
@@ -417,14 +401,18 @@ getSprocParams <- function(connectionString, name) {
 #
 #@return the query
 #
-createQuery <- function(connectionString, name, ...) {
-    #Get and process params from the stored procedure in the database
+createQuery <- function(connectionString, name, ...)
+{
+    # Get and process params from the stored procedure in the database
+    #
     storedProcParams <- getSprocParams(connectionString = connectionString, name = name)
     params <- storedProcParams$inputParams
     inList <- c()
 
-    if (!is.null(params)) {
-        for(i in seq_len(nrow(params))) {
+    if (!is.null(params))
+    {
+        for(i in seq_len(nrow(params)))
+        {
             parameter_outer <- params[i,]$Parameter_name
             parameter <- gsub('.{6}$', '', parameter_outer)
             parameter <- gsub('@','', parameter)
@@ -433,20 +421,26 @@ createQuery <- function(connectionString, name, ...) {
             inList <- c(inList,parameter)
         }
     }
+
     inLabels <- NULL
-    if (!(length(list(...)) == 1 && is.null(list(...)[[1]]))) {
+    if (!(length(list(...)) == 1 && is.null(list(...)[[1]])))
+    {
         inLabels <- labels(list(...))
-        if (!all(inLabels %in% inList)) {
+        if (!all(inLabels %in% inList))
+        {
             stop("You must provide named arguments that match the parameters in the stored procedure.")
         }
     }
-    #add necessary variable declarations and value assignments
 
+    #add necessary variable declarations and value assignments
+    #
     query <- paste0("exec ", name)
-    for(p in inList) {
+    for(p in inList)
+    {
         paramName <- p
         query <- paste0(query, " @", paramName, "_outer = ?,")
     }
+
     query <- gsub(",$", "", query)
     list(query=query, inputParams=inList)
 }

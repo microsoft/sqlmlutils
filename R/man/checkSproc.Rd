@@ -28,7 +28,8 @@ dropSproc(connectionString, "fun")
 func <- function(arg1) {return(data.frame(hello = arg1))}
 createSprocFromFunction(connectionString, name = "fun",
                         func = func, inputParams = list(arg1="character"))
-if (checkSproc(connectionString, "fun")) {
+if (checkSproc(connectionString, "fun"))
+{
     print("Function 'fun' exists!")
     executeSproc(connectionString, "fun", arg1="WORLD")
 }
