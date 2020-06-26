@@ -4,4 +4,4 @@
 library(testthat)
 library(sqlmlutils)
 
-test_check("sqlmlutils", filter = "storedProcedure")
+test_check("sqlmlutils", filter = "scope")

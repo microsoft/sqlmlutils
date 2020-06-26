@@ -54,8 +54,9 @@ scriptDirectory <- file.path(testthatDir, "scripts")
 options(repos = c(CRAN="https://cran.microsoft.com", CRANextra = "http://www.stats.ox.ac.uk/pub/RWin"))
 cat("INFO: repos = ", getOption("repos"), sep="\n")
 
+# Compute context specifications
+#
 TestArgs <- list(
-    # Compute context specifications
     gitRoot = R_Root,
     testDirectory = testthatDir,
     scriptDirectory = scriptDirectory,
