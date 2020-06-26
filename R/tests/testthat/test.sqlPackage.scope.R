@@ -8,8 +8,8 @@ library(testthat)
 
 context("Tests for sqlmlutils package management scope")
 
-test_that("dbo cannot install package into private scope", {
-    #skip("temporarily_disabled")
+test_that("dbo cannot install package into private scope",
+{
     skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
@@ -21,8 +21,8 @@ test_that("dbo cannot install package into private scope", {
     helper_checkPackageStatusRequire( connectionString = connectionStringDBO,  packageName, FALSE)
 })
 
-test_that( "package install and remove by scope", {
-    #skip("temporarily_disabled")
+test_that( "package install and remove by scope",
+{
     skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
@@ -72,7 +72,6 @@ test_that( "package install and remove by scope", {
     # remove packages from private scope
     #
     cat("TEST: AirlineUser: removing packages from private scope...\n")
-    #owner <- 'AirlineUser'
     try(sql_remove.packages( connectionStringAirlineUser, packageName, scope = 'private', verbose = TRUE))
     helper_checkPackageStatusFind(connectionStringAirlineUser, packageName, FALSE)
 
