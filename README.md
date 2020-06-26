@@ -28,7 +28,7 @@ Windows:
 
 From command prompt, run 
 ```
-R.exe -e "install.packages('RODBCext', repos='https://mran.microsoft.com/snapshot/2019-02-01/')"
+R.exe -e "install.packages('odbc')"
 R.exe CMD INSTALL dist/sqlmlutils_0.7.3.zip
 ```
 OR
@@ -39,7 +39,7 @@ To build a new package file and install, run
 
 Linux
 ```
-R.exe -e "install.packages('RODBCext', repos='https://mran.microsoft.com/snapshot/2019-02-01/')"
+R.exe -e "install.packages('odbc')"
 R.exe CMD INSTALL dist/sqlmlutils_0.7.3.tar.gz
 ```
 

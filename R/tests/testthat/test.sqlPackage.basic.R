@@ -1,8 +1,6 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
-library(RODBC)
-library(RODBCext)
 library(sqlmlutils)
 library(testthat)
 

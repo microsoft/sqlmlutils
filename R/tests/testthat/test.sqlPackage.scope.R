@@ -1,8 +1,6 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
-library(RODBC)
-library(RODBCext)
 library(sqlmlutils)
 library(testthat)
 
@@ -13,11 +11,11 @@ test_that("dbo cannot install package into private scope",
     skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
-    packageName <- c("glue")
+    packageName <- c("xtable")
 
     output <- try(capture.output(sql_install.packages(connectionString = connectionStringDBO, packageName, verbose = TRUE, scope="private")))
     expect_true(inherits(output, "try-error"))
-    expect_equal(1, sum(grepl("Permission denied for installing packages on SQL server for current user", output)))
+    expect_equal(1, sum(grepl("The user does not have permission to perform this action", output)))
     helper_checkPackageStatusRequire( connectionString = connectionStringDBO,  packageName, FALSE)
 })
 
@@ -27,8 +25,8 @@ test_that( "package install and remove by scope",
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
 
-    packageName <- c("plyr")
-    dependentPackageName <- "Rcpp"
+    packageName <- c("A3")
+    dependentPackageName <- "xtable"
 
     owner <- ""
     cat("\nTEST: connection string='",connectionStringDBO,"'\n", sep="")

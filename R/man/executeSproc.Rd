@@ -20,8 +20,7 @@ Execute a Stored Procedure
 }
 \section{Warning}{
 
-Even though you can create stored procedures with output parameters, you CANNOT execute them
-using this utility due to limitations of RODBC.
+Even though you can create stored procedures with output parameters, you CANNOT currently execute them with output parameters
 }
 
 \examples{

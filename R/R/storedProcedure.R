@@ -284,8 +284,7 @@ checkSproc <- function(connectionString, name, getScript=FALSE)
 #'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
 #'
 #'@section Warning:
-#'Even though you can create stored procedures with output parameters, you CANNOT execute them
-#'using this utility due to limitations of RODBC.
+#'Even though you can create stored procedures with output parameters, you CANNOT currently execute them with output parameters
 #'
 #'@examples
 #'\dontrun{

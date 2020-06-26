@@ -7,7 +7,7 @@ sqlmlutils is an R package to help execute R code on a SQL database (SQL Server 
 ### Windows
 From command prompt, run 
 ```
-R.exe -e "install.packages('RODBCext', repos='https://mran.microsoft.com/snapshot/2019-02-01/')"
+R.exe -e "install.packages('odbc')"
 R.exe CMD INSTALL dist/sqlmlutils_0.7.3.zip
 ```
 OR
@@ -18,7 +18,7 @@ To build a new package file and install, run
 
 ### Linux
 ```
-R.exe -e "install.packages('RODBCext', repos='https://mran.microsoft.com/snapshot/2019-02-01/')"
+R.exe -e "install.packages('odbc')"
 R.exe CMD INSTALL dist/sqlmlutils_0.7.3.tar.gz
 ```
 
@@ -197,4 +197,4 @@ sql_install.packages(connectionString = connection, pkgPath, verbose = TRUE, sco
     
 ### Notable TODOs and open issues
 
-1. Output Parameter execution does not work - RODBCext limitations?
+1. Output Parameter execution did not work with RODBCext. Check whether they work with odbc package.
