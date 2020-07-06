@@ -15,7 +15,7 @@ test_that("dbo cannot install package into private scope",
 
     output <- try(capture.output(sql_install.packages(connectionString = connectionStringDBO, packageName, verbose = TRUE, scope="private")))
     expect_true(inherits(output, "try-error"))
-    expect_equal(1, sum(grepl("The user does not have permission to perform this action", output)))
+    expect_equal(1, sum(grepl("Permission denied for installing packages on SQL server for current user", output)))
     helper_checkPackageStatusRequire( connectionString = connectionStringDBO,  packageName, FALSE)
 })
 

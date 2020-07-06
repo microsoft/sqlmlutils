@@ -72,4 +72,4 @@ TestArgs <- list(
 )
 
 options(TestArgs = TestArgs)
-#rm(TestArgs)
+rm(TestArgs)

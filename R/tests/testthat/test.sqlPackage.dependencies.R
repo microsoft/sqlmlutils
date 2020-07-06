@@ -11,7 +11,7 @@ test_that("single package install and removal with no dependencies",
     #
     # Set scope to public for trusted connection on Windows
     #
-    scope <- if(!helper_isServerLinux())"public" else "private"
+    scope <- if(!helper_isServerLinux()) "public" else "private"
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
     packageName <- c("glue")
@@ -67,8 +67,8 @@ test_that( "package install and uninstall with dependency",
     cat("\nINFO: checking remote lib paths...\n")
     helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
 
-    packageName <- c("plyr")
-    dependentPackageName <- "Rcpp"
+    packageName <- c("A3")
+    dependentPackageName <- "xtable"
 
     #
     # remove old packages if any and verify they aren't there

@@ -107,7 +107,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
     }
     else
     {
-        resVal <- execute(connectionString = connectionString, script = spees)
+        resVal <- execute(connectionString, script = spees)
         return(resVal[[1]])
     }
 }
@@ -202,18 +202,43 @@ connectToServer <- function(connectionString)
 #
 # Execute and process a script
 #
-# @param connectionString character string. The connectionString to the database
+# @param connection character string or S4 connection object, to connect to the database
 # @param script character string. The script to execute
 #
-execute <- function(connectionString, script, ...)
+execute <- function(connection, script, ...)
 {
     queryResult <- NULL
+
+    # Check if the connection is a connection string or an odbc connection object (S4 object)
+    #
+    if (class(connection) == "character")
+    {
+        if (nchar(connection) < 1)
+        {
+            stop(paste0("Invalid connection string: ", connection), call. = FALSE)
+        }
+    }
+    else if (typeof(connection) != "S4")
+    {
+        stop("Invalid connection string has to be a character string or odbc handle", call. = FALSE)
+    }
+
     tryCatch(
     {
-        dbConnection <- connectToServer(connectionString)
-        on.exit(dbDisconnect(dbConnection), add = TRUE)
+        # If we have a connection string, connect, then disconnect on exit.
+        # If we have an actual connection object, use it but don't disconnect on exit.
+        #
+        if (class(connection) == "character")
+        {
+            hodbc <- connectToServer(connection)
+            on.exit(dbDisconnect(hodbc), add = TRUE)
+        }
+        else
+        {
+            hodbc <- connection
+        }
 
-        queryResult <- dbSendQuery(dbConnection, script, ...)
+        queryResult <- dbSendQuery(hodbc, script, ...)
         res <- dbFetch(queryResult)
 
         binVal <- res$returnVal
@@ -276,6 +301,7 @@ execute <- function(connectionString, script, ...)
 
     return(res)
 }
+
 
 #
 # Build an R sp_execute_external_script
