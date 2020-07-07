@@ -101,7 +101,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 
     spees <- speesBuilderFromFunction(func = func, inputDataQuery = inputDataQuery, inputDataName = inputDataName, binArgs)
 
-    if(getScript)
+    if (getScript)
     {
         return(spees)
     }
@@ -179,7 +179,7 @@ executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
               "
     spees <- speesBuilder(script = script, inputDataQuery = sqlQuery, TRUE)
 
-    if(getScript)
+    if (getScript)
     {
         return(spees)
     }
@@ -249,7 +249,7 @@ execute <- function(connection, script, ...)
     },
     finally =
     {
-        if(!is.null(queryResult))
+        if (!is.null(queryResult))
         {
             dbClearResult(queryResult)
         }
@@ -272,7 +272,7 @@ execute <- function(connection, script, ...)
         if (len > 1)
         {
             output <- resVal[[2]]
-            for(o in output)
+            for (o in output)
             {
                 cat(paste0(o,"\n"))
             }
@@ -281,7 +281,7 @@ execute <- function(connection, script, ...)
         if (len > 2)
         {
             warnings <- resVal[[3]]
-            for(w in warnings)
+            for (w in warnings)
             {
                 warning(w)
             }
@@ -290,7 +290,7 @@ execute <- function(connection, script, ...)
         if (len > 3)
         {
             errors <- resVal[[4]]
-            for(e in errors)
+            for (e in errors)
             {
                 stop(paste0("Error in script: ", e))
             }

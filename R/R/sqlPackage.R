@@ -590,7 +590,7 @@ checkConnectionString <- function(connectionString)
     }
 }
 
-checkResult <- function( result, expectedResult, errorMessage)
+checkResult <- function(result, expectedResult, errorMessage)
 {
     if (result != expectedResult)
     {
@@ -1209,7 +1209,8 @@ prunePackagesToInstallExtLib <- function(dependentPackages, topMostPackages, ins
                     {
                         # pkgToInstall is newer (later) than availablePkg
                         #
-                        warning(sprintf("package is already installed but version is older than available in repos: package='%s', scope='%s', currently installed version='%s', new version=='%s'",
+                        warning(sprintf("package is already installed but version is older than available in repos:
+                                        package='%s', scope='%s', currently installed version='%s', new version=='%s'",
                                         pkgToInstall$Package, scope, availablePkg$Version, pkgToInstall$Version), call. = FALSE)
                     }
 
@@ -2031,7 +2032,7 @@ sqlHelperInstallPackages <- function(connectionString, packages, owner = "", sco
 
     tryCatch({
         hodbc <- connectToServer(connectionString)
-        checkResult(dbBegin(hodbc), TRUE, "failed to create transaction")
+        checkResult(dbBegin(hodbc), expectedResult=TRUE, errorMessage="failed to create transaction")
         haveTransaction <- TRUE
 
         numPkgs <- nrow(packages)
@@ -2135,7 +2136,7 @@ sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToRe
     tryCatch({
         hodbc <- connectToServer(connectionString)
 
-        checkResult( dbBegin(hodbc), TRUE, "failed to create transaction")
+        checkResult(dbBegin(hodbc), expectedResult=TRUE, errorMessage="failed to create transaction")
 
         haveTransaction <- TRUE
 

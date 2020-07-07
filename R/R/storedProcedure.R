@@ -85,7 +85,7 @@ createSprocFromFunction <- function (connectionString, name, func,
 
     procScript <- generateTSQL(func = func, spName = name, inputParams = inputParams, outputParams = outputParams)
 
-    if(getScript)
+    if (getScript)
     {
         return(procScript)
     }
@@ -133,7 +133,7 @@ createSprocFromScript <- function (connectionString, name, script,
 
     procScript <- generateTSQLFromScript(script = text, spName = name, inputParams = inputParams, outputParams = outputParams)
 
-    if(getScript)
+    if (getScript)
     {
         return(procScript)
     }
@@ -190,7 +190,7 @@ dropSproc <- function(connectionString, name, getScript = FALSE)
 {
     query = sprintf("DROP PROCEDURE %s", name)
 
-    if(getScript)
+    if (getScript)
     {
         return(query)
     }
@@ -259,7 +259,7 @@ checkSproc <- function(connectionString, name, getScript=FALSE)
 {
     query = "SELECT OBJECT_ID (?, N'P')"
 
-    if(getScript)
+    if (getScript)
     {
         return(gsub("?", paste0("N'", name, "'"), query, fixed=TRUE))
     }
@@ -318,23 +318,23 @@ executeSproc <- function(connectionString, name, ..., getScript = FALSE)
     res <- createQuery(connectionString = connectionString, name = name, ...)
     query <- res$query
     paramOrder <- res$inputParams
-    df = list(...)
+    paramList = list(...)
 
-    if(getScript)
+    if (getScript)
     {
         return(query)
     }
 
     # Reorder the parameters to match the function param order
     #
-    if(length(df) > 0)
+    if (length(paramList) > 0)
     {
-        df <- df[paramOrder]
+        paramList <- paramList[paramOrder]
     }
 
-    if(length(df) > 0)
+    if (length(paramList) > 0)
     {
-        result <- execute(connectionString, query, df)
+        result <- execute(connectionString, query, paramList)
     }
     else
     {
@@ -410,7 +410,7 @@ createQuery <- function(connectionString, name, ...)
 
     if (!is.null(params))
     {
-        for(i in seq_len(nrow(params)))
+        for (i in seq_len(nrow(params)))
         {
             parameter_outer <- params[i,]$Parameter_name
             parameter <- gsub('.{6}$', '', parameter_outer)
@@ -431,10 +431,10 @@ createQuery <- function(connectionString, name, ...)
         }
     }
 
-    #add necessary variable declarations and value assignments
+    # add necessary variable declarations and value assignments
     #
     query <- paste0("exec ", name)
-    for(p in inList)
+    for (p in inList)
     {
         paramName <- p
         query <- paste0(query, " @", paramName, "_outer = ?,")
