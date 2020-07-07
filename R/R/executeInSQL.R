@@ -192,7 +192,7 @@ executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
 
 #
 # Use odbc and connection string to connect to a server
-# @param connectionString character string. The connection String to the database
+# @param connectionString character string. The connection to the database
 #
 connectToServer <- function(connectionString)
 {

@@ -13,4 +13,4 @@ matrix:
         - sudo bash "../Travis-CI/installODBC.sh"
       script:
         - R CMD build .
-        - travis_wait 30 R CMD check sqlmlutils_0.7.3.tar.gz --as-cran
+        - travis_wait 60 R CMD check sqlmlutils_0.7.3.tar.gz --as-cran
