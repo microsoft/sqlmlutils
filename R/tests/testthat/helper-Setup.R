@@ -12,13 +12,18 @@ Sysname <- Sys.info()['sysname']
 cat("INFO: sysname=", Sysname, "\n", sep = "")
 
 Driver <- Sys.getenv("DRIVER")
-if (Driver == ''){
-    if(Sysname == "Windows"){
+if (Driver == '')
+{
+    if(Sysname == "Windows")
+    {
         Driver <- "SQL Server"
-    } else {
+    }
+    else
+    {
         Driver <- "ODBC Driver 17 for SQL Server"
     }
 }
+
 cat("INFO: Driver=", Driver, "\n", sep = "")
 
 Server <- Sys.getenv("SERVER")
@@ -49,8 +54,9 @@ scriptDirectory <- file.path(testthatDir, "scripts")
 options(repos = c(CRAN="https://cran.microsoft.com", CRANextra = "http://www.stats.ox.ac.uk/pub/RWin"))
 cat("INFO: repos = ", getOption("repos"), sep="\n")
 
+# Compute context specifications
+#
 TestArgs <- list(
-    # Compute context specifications
     gitRoot = R_Root,
     testDirectory = testthatDir,
     scriptDirectory = scriptDirectory,

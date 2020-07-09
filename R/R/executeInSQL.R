@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 
-
 #'
 #'Execute a function in SQL
 #'
@@ -28,22 +27,25 @@
 #'
 #'@export
 connectionInfo <- function(driver = "SQL Server", server = "localhost", database = "master",
-                             uid = NULL, pwd = NULL) {
+                             uid = NULL, pwd = NULL)
+{
     authorization <- "Trusted_Connection=Yes"
 
-    if (!is.null(uid)) {
-        if (is.null(pwd)) {
+    if (!is.null(uid))
+    {
+        if (is.null(pwd))
+        {
             stop("Need a password if using uid")
-        } else {
+        }
+        else
+        {
             authorization = sprintf("uid=%s;pwd=%s",uid,pwd)
         }
     }
 
-    connection <- sprintf("Driver={%s};Server=%s;Database=%s;%s;", driver, server, database, authorization)
+    connection <- sprintf("Driver=%s;Server=%s;Database=%s;%s;", driver, server, database, authorization)
     connection
 }
-
-
 
 #'
 #'Execute a function in SQL
@@ -65,36 +67,47 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
 #'\dontrun{
 #' connection <- connectionInfo(database = "AirlineTestDB")
 #'
-#' foo <- function(in_df, arg) {
+#' foo <- function(in_df, arg)
+#' {
 #'     list(data = in_df, value = arg)
 #' }
+#'
 #' executeFunctionInSQL(connection, foo, arg = 12345,
 #'                      inputDataQuery = "SELECT top 1 * from airline5000")
 #'}
 #'
-#'
+#'@import odbc
 #'@export
 executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "", getScript = FALSE)
 {
     inputDataName <- "InputDataSet"
     listArgs <- list(...)
 
-    if (inputDataQuery != "") {
+    if (inputDataQuery != "")
+    {
         funcArgs <- methods::formalArgs(func)
-        if (length(funcArgs) < 1) {
+
+        if (length(funcArgs) < 1)
+        {
             stop("To use the inputDataQuery variable, the function must have at least one input argument")
-        } else {
+        }
+        else
+        {
             inputDataName <- funcArgs[[1]]
         }
     }
+
     binArgs <- serialize(listArgs, NULL)
 
     spees <- speesBuilderFromFunction(func = func, inputDataQuery = inputDataQuery, inputDataName = inputDataName, binArgs)
 
-    if(getScript) {
+    if (getScript)
+    {
         return(spees)
-    } else {
-        resVal <- execute(connectionString = connectionString, script = spees)
+    }
+    else
+    {
+        resVal <- execute(connectionString, script = spees)
         return(resVal[[1]])
     }
 }
@@ -117,15 +130,19 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", getScript = FALSE)
 {
 
-    if (file.exists(script)){
+    if (file.exists(script))
+    {
         print(paste0("Script path exists, using file ", script))
-    } else {
+    }
+    else
+    {
         stop("Script path doesn't exist")
     }
 
     text <- paste(readLines(script), collapse="\n")
 
-    func <- function(InputDataSet, script) {
+    func <- function(InputDataSet, script)
+    {
         eval(parse(text = script))
     }
 
@@ -162,37 +179,86 @@ executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
               "
     spees <- speesBuilder(script = script, inputDataQuery = sqlQuery, TRUE)
 
-
-    if(getScript) {
+    if (getScript)
+    {
         return(spees)
-    } else {
+    }
+    else
+    {
         execute(connectionString, spees)$result
     }
 }
 
+
 #
-#Execute and process a script
+# Use odbc and connection string to connect to a server
+# @param connectionString character string. The connection to the database
 #
-#@param connectionString character string. The connectionString to the database
-#@param script character string. The script to execute
-#
-#
-execute <- function(connectionString, script)
+connectToServer <- function(connectionString)
 {
-    tryCatch({
-        dbhandle <- odbcDriverConnect(connectionString)
-        res <- sqlQuery(dbhandle, script)
-        if (typeof(res) == "character") {
-            stop(res[1])
+    dbConnect(odbc(), .connection_string = connectionString)
+}
+
+#
+# Execute and process a script
+#
+# @param connection character string or S4 connection object, to connect to the database
+# @param script character string. The script to execute
+#
+execute <- function(connection, script, ...)
+{
+    queryResult <- NULL
+
+    # Check if the connection is a connection string or an odbc connection object (S4 object)
+    #
+    if (class(connection) == "character")
+    {
+        if (nchar(connection) < 1)
+        {
+            stop(paste0("Invalid connection string: ", connection), call. = FALSE)
         }
+    }
+    else if (typeof(connection) != "S4")
+    {
+        stop("Invalid connection string has to be a character string or odbc handle", call. = FALSE)
+    }
+
+    tryCatch(
+    {
+        # If we have a connection string, connect, then disconnect on exit.
+        # If we have an actual connection object, use it but don't disconnect on exit.
+        #
+        if (class(connection) == "character")
+        {
+            hodbc <- connectToServer(connection)
+            on.exit(dbDisconnect(hodbc), add = TRUE)
+        }
+        else
+        {
+            hodbc <- connection
+        }
+
+        queryResult <- dbSendQuery(hodbc, script, ...)
+        res <- dbFetch(queryResult)
+
         binVal <- res$returnVal
-    }, error = function(e) {
+    },
+    error = function(e)
+    {
         stop(paste0("Error in SQL Execution: ", e, "\n"))
-    }, finally ={
-        odbcCloseAll()
+    },
+    finally =
+    {
+        if (!is.null(queryResult))
+        {
+            dbClearResult(queryResult)
+        }
     })
+
     binVal <- res$returnVal
-    if (!is.null(binVal)) {
+
+    if (!is.null(binVal))
+    {
         resVal <- unserialize(unlist(lapply(lapply(as.character(binVal),as.hexmode), as.raw)))
         len <- length(resVal)
 
@@ -202,40 +268,50 @@ execute <- function(connectionString, script)
         # 3. The warnings of the function
         # 4. The errors of the function
         # We raise warnings and errors, print any output, and return the actual function results to the user
-
-        if (len > 1) {
+        #
+        if (len > 1)
+        {
             output <- resVal[[2]]
-            for(o in output) {
+            for (o in output)
+            {
                 cat(paste0(o,"\n"))
             }
         }
-        if (len > 2) {
+
+        if (len > 2)
+        {
             warnings <- resVal[[3]]
-            for(w in warnings) {
+            for (w in warnings)
+            {
                 warning(w)
             }
         }
-        if (len > 3) {
+
+        if (len > 3)
+        {
             errors <- resVal[[4]]
-            for(e in errors) {
+            for (e in errors)
+            {
                 stop(paste0("Error in script: ", e))
             }
         }
-        return(resVal)
-    } else {
-        return(res)
+
+        res <- resVal
     }
+
+    return(res)
 }
 
-#
-#Build an R sp_execute_external_script
-#
-#@param script The script to execute
-#@param inputDataQuery The query on the database
-#@param withResults Whether to have a result set, outside of the OutputDataSet
-#
-speesBuilder <- function(script, inputDataQuery, withResults = FALSE) {
 
+#
+# Build an R sp_execute_external_script
+#
+# @param script The script to execute
+# @param inputDataQuery The query on the database
+# @param withResults Whether to have a result set, outside of the OutputDataSet
+#
+speesBuilder <- function(script, inputDataQuery, withResults = FALSE)
+{
     resultSet <- if (withResults) "with result sets((returnVal varchar(MAX)))" else ""
 
     sprintf("exec sp_execute_external_script
@@ -249,18 +325,18 @@ speesBuilder <- function(script, inputDataQuery, withResults = FALSE) {
 }
 
 #
-#Build a spees call from a function
+# Build a spees call from a function
 #
-#@param func The function to make into a spees
-#@param inputDataQuery The input data query to the database
-#@param inputDataName The name of the variable to put the data frame from the query into in the script
-#@param binArgs The (binary) version of all arguments passed into the function
+# @param func The function to make into a spees
+# @param inputDataQuery The input data query to the database
+# @param inputDataName The name of the variable to put the data frame from the query into in the script
+# @param binArgs The (binary) version of all arguments passed into the function
 #
-#@return The spees script to execute
-#The spees script will return a data frame with the results, serialized
+# @return The spees script to execute
+# The spees script will return a data frame with the results, serialized
 #
-speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArgs) {
-
+speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArgs)
+{
     funcName <- deparse(substitute(func))
     funcBody <- gsub('"', '\"', paste0(deparse(func), collapse = "\n"))
 
@@ -280,7 +356,8 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
                              binArgList <- unlist(lapply(lapply(strsplit(\"%s\",\";\")[[1]], as.hexmode), as.raw))
                              argList <- as.list(unserialize(binArgList))
 
-                             if (exists(\"InputDataSet\") && nrow(InputDataSet)!=0) {
+                             if (exists(\"InputDataSet\") && nrow(InputDataSet)!=0)
+                             {
                                 argList <- c(list(%s = InputDataSet), argList)
                              }
 
@@ -290,11 +367,11 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
                                      ),
                                  type=\"message\")
 
-                         }, error = function(err) {
+                         }, error = function(err)
+                         {
                             funerror <<- err
                          }
-                         ), silent = TRUE
-                         )
+                         ), silent = TRUE)
 
                          options(warn=oldWarn)
 
@@ -306,4 +383,3 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
     #Call the spees builder to wrap the function; needs the returnVal resultset
     speesBuilder(speesBody, inputDataQuery, withResults = TRUE)
 }
-

@@ -1,16 +1,13 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
-library(RODBC)
-library(RODBCext)
 library(sqlmlutils)
 library(testthat)
 
 context("Tests for sqlmlutils package management create external library")
 
-test_that("Package APIs interop with Create External Library", {
-    #skip("temporaly_disabled")
-
+test_that("Package APIs interop with Create External Library",
+{
     cat("\nINFO: test if package management interops properly with packages installed directly with CREATE EXTERNAL LIBRARY\n
       Note:\n
         packages installed with CREATE EXTERNAL LIBRARY won't have top-level attribute set in extended properties\n
@@ -43,6 +40,7 @@ test_that("Package APIs interop with Create External Library", {
             unlink( repoDir, recursive = TRUE , force = TRUE)
         }
     })
+
     dir.create( repoDir, recursive =  TRUE)
     download.packages( c("glue"), destdir = repoDir, type = "win.binary" )
     pkgPath <- list.files(repoDir, pattern = "glue.+zip", full.names = TRUE, ignore.case = TRUE)
@@ -56,17 +54,20 @@ test_that("Package APIs interop with Create External Library", {
     output <- try(capture.output(
         helper_CreateExternalLibrary(connectionString = connectionStringAirlineUserdbowner, packageName = packageName, content = pkgContent)
     ))
+
     expect_true(!inherits(output, "try-error"))
 
     output <- try(capture.output(
         helper_callDummySPEES( connectionString = connectionStringAirlineUserdbowner)
     ))
+
     expect_true(!inherits(output, "try-error"))
 
 
     helper_checkPackageStatusFind( connectionStringAirlineUserdbowner, packageName, TRUE)
 
     # Enumerate packages and check that package is listed as top-level
+    #
     cat("\nTEST: enumerate packages and check that package is listed as top-level...\n")
     installedPkgs <- helper_tryCatchValue( sql_installed.packages(connectionString = connectionStringAirlineUserdbowner, fields=c("Package", "Attributes", "Scope")))
 
@@ -74,6 +75,7 @@ test_that("Package APIs interop with Create External Library", {
     expect_equal(1, as.integer(installedPkgs$value['glue','Attributes']), msg=sprintf(" (expected package listed as top-level: pkg=%s)", packageName))
 
     # Remove package
+    #
     cat("\nTEST: remove package previously installed with CREATE EXTERNAL LIBRARY...\n")
     output <- try(capture.output(sql_remove.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
     expect_true(!inherits(output, "try-error"))

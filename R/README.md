@@ -7,8 +7,8 @@ sqlmlutils is an R package to help execute R code on a SQL database (SQL Server 
 ### Windows
 From command prompt, run 
 ```
-R.exe -e "install.packages('RODBCext', repos='https://mran.microsoft.com/snapshot/2019-02-01/')"
-R.exe CMD INSTALL dist/sqlmlutils_0.7.2.zip
+R.exe -e "install.packages('odbc')"
+R.exe CMD INSTALL dist/sqlmlutils_0.7.3.zip
 ```
 OR
 To build a new package file and install, run
@@ -18,8 +18,8 @@ To build a new package file and install, run
 
 ### Linux
 ```
-R.exe -e "install.packages('RODBCext', repos='https://mran.microsoft.com/snapshot/2019-02-01/')"
-R.exe CMD INSTALL dist/sqlmlutils_0.7.2.tar.gz
+R.exe -e "install.packages('odbc')"
+R.exe CMD INSTALL dist/sqlmlutils_0.7.3.tar.gz
 ```
 
 # Getting started
@@ -56,7 +56,8 @@ library(sqlmlutils)
 
 connection <- connectionInfo()
 
-funcWithArgs <- function(arg1, arg2){
+funcWithArgs <- function(arg1, arg2)
+{
     return(c(arg1, arg2))
 }
 result <- executeFunctionInSQL(connection, funcWithArgs, arg1="result1", arg2="result2")
@@ -72,7 +73,8 @@ library(sqlmlutils)
 
 connection <-  connectionInfo(database="AirlineTestDB")
 
-linearModel <- function(in_df, xCol, yCol) {
+linearModel <- function(in_df, xCol, yCol) 
+{
     lm(paste0(yCol, " ~ ", xCol), in_df)
 }
 
@@ -102,7 +104,8 @@ stopifnot(ncol(dataTable) == 30)
 ```R
 library(sqlmlutils)
 
-spPredict <- function(inputDataFrame) {
+spPredict <- function(inputDataFrame) 
+{
     library(RevoScaleR)
     model <- rxLinMod(ArrDelay ~ CRSDepTime, inputDataFrame)
     rxPredict(model, inputDataFrame)
@@ -194,4 +197,4 @@ sql_install.packages(connectionString = connection, pkgPath, verbose = TRUE, sco
     
 ### Notable TODOs and open issues
 
-1. Output Parameter execution does not work - RODBCext limitations?
+1. Output Parameter execution did not work with RODBCext. Check whether they work with odbc package.

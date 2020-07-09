@@ -1,13 +1,13 @@
 Package: sqlmlutils
 Type: Package
 Title: Wraps R code into executable SQL Server stored procedures
-Version: 0.7.2
+Version: 0.7.3
 Author: Microsoft Corporation
 Maintainer: Microsoft Corporation <msrpack@microsoft.com>
 Depends:
     R (>= 3.2.2)
 Imports:
-    RODBC, RODBCext, tools, methods, utils
+    odbc, tools, methods, utils
 Description: sqlmlutils is a package designed to help users interact with SQL Server and execute R or Python code 
              from an R/Python client. It provides a series of functions for executing functions in SQL, 
              creating and running stored procedures, and managing packages on the database.

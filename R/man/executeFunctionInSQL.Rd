@@ -34,13 +34,14 @@ Execute a function in SQL
 \dontrun{
 connection <- connectionInfo(database = "AirlineTestDB")
 
-foo <- function(in_df, arg) {
+foo <- function(in_df, arg)
+{
     list(data = in_df, value = arg)
 }
+
 executeFunctionInSQL(connection, foo, arg = 12345,
                      inputDataQuery = "SELECT top 1 * from airline5000")
 }
-
 
 }
 \seealso{

@@ -1,15 +1,14 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
-library(RODBC)
-library(RODBCext)
 library(sqlmlutils)
 library(testthat)
 
 context("Tests for sqlmlutils package management unit")
 
 
-test_that("checkOwner() catches bad owner parameter input", {
+test_that("checkOwner() catches bad owner parameter input",
+{
     expect_equal(sqlmlutils:::checkOwner(NULL), NULL)
     expect_equal(sqlmlutils:::checkOwner(''), NULL)
     expect_equal(sqlmlutils:::checkOwner('AirlineUserdbowner'), NULL)
@@ -20,8 +19,6 @@ test_that("checkOwner() catches bad owner parameter input", {
 })
 
 test_that("Package management ExtLib", {
-    #skip("temporaly_disabled")
-
     versionClass <- sqlmlutils:::sqlCheckPackageManagementVersion(connectionString = helper_getSetting("connectionStringDBO"))
     expect_equal(versionClass, "ExtLib")
 })

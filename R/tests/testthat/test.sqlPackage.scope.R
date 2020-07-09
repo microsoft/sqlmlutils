@@ -1,19 +1,17 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
-library(RODBC)
-library(RODBCext)
 library(sqlmlutils)
 library(testthat)
 
 context("Tests for sqlmlutils package management scope")
 
-test_that("dbo cannot install package into private scope", {
-    #skip("temporarily_disabled")
+test_that("dbo cannot install package into private scope",
+{
     skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
-    packageName <- c("glue")
+    packageName <- c("xtable")
 
     output <- try(capture.output(sql_install.packages(connectionString = connectionStringDBO, packageName, verbose = TRUE, scope="private")))
     expect_true(inherits(output, "try-error"))
@@ -21,14 +19,14 @@ test_that("dbo cannot install package into private scope", {
     helper_checkPackageStatusRequire( connectionString = connectionStringDBO,  packageName, FALSE)
 })
 
-test_that( "package install and remove by scope", {
-    #skip("temporarily_disabled")
+test_that( "package install and remove by scope",
+{
     skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
 
-    packageName <- c("plyr")
-    dependentPackageName <- "Rcpp"
+    packageName <- c("A3")
+    dependentPackageName <- "xtable"
 
     owner <- ""
     cat("\nTEST: connection string='",connectionStringDBO,"'\n", sep="")
@@ -72,7 +70,6 @@ test_that( "package install and remove by scope", {
     # remove packages from private scope
     #
     cat("TEST: AirlineUser: removing packages from private scope...\n")
-    #owner <- 'AirlineUser'
     try(sql_remove.packages( connectionStringAirlineUser, packageName, scope = 'private', verbose = TRUE))
     helper_checkPackageStatusFind(connectionStringAirlineUser, packageName, FALSE)
 

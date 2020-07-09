@@ -1,18 +1,17 @@
 # Copyright(c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
-library(RODBC)
-library(RODBCext)
 library(sqlmlutils)
 library(testthat)
 
 context("Tests for sqlmlutils package management dependencies")
 
-test_that("single package install and removal with no dependencies", {
-    #skip("temporaly_disabled")
-
-    #set scope to public for trusted connection on Windows
-    scope <- if(!helper_isServerLinux())"public" else "private"
+test_that("single package install and removal with no dependencies",
+{
+    #
+    # Set scope to public for trusted connection on Windows
+    #
+    scope <- if(!helper_isServerLinux()) "public" else "private"
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
     packageName <- c("glue")
@@ -31,6 +30,7 @@ test_that("single package install and removal with no dependencies", {
         cat("\nINFO: removing package...\n")
         sql_remove.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)
     }
+
     helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
 
     #
@@ -40,6 +40,7 @@ test_that("single package install and removal with no dependencies", {
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
+
     helper_checkPackageStatusRequire( connectionStringDBO, packageName, TRUE)
     helper_checkSqlLibPaths(connectionStringDBO, 2)
 
@@ -51,11 +52,12 @@ test_that("single package install and removal with no dependencies", {
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
+
     helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
 })
 
-test_that( "package install and uninstall with dependency", {
-    #skip("temporaly_disabled")
+test_that( "package install and uninstall with dependency",
+{
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
     scope <- "private"
 
@@ -65,8 +67,8 @@ test_that( "package install and uninstall with dependency", {
     cat("\nINFO: checking remote lib paths...\n")
     helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
 
-    packageName <- c("plyr")
-    dependentPackageName <- "Rcpp"
+    packageName <- c("A3")
+    dependentPackageName <- "xtable"
 
     #
     # remove old packages if any and verify they aren't there
@@ -76,6 +78,7 @@ test_that( "package install and uninstall with dependency", {
         cat("\nINFO: removing package:", packageName,"\n")
         sql_remove.packages( connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
     }
+
     if (helper_remote.require(connectionStringAirlineUserdbowner, dependentPackageName) == TRUE)
     {
         cat("\nINFO: removing package:", dependentPackageName,"\n")
@@ -92,6 +95,7 @@ test_that( "package install and uninstall with dependency", {
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
+
     helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  packageName, TRUE)
     helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  dependentPackageName, TRUE)
     helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 2)
@@ -104,12 +108,13 @@ test_that( "package install and uninstall with dependency", {
     print(output)
     expect_true(!inherits(output, "try-error"))
     expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
+
     helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
     helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
 })
 
-test_that( "Installing a package that is already in use", {
-    #skip("temporaly_disabled")
+test_that( "Installing a package that is already in use",
+{
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
     scope <- "private"
 
@@ -120,7 +125,7 @@ test_that( "Installing a package that is already in use", {
     helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
 
 
-    packageName <- c("lattice") # usually already attached in a R session.
+    packageName <- c("lattice") # usually already attached in an R session.
 
     installedPackages <- sql_installed.packages(connectionStringAirlineUserdbowner, fields = NULL, scope = scope)
     if (!packageName %in% installedPackages)

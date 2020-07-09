@@ -20,7 +20,8 @@ helper_parseConnectionString <- function(connectionString)
 
 helper_getSetting <- function(key)
 {
-    if(is.null(Settings)){
+    if(is.null(Settings))
+    {
         testArgs <- options('TestArgs')$TestArgs
         connectionStringDBO <- testArgs$connectionString
         connSplit <- helper_parseConnectionString( connectionStringDBO )
@@ -92,11 +93,8 @@ helper_checkSqlLibPaths <- function(connectionString, minimumCount)
 helper_ExecuteSQLDDL <- function(connectionString, sqlDDL)
 {
     cat(sprintf("\nINFO: executing: sqlDDL=\'%s\', connectionString=\'%s\'.\r\n", substr(sqlDDL,0,256), connectionString))
-    hodbc <- odbcDriverConnect(connectionString)
 
-    sqlExecute(hodbc, query = sqlDDL, fetch = TRUE)
-
-    odbcClose(hodbc)
+    sqlmlutils:::execute(connectionString, sqlDDL)
 }
 
 helper_CreateExternalLibrary <- function(connectionString, packageName, authorization=NULL, content)
@@ -127,11 +125,7 @@ helper_callDummySPEES <- function(connectionString)
     @LANGUAGE = N'R',
     @SCRIPT = N'invisible(NULL)'"
 
-    hodbc <- odbcDriverConnect(connectionString)
-
-    sqlExecute(hodbc, query = speesStr, fetch = TRUE)
-
-    odbcClose(hodbc)
+    sqlmlutils:::execute(connectionString, speesStr)
 }
 
 #

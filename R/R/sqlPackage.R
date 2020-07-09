@@ -37,6 +37,7 @@ sql_installed.packages <- function(connectionString,
                                    subarch = NULL, scope = "private", owner = '',
                                    scriptFile = NULL)
 {
+
     assign("g_scriptFile", scriptFile, envir = install.env)
     enumResult <- NULL
 
@@ -46,16 +47,19 @@ sql_installed.packages <- function(connectionString,
     scope <- normalizeScope(scope)
 
     enumResult <- list(packages = NULL, warnings = NULL, errors = NULL)
+
     enumResult <- sqlEnumPackages(
         connectionString = connectionString,
         owner = owner, scope = scope,
         priority = priority, fields = fields, subarch = subarch)
 
-    if (!is.null(enumResult$errors)){
+    if (!is.null(enumResult$errors))
+    {
         stop(enumResult$errors, call. = FALSE)
     }
 
-    if (!is.null(enumResult$warnings)){
+    if (!is.null(enumResult$warnings))
+    {
         warning(enumResult$warnings, immediate. = TRUE, call. = FALSE)
     }
 
@@ -139,21 +143,25 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
     checkConnectionString(connectionString)
     checkVersion(connectionString)
 
-    if (length(pkgs) == 0){
+    if (length(pkgs) == 0)
+    {
         stop("no packages provided to remove")
     }
 
     scope <- normalizeScope(scope)
     scopeint <- parseScope(scope)
 
-    if (scope == "PUBLIC" && is.character(owner) && nchar(owner) >0)
+    if (scope == "PUBLIC" && is.character(owner) && nchar(owner) > 0)
     {
         stop(paste0("Invalid use of scope PUBLIC. Use scope 'PRIVATE' to remove packages for owner '", owner ,"'\n"), call. = FALSE)
     }
 
-    if(verbose){
+    if(verbose)
+    {
         write(sprintf("%s  Starting package removal on SQL server (%s)...", pkgTime(), connectionString), stdout())
-    } else {
+    }
+    else
+    {
         write(sprintf("(package removal may take a few minutes, set verbose=TRUE for progress report)"), stdout())
     }
 
@@ -182,7 +190,8 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
         tablePackages <- sqlEnumTable(connectionString, missingPackagesLib, owner, scopeint)
         missingPackages <- tablePackages[tablePackages$Package == missingPackagesLib & tablePackages$Found == FALSE,"Package",drop=FALSE]$Package
 
-        if (length(missingPackages) > 0){
+        if (length(missingPackages) > 0)
+        {
             stop(sprintf("Cannot find specified packages (%s) to remove from scope '%s'", paste(missingPackages, collapse = ', '), scope), call. = FALSE)
         }
 
@@ -217,7 +226,6 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
             # In any case we will track the package and report on its status to the caller
             pkgs <- pkgs[!(pkgs %in% pkgsToReport)]
         }
-
     }
 
     if (length(pkgs) > 0 || length(pkgsToDrop) > 0 || length(pkgsToReport) > 0)
@@ -229,16 +237,16 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
 
         sqlHelperRemovePackages(connectionString, pkgs, pkgsToDrop, pkgsToReport, scope, owner, verbose)
     }
+
     return(invisible(NULL))
 }
-
 
 #
 # Executes a R function on a remote sql server
 # using sp_execute_external_script
 # This is a variation on execute in sql, with a few extra params
 #
-# @param connection  odbc connection string or a valid RODBC handle
+# @param connection  odbc connection string or a valid odbc handle
 #
 # @param FUN   function to execute
 # @param ...   parameters passed to FUN
@@ -253,49 +261,56 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
 sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asuser = NULL, includeFun = list())
 {
     g_scriptFile <- local(g_scriptFile, install.env)
-    if (class(connection) == "character"){
-        if (nchar(connection) < 1){
-            stop(paste0("Invalid connection string: ", connection), call. = FALSE)
-        }
-    } else if (class(connection) != "RODBC"){
-        stop("Invalid connection string has to be a character string or RODBC handle", call. = FALSE)
-    }
 
-    if (is.character(asuser) && length(asuser) == 1){
-        if (nchar(asuser) == 0){
+    if (is.character(asuser) && length(asuser) == 1)
+    {
+        if (nchar(asuser) == 0)
+        {
             asuser <- NULL
         }
-    } else {
+    }
+    else
+    {
         asuser <- NULL
     }
 
     # input processing and checking
-    if (is.function(FUN)) {
+    #
+    if (is.function(FUN))
+    {
         funName <- deparse(substitute(FUN))
-    } else {
+    }
+    else
+    {
         if (!is.character(FUN))
+        {
             stop(paste("you must provide either a function object or a function"))
+        }
+
         funName <- FUN
         FUN <- match.fun(FUN)
     }
 
-    #
     # captures the R code and formats it to be embedded in t-sql sp_execute_external_script
     #
     deparseforSql <- function(funName, fun)
     {
         # counts the number of spaces at the beginning of the string
-        countSpacesAtBegin <- function(s) {
+        #
+        countSpacesAtBegin <- function(s)
+        {
             p <- gregexpr("^ *", s)
             return(attr(p[[1]], "match.length"))
         }
 
         funBody <- deparse(fun)
 
-        # add on the function definititon
+        # add on the function definition
+        #
         funBody[1] <- paste(funName, "<-", funBody[1], sep = " ")
 
         # escape single quotes and get rid of tabs
+        #
         funBody <- sapply(funBody, gsub, pattern = "\t", replacement = "  ")
         funBody <- sapply(funBody, gsub, pattern = "'", replacement = "''")
 
@@ -303,27 +318,37 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         # more than 2 spaces and get rid of extra spaces.
         # otherwsise the resulting indentation of R code in TSQL
         # will depend on the indentation of the code in the R
+        #
         if (length(funBody) > 1)
         {
             # temporarily discard empty lines so they don't affect space counting
+            #
             no_empty_lines <- funBody[funBody != ""]
 
             # remove the first line (function declaration line) from no_empty_lines
             # and if the last line only contains a closing bracket align it with
             # the function declaration and remove as well
-            if (grepl("^ *} *$", funBody[length(funBody)])) {
+            #
+            if (grepl("^ *} *$", funBody[length(funBody)]))
+            {
                 funBody[length(funBody)] <- "}"
                 no_empty_lines <- no_empty_lines[2:(length(no_empty_lines) - 1)]
-            } else {
+            }
+            else
+            {
                 no_empty_lines <- no_empty_lines[2:length(no_empty_lines)]
             }
 
             # find the minimum number of extra spaces
+            #
             extra_spaces <- min(sapply(no_empty_lines, countSpacesAtBegin)) - 2
 
             # remove extra spaces
-            if (extra_spaces > 0) {
-                for (i in 2:(length(funBody) - 1)) {
+            #
+            if (extra_spaces > 0)
+            {
+                for (i in 2:(length(funBody) - 1))
+                {
                     funBody[i] <- gsub(paste("^ {", extra_spaces,"}", sep = ""),
                                        "", funBody[i])
                 }
@@ -344,11 +369,13 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
     # that belong to that package. In this case, the packagesToLoad argument is expected
     # to name the package that is required to be loaded on the cluster nodes in order for
     # the promised symbols to be resolvable.
+    #
     tryEvalArgList <- function(...)
     {
         # Convert ellipsis arguments into a list of substituted values,
         # which will result in names, symbols, or language objects and
         # will avoid the evaluation.
+        #
         argListSubstitute <- as.list(substitute(list(...)))[-1L]
 
         # Now attempt to evaluate each argument. If we fail, then keep
@@ -356,6 +383,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         # essentially act as a promise and will be evaluated on the cluster.
         # If they also fail (re not resolvable) on the cluster, an error will
         # be returned.
+        #
         envir <- parent.frame(n = 2)
         sapply(argListSubstitute, function(x, envir)
         {
@@ -373,7 +401,9 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
     if (length(includeFun) > 0)
     {
         includeFunNames <- names(includeFun)
-        if(length(includeFunNames) != length(includeFun)){
+
+        if(length(includeFunNames) != length(includeFun))
+        {
             stop("invalid parameter 'includeFun' requires matching function names to be specified in list", call. = FALSE)
         }
         for (i in seq_along(includeFun))
@@ -391,28 +421,34 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
 
     script <- paste0(script,
                      sprintf("
-                             result <- NULL
-                             funerror <- NULL
-                             funwarnings <- NULL
-                             output <- capture.output(try(
-                             withCallingHandlers({
-                             binArgList <- unlist(lapply(lapply(strsplit(\"%s\",\";\")[[1]], as.hexmode), as.raw))
-                             argList <- as.list(unserialize(binArgList))
-                             result <- do.call(%s, argList)
-                             }, error = function(err) {
-                             funerror <<- err$message
-                             }, warning = function(warn) {
-                             funwarnings <<- c(funwarnings, warn$message)
+                                 result <- NULL
+                                 funerror <- NULL
+                                 funwarnings <- NULL
+                                 output <- capture.output(try(
+                                 withCallingHandlers({
+                                 binArgList <- unlist(lapply(lapply(strsplit(\"%s\",\";\")[[1]], as.hexmode), as.raw))
+                                 argList <- as.list(unserialize(binArgList))
+                                 result <- do.call(%s, argList)
+                             },
+                             error = function(err)
+                             {
+                                funerror <<- err$message
+                             },
+                             warning = function(warn)
+                             {
+                                funwarnings <<- c(funwarnings, warn$message)
                              }
-                            ), silent = TRUE
-                            ))
+                             ), silent = TRUE
+                             ))
+
                              serializedResult <- as.character(serialize(list(result, funerror, funwarnings, output), NULL))
                              OutputDataSet <- data.frame(serializedResult, stringsAsFactors = FALSE)[1]
                              ", binArgListCollapse, funName)
                             )
 
     query <- ""
-    if (!is.null(asuser)){
+    if (!is.null(asuser))
+    {
         query <- paste0("EXECUTE AS USER = '", asuser, "';")
     }
 
@@ -420,51 +456,60 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
                     ,"\nEXEC sp_execute_external_script"
                     ,"\n@language = N'R'"
                     ,"\n,@script = N'",script, "';"
-   )
+    )
 
-    if (!is.null(asuser)){
+    if (!is.null(asuser))
+    {
         query <- paste0(query, "\nREVERT;")
     }
 
     success <- FALSE
     error <- ""
     hodbc <- -1
-    tryCatch({
-        if (class(connection) == "character"){
-            hodbc <- odbcDriverConnect(connection)
-            if (hodbc == -1){
-                error <- sprintf("failed to connect to sql server using connection string %s", connection)
-                success <- FALSE
-            }
-        } else {
-            hodbc <- connection
-        }
 
-        if(!is.null(g_scriptFile)) {
+    queryResult <- NULL
+    tryCatch(
+    {
+
+        if(!is.null(g_scriptFile))
+        {
             callingFun = as.character(as.list(sys.call()))
+
             if("findPackages" %in% callingFun ||
-               "utils::installed.packages" %in% callingFun) {
+               "utils::installed.packages" %in% callingFun)
+            {
                 cat(sprintf("-- Called from %s\n", callingFun[[1]]), file=g_scriptFile, append=TRUE)
                 cat(query, file=g_scriptFile, append=TRUE)
                 cat("\n", file=g_scriptFile, append=TRUE)
             }
         }
 
-        sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
-        if (is.data.frame(sqlResult)){
+        sqlResult <- execute(connection, query)
+
+        if (is.data.frame(sqlResult))
+        {
             serializedResult <- sqlResult[[1]]
             success <- TRUE
-        } else {
+        }
+        else
+        {
             # error happened, vector of string contains error messages
+            #
             error <- paste(sqlResult, sep = "\n")
             success <- FALSE
         }
-    }, error = function(err) {
+
+    },
+    error = function(err)
+    {
         success <<- FALSE
         error <<- err$message
-    }, finally = {
-        if (class(connection) == "character" && hodbc != -1){
-            odbcClose(hodbc)
+    },
+    finally =
+    {
+        if(!is.null(queryResult))
+        {
+            dbClearResult(queryResult)
         }
     })
 
@@ -477,19 +522,24 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         funwarnings <-lst[[3]]
         output <- lst[[4]]
 
-        if (!is.null(output)){
-            for(o in output) {
+        if (!is.null(output))
+        {
+            for(o in output)
+            {
                 cat(paste0(o,"\n"))
             }
         }
 
-        if (!is.null(funwarnings)){
-            for(w in funwarnings) {
+        if (!is.null(funwarnings))
+        {
+            for(w in funwarnings)
+            {
                 warning(w, call. = FALSE)
             }
         }
 
-        if (!is.null(funerror)){
+        if (!is.null(funerror))
+        {
             stop(funerror, call. = FALSE)
         }
 
@@ -524,6 +574,7 @@ getPackageTopMostAttributeFlag <- function()
 pkgTime <- function()
 {
     # tz: ""= current time zone, "GMT" = UTC
+    #
     return (format(Sys.time(), "%Y-%m-%d %H:%M:%OS2", tz = ""))
 }
 
@@ -539,19 +590,13 @@ checkConnectionString <- function(connectionString)
     }
 }
 
-checkOdbcHandle <- function(hodbc, connectionString)
+checkResult <- function(result, expectedResult, errorMessage)
 {
-    if (hodbc == -1){
-        stop(sprintf("Failed to connect to sql server using connection string %s", connectionString, call. = FALSE))
-    }
-    invisible(NULL)
-}
-
-checkResult <- function( result, expectedResult, errorMessage)
-{
-    if (result != expectedResult){
+    if (result != expectedResult)
+    {
         stop(errorMessage, call. = FALSE)
     }
+
     invisible(NULL)
 }
 
@@ -569,9 +614,9 @@ processInstalledPackagesResult <- function(result, fields)
     {
         names(result) <- NULL
     }
+
     return(result)
 }
-
 
 #
 # Returns
@@ -584,10 +629,13 @@ normalizeScope <- function(scope)
     if (is.character(scope) && length(scope) == 1)
     {
         normScope <- toupper(scope)
-        if (normScope == "SHARED"){
+        if (normScope == "SHARED")
+        {
             normScope <- "PUBLIC"
         }
-        if (normScope %in% scopes){
+
+        if (normScope %in% scopes)
+        {
             return (normScope)
         }
     }
@@ -677,22 +725,9 @@ sqlSelectUser <- function(connectionString)
     user <- ""
     query <- "SELECT USER;"
 
-    hodbc <- odbcDriverConnect(connectionString)
-    checkOdbcHandle(hodbc, connectionString)
-    on.exit(odbcClose(hodbc), add = TRUE)
+    user = execute(connectionString, query)
 
-    sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
-
-    if (is.data.frame(sqlResult))
-    {
-        user <- sqlResult[1,1]
-    }
-    else
-    {
-        user <- NULL
-    }
-
-    return (user)
+    return(user)
 }
 
 #
@@ -712,9 +747,12 @@ checkVersion <- function(connectionString)
 
     versionClass <- sqlCheckPackageManagementVersion(connectionString)
 
-    if (is.character(versionClass) &&  versionClass == "ExtLib"){
+    if (is.character(versionClass) &&  versionClass == "ExtLib")
+    {
         return (list(serverIsWindows = serverIsWindows, rversion = serverVersion[['rversion']]))
-    } else {
+    }
+    else
+    {
         stop(paste0("SQL server does not support package management."), call. = FALSE)
     }
 }
@@ -742,7 +780,8 @@ sqlCheckPackageManagementVersion <- function(connectionString)
     versionClass <- NA
     force(connectionString)
 
-    if(is.null(connectionString) || nchar(connectionString) == 0){
+    if(is.null(connectionString) || nchar(connectionString) == 0)
+    {
         stop("Invalid connectionString is null or empty")
     }
 
@@ -753,9 +792,11 @@ sqlCheckPackageManagementVersion <- function(connectionString)
         stop("Invalid SQL version is null or empty", call. = FALSE)
     }
 
-    if( ( (version[["serverType"]]=="azure" && version[["major"]] >= 12 ) || (version[["serverType"]]=="box" && version[["major"]] >= 15 )))
+    if( ( (version[["serverType"]]=="azure" && version[["major"]] >= 12 ) ||
+          (version[["serverType"]]=="box" && version[["major"]] >= 15 )))
     {
         # server supports external library with DDLs
+        #
         versionClass <- "ExtLib"
     }
     else
@@ -781,18 +822,24 @@ sqlPackageManagementVersion <- function(connectionString)
     pmversion <- NULL
 
     serverProperties <- sqlServerProperties(connectionString)
-    if (is.null(serverProperties)){
+    if (is.null(serverProperties))
+    {
         stop(sprintf("Failed to get SQL version using connection string '%s'", connectionString ), call. = FALSE)
     }
 
+    # Check if the Engine Property is 5 (Azure DB) or 8 (Managed Instance)
+    # https://docs.microsoft.com/en-us/sql/t-sql/functions/serverproperty-transact-sql?view=sql-server-ver15
+    #
     if(serverProperties[["edition"]] == "sql azure" && (serverProperties[["engineEdition"]]==5 || serverProperties[["engineEdition"]]==8))
     {
-        # sql azure
+        # SQL in Azure & Managed Instance
+        #
         pmversion <- append(list(serverType = "azure"), tail(serverProperties, -2))
     }
     else
     {
-        # sql box product
+        # SQL box product
+        #
         pmversion <- append(list(serverType = "box"), tail(serverProperties, -2))
     }
 
@@ -814,25 +861,24 @@ sqlServerProperties <- function(connectionString)
 {
     serverProperties <- NULL
 
-    query <- paste0("SELECT CAST(SERVERPROPERTY('Edition') AS nvarchar) AS Edition, CAST(SERVERPROPERTY('EngineEdition') AS nvarchar) AS EngineEdition, CAST(SERVERPROPERTY('ProductVersion') AS nvarchar) AS ProductVersion")
+    query <- paste0("SELECT CAST(SERVERPROPERTY('Edition') AS nvarchar) AS Edition,
+                    CAST(SERVERPROPERTY('EngineEdition') AS nvarchar) AS EngineEdition,
+                    CAST(SERVERPROPERTY('ProductVersion') AS nvarchar) AS ProductVersion")
 
-    hodbc <- odbcDriverConnect(connectionString)
-    checkOdbcHandle(hodbc, connectionString)
-    on.exit(odbcClose(hodbc), add = TRUE)
-
-    sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
+    sqlResult <- execute(connectionString, query)
 
     if (is.data.frame(sqlResult))
     {
         #
         #                      Edition EngineEdition ProductVersion
-        #1 Enterprise Edition (64-bit)             3    15.0.800.91
+        #1 Enterprise Edition (64-bit)      B       3    15.0.800.91
         #
         serverProperties <- list(edition= tolower(sqlResult$Edition), engineEdition=as.integer(sqlResult$EngineEdition))
         productVersion <- as.integer(unlist(strsplit(sqlResult$ProductVersion, "\\.")))
         names(productVersion) <- c( "major", "minor", "build", "revision" )[1:length(productVersion)]
         serverProperties <- append(serverProperties, productVersion)
     }
+
     return (serverProperties)
 }
 
@@ -847,15 +893,21 @@ sqlEnumPackages <- function(connectionString, owner, scope, priority, fields, su
 
     pkgGetLibraryPath <- function(scopeint)
     {
-        if (!all.equal(scopeint,as.integer(scopeint))){
+        if (!all.equal(scopeint,as.integer(scopeint)))
+        {
             stop("pkgGetLibraryPathExtLib(): scope expected to be an integer", call. = FALSE)
         }
 
-        if (scopeint == 0){
+        if (scopeint == 0)
+        {
             extLibPath <- Sys.getenv("MRS_EXTLIB_SHARED_PATH")
-        } else if (scopeint == 1){
+        }
+        else if (scopeint == 1)
+        {
             extLibPath <- Sys.getenv("MRS_EXTLIB_USER_PATH")
-        } else {
+        }
+        else
+        {
             stop(paste0("pkgGetLibraryPathExtLib(): invalid scope value ", scopeint, ""), call. = FALSE)
         }
 
@@ -930,25 +982,29 @@ sqlEnumPackages <- function(connectionString, owner, scope, priority, fields, su
         }
 
         # enumerate packages installed under sql server R library path
+        #
         packages <- NULL
-        tryCatch({
+        tryCatch(
+        {
             packages <- sqlRemoteExecuteFun(connectionString, utils::installed.packages, lib.loc = libPath, noCache = TRUE,
                                             priority = priority, fields = NULL, subarch = subarch,
                                             useRemoteFun = TRUE, asuser = owner)
         },
-        error = function(err){
+        error = function(err)
+        {
             stop(paste0("failed to enumerate installed packages on library path: ", err$message), call. = FALSE)
-        }
-       )
+        })
 
-        if (!is.null(packages) && nrow(packages)>0)
+        if (!is.null(packages) && nrow(packages) > 0)
         {
             packages <- cbind(packages, Attributes = rep(NA, nrow(packages)), Scope = rep(libScope, nrow(packages)))
 
             # get top package flag if attributes column will be present in final results and if we are in PUBLIC or PRIVATE scope
+            #
             if (nrow(packages) > 0 && (libScope == 'PUBLIC' || libScope == 'PRIVATE'))
             {
                 filteredPackages <- processInstalledPackagesResult(packages, fields)
+
                 if ('Attributes' %in% colnames(filteredPackages))
                 {
                     packagesNames <- rownames(packages[packages[,'Scope'] == libScope,, drop = FALSE])
@@ -964,9 +1020,11 @@ sqlEnumPackages <- function(connectionString, owner, scope, priority, fields, su
                                 if (packages[pkg,'Scope'] == libScope)
                                 {
                                     isTopPackage <- as.integer(isTopPackageDf[pkg,'IsTopPackage'])
-                                    if (isTopPackage == IS_TOP_PACKAGE_MISSING){
+                                    if (isTopPackage == IS_TOP_PACKAGE_MISSING)
+                                    {
                                         isTopPackage = 1
                                     }
+
                                     packages[pkg,'Attributes'] <- isTopPackage
                                 }
                             }
@@ -1014,7 +1072,9 @@ sqlEnumPackages <- function(connectionString, owner, scope, priority, fields, su
             {
                 ret <- addInstalledPackages(connectionString, installedPackages, libScope, libPath, priority, fields, subarch)
             }
-            if (!is.null(ret)){
+
+            if (!is.null(ret))
+            {
                 installedPackages <- ret$installedPackages
                 result$warnings <- c(result$warnings,ret$warnings)
                 result$errors <- c(result$errors,ret$errors)
@@ -1123,12 +1183,14 @@ prunePackagesToInstallExtLib <- function(dependentPackages, topMostPackages, ins
         pkgToInstall <- dependentPackages[pkgToInstallIndex,]
 
         # get available packages that match the name of the package we depend on
+        #
         availablePkgs <- installedPackages[match(pkgToInstall$Package, installedPackages$Package, nomatch = 0),, drop = FALSE]
 
 
         if (nrow(availablePkgs) == 0)
         {
             # no packages available, add packages we depend to the list of pruned packages to install
+            #
             prunedPackagesToInstall <- rbind(prunedPackagesToInstall, pkgToInstall)
         }
         else
@@ -1137,23 +1199,36 @@ prunePackagesToInstallExtLib <- function(dependentPackages, topMostPackages, ins
             # (1) versions are the same -> OK
             # (2) installed version is newer -> OK
             # (3) installed version is older -> we print a warning to allow user to make proper decision
+            #
             for(scope in c("PRIVATE", "PUBLIC", "SYSTEM"))
             {
                 availablePkg <- availablePkgs[ availablePkgs$Scope == scope,, drop = FALSE ]
-                if (nrow(availablePkg) == 1){
-                    if (utils::compareVersion(availablePkg$Version, pkgToInstall$Version) == -1){
-                        #pkgToInstall is newer (later) than availablePkg
-                        warning(sprintf("package is already installed but version is older than available in repos: package='%s', scope='%s', currently installed version='%s', new version=='%s'", pkgToInstall$Package, scope, availablePkg$Version, pkgToInstall$Version), call. = FALSE)
+                if (nrow(availablePkg) == 1)
+                {
+                    if (utils::compareVersion(availablePkg$Version, pkgToInstall$Version) == -1)
+                    {
+                        # pkgToInstall is newer (later) than availablePkg
+                        #
+                        warning(sprintf("package is already installed but version is older than available in repos:
+                                        package='%s', scope='%s', currently installed version='%s', new version=='%s'",
+                                        pkgToInstall$Package, scope, availablePkg$Version, pkgToInstall$Version), call. = FALSE)
                     }
+
                     break
                 }
             }
 
             # if the available package is being requested as a top-level package we check
             # if the top-leve attribute on the package is set to false we will have to update it to true
-            if ('Attributes' %in% colnames(installedPackages)){
-                if (pkgToInstall$Package %in% topMostPackages){ # package to install is requested as top-level
+            #
+            if ('Attributes' %in% colnames(installedPackages))
+            {
+                # package to install is requested as top-level
+                #
+                if (pkgToInstall$Package %in% topMostPackages)
+                {
                     # if package is marked as depended we have to set it as top-level
+                    #
                     pkgToTop <- availablePkgs[!is.na(availablePkgs[,'Attributes']) &
                                                   bitwAnd(as.integer(availablePkgs[,'Attributes']), getPackageTopMostAttributeFlag()) ==  0
                                               ,, drop = FALSE]
@@ -1226,7 +1301,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
                                         serverVersion = serverVersion)
 {
     g_scriptFile <- local(g_scriptFile, install.env)
-    #
+
     # check permissions
     #
     checkPermission <- function(connectionString, scope, owner, verbose)
@@ -1238,26 +1313,25 @@ sqlInstallPackagesExtLib <- function(connectionString,
             haveOwner <- (nchar(owner) > 0)
             query <- ""
 
-            if (haveOwner){
+            if (haveOwner)
+            {
                 query <- paste0("EXECUTE AS USER = '", owner , "';\n")
             }
 
             query <- paste0(query, "SELECT USER;")
 
-            if (haveOwner) {
+            if (haveOwner)
+            {
                 query <- paste0(query, "\nREVERT;")
             }
 
-            hodbc <- odbcDriverConnect(connectionString)
-            checkOdbcHandle(hodbc, connectionString)
-            on.exit(odbcClose(hodbc), add = TRUE)
-
-            if(!is.null(g_scriptFile)) {
+            if(!is.null(g_scriptFile))
+            {
                 cat(query, file=g_scriptFile, append=TRUE)
                 cat("\n", file=g_scriptFile, append=TRUE)
             }
-            sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
 
+            sqlResult <- execute(connectionString, query)
 
             if (is.data.frame(sqlResult))
             {
@@ -1270,6 +1344,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
                 else if (scope == "PRIVATE" && user == "dbo")
                 {
                     # block dbo call to install into PRIVATE library path which is not supported by create external library
+                    #
                     allowed <- FALSE
                 }
                 else
@@ -1279,7 +1354,8 @@ sqlInstallPackagesExtLib <- function(connectionString,
             }
             else
             {
-                #cannot execute as the database principal because the principal "x" does not exist
+                # cannot execute as the database principal because the principal "x" does not exist
+                #
                 allowed <- FALSE
             }
 
@@ -1293,7 +1369,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
 
         if (scope == "PUBLIC")
         {
-            if (is.character(owner) && nchar(owner) >0)
+            if (is.character(owner) && nchar(owner) > 0)
             {
                 stop(paste0("Invalid use of scope PUBLIC. Use scope 'PRIVATE' to install packages for owner '", owner ,"'\n"), call. = FALSE)
             }
@@ -1313,7 +1389,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
 
     attributePackages <- function(connectionString, packages, scopeint, owner, verbose)
     {
-        packagesNames <- sapply(packages, function(pkg){pkg$name},USE.NAMES = FALSE)
+        packagesNames <- sapply(packages, function(pkg) {pkg$name},USE.NAMES = FALSE)
 
         if (verbose)
         {
@@ -1325,7 +1401,8 @@ sqlInstallPackagesExtLib <- function(connectionString,
                                   owner = owner,
                                   scope = as.integer(scopeint))
 
-        if (result) {
+        if (result)
+        {
             write(sprintf("Successfully attributed packages on SQL server (%s).",
                           paste(packagesNames, collapse = ', ')), stdout())
         }
@@ -1335,9 +1412,12 @@ sqlInstallPackagesExtLib <- function(connectionString,
     scope <- normalizeScope(scope)
     scopeint <- parseScope(scope)
 
-    if(verbose){
+    if(verbose)
+    {
         write(sprintf("%s  Starting package install on SQL server (%s)...", pkgTime(), connectionString), stdout())
-    } else {
+    }
+    else
+    {
         write(sprintf("(package install may take a few minutes, set verbose=TRUE for progress report)"), stdout())
     }
 
@@ -1375,37 +1455,49 @@ sqlInstallPackagesExtLib <- function(connectionString,
                 return (list(ContribSource = contribSource, ContribWinBinary = contribWinBinary))
             }
 
-            if(missing(repos)){
+            if(missing(repos))
+            {
                 rversion <- getRversionContribFormat()
-                if(rversion == serverVersion$rversion){
+
+                if(rversion == serverVersion$rversion)
+                {
                     contribs <- getContribUrls(serverVersion$serverIsWindows)
-                } else {
-                    write(sprintf("R version installed on sql server (%s) is different from the R version on client (%s). Using sql server R version to find matching packages in repositories.",  serverVersion$rversion, rversion), stdout())
+                }
+                else
+                {
+                    write(sprintf("R version installed on sql server (%s) is different from the R version on client (%s). Using sql server R version to find matching packages in repositories.",
+                                  serverVersion$rversion, rversion), stdout())
+
                     contribs <- sqlRemoteExecuteFun(connectionString, getContribUrls, serverVersion$serverIsWindows)
                 }
+
                 contribSource <- contribs$ContribSource
                 contribWinBinary <- contribs$ContribWinBinary
-            } else {
+
+            }
+            else
+            {
                 # caller specified repo
+                #
                 contribSource <- utils::contrib.url(repos = repos, type = "source")
                 if(serverVersion$serverIsWindows)
+                {
                     contribWinBinary <- utils::contrib.url(repos = repos, type = "win.binary")
+                }
             }
 
-            #
             # get the available package lists
             #
             sourcePackages <- utils::available.packages(contribSource, type = "source")
             row.names(sourcePackages) <- NULL
 
-
             binaryPackages <- if (serverVersion$serverIsWindows) utils::available.packages(contribWinBinary, type = "win.binary") else NULL
             row.names(binaryPackages) <- NULL
+
             pkgsUnison <-  data.frame(rbind(sourcePackages, binaryPackages), stringsAsFactors = FALSE)
             pkgsUnison <- pkgsUnison[!duplicated(pkgsUnison$Package),,drop=FALSE]
             row.names(pkgsUnison) <- pkgsUnison$Package
 
-            #
             # check for missing packages
             #
             missingPkgs <- pkgs[!(pkgs %in% pkgsUnison$Package) ]
@@ -1415,20 +1507,17 @@ sqlInstallPackagesExtLib <- function(connectionString,
                 stop(sprintf("Cannot find specified packages (%s) to install", paste(missingPkgs, collapse = ', ')), call. = FALSE)
             }
 
-            #
             # get all installed packages
             #
             installedPackages <- sql_installed.packages(connectionString, fields = NULL, scope = scope, owner =  owner, scriptFile = g_scriptFile)
             installedPackages <- data.frame(installedPackages, row.names = NULL, stringsAsFactors = FALSE)
 
-            #
             # get dependency closure of given packages
             #
             pkgsToDownload <- getDependentPackagesToInstall(pkgs = pkgs, availablePackages = pkgsUnison,
                                                             installedPackages = installedPackages,
                                                             skipMissing = skipMissing, verbose = verbose)
 
-            #
             # prune dependencies for already installed packages
             #
             prunedPkgs <- prunePackagesToInstallExtLib(dependentPackages = pkgsToDownload,
@@ -1457,7 +1546,6 @@ sqlInstallPackagesExtLib <- function(connectionString,
                     pkgType = "source"
                 }
 
-                #
                 # download all the packages in dependency closure
                 #
                 downloadPkgs <- downloadDependentPackages(pkgs = pkgsToDownload, destdir = downloadDir,
@@ -1467,14 +1555,15 @@ sqlInstallPackagesExtLib <- function(connectionString,
 
             if (length(pkgsToDownload) > 0)
             {
-                attributesVec<-apply(downloadPkgs, 1, function(x){
+                attributesVec<-apply(downloadPkgs, 1, function(x)
+                {
                     packageAttributes <- 0x0
-                    if (x["Package"] %in% pkgs){
+                    if (x["Package"] %in% pkgs)
+                    {
                         packageAttributes <- bitwOr(packageAttributes,topMostPackageFlag)
                     }
                     return (packageAttributes)
-                }
-               )
+                })
 
                 downloadPkgs <- cbind(downloadPkgs, Attribute = attributesVec)
                 sqlHelperInstallPackages(connectionString, downloadPkgs, owner, scope, verbose)
@@ -1488,11 +1577,13 @@ sqlInstallPackagesExtLib <- function(connectionString,
                     packageDescriptor <- list()
                     packageDescriptor$name <- pkgsToAttribute[packageIndex,"Package"]
                     packageAttributes <- 0x0
-                    if (packageDescriptor$name %in% pkgs){
+
+                    if (packageDescriptor$name %in% pkgs)
+                    {
                         packageAttributes <- bitwOr(packageAttributes,topMostPackageFlag)
                     }
-                    packageDescriptor$attributes <- packageAttributes
 
+                    packageDescriptor$attributes <- packageAttributes
 
                     packages[[length(packages) + 1]] <- packageDescriptor
                 }
@@ -1504,6 +1595,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
         else
         {
             # caller set repos = NULL, packages are file paths
+            #
             pkgs <- normalizePath(pkgs, mustWork = FALSE)
             missingPkgs <- pkgs[!file.exists(pkgs)]
 
@@ -1513,7 +1605,8 @@ sqlInstallPackagesExtLib <- function(connectionString,
             }
 
             packages <- data.frame(matrix(nrow = 0, ncol = 3), stringsAsFactors = FALSE)
-            for( packageFile in pkgs){
+            for( packageFile in pkgs)
+            {
                 packages <- rbind(packages, data.frame(
                     Package = unlist(lapply(strsplit(basename(packageFile), '\\.|_'), '[[', 1), use.names =  F),
                     File = packageFile,
@@ -1523,7 +1616,6 @@ sqlInstallPackagesExtLib <- function(connectionString,
 
             sqlHelperInstallPackages(connectionString, packages, owner, scope, verbose)
         }
-
     }
 }
 
@@ -1533,7 +1625,9 @@ sqlInstallPackagesExtLib <- function(connectionString,
 sqlCreateExternalLibrary <- function(hodbc, packageName, packageFile, user = "")
 {
     g_scriptFile <- local(g_scriptFile, install.env)
+
     # read zip file into binary format
+    #
     fileConnection <- file(packageFile, 'rb')
     pkgBin <- readBin(con = fileConnection, what = raw(), n = file.size(packageFile))
     close(fileConnection)
@@ -1544,23 +1638,28 @@ sqlCreateExternalLibrary <- function(hodbc, packageName, packageFile, user = "")
 
     query <- paste0("CREATE EXTERNAL LIBRARY [", packageName, "]")
 
-    if (haveUser){
+    if (haveUser)
+    {
         query <- paste0(query, " AUTHORIZATION ", user)
     }
 
     query <- paste0(query, " FROM (CONTENT=", pkgContent ,") WITH (LANGUAGE = 'R');")
 
-    if(!is.null(g_scriptFile)) {
+    if(!is.null(g_scriptFile))
+    {
         cat(query, file=g_scriptFile, append=TRUE)
         cat("\n", file=g_scriptFile, append=TRUE)
     }
-    sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
 
-    if (is.character(sqlResult) && length(sqlResult) == 0){
+    sqlResult <- execute(hodbc, query)
+
+    if (length(sqlResult) == 0)
+    {
         return (TRUE)
     }
 
     # sqlResult contains character vector of error messages
+    #
     stop(paste(sqlResult, collapse = "\n"))
 }
 
@@ -1574,26 +1673,31 @@ sqlDropExternalLibrary <- function(hodbc, packageName, user = "")
 
     query <- paste0("DROP EXTERNAL LIBRARY [", packageName, "]")
 
-    if (haveUser){
+    if (haveUser)
+    {
         query <- paste0(query, " AUTHORIZATION ", user, ";")
     }
 
-    if(!is.null(g_scriptFile)) {
+    if(!is.null(g_scriptFile))
+    {
         cat(query, file=g_scriptFile, append=TRUE)
         cat("\n", file=g_scriptFile, append=TRUE)
     }
-    sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
 
-    if (is.character(sqlResult) && length(sqlResult) == 0){
+    sqlResult <- execute(hodbc, query)
+
+    if (length(sqlResult) == 0)
+    {
         return (TRUE)
     }
 
     # sqlResult contains character vector of error messages
+    #
     stop(paste(sqlResult, collapse = "\n"), call. = FALSE)
 }
 
 #
-# Adds extendend property to package to store attributes (Top level package)
+# Adds extended property to package to store attributes (Top level package)
 #
 sqlAddExtendedProperty <- function(hodbc, packageName, attributes, user = "")
 {
@@ -1604,21 +1708,32 @@ sqlAddExtendedProperty <- function(hodbc, packageName, attributes, user = "")
 
 
     # use extended property to set top level packages
-    if (haveUser){
+    #
+    if (haveUser)
+    {
         # if we have an user bind it to the query
-        query <- paste0("EXEC sp_addextendedproperty @name = N'IsTopPackage', @value=", isTopLevel,", @level0type=N'USER', @level0name=",user,", @level1type = N'external library', @level1name =", packageName)
-    } else {
+        #
+        query <- paste0("EXEC sp_addextendedproperty @name = N'IsTopPackage', @value=", isTopLevel,", @level0type=N'USER', @level0name=",
+                        user,", @level1type = N'external library', @level1name =N'", packageName,"'")
+    }
+    else
+    {
         # if user is empty we use the current user
-        query <- paste0("DECLARE @currentUser NVARCHAR(128); SELECT @currentUser = CURRENT_USER; EXEC sp_addextendedproperty @name = N'IsTopPackage', @value=", isTopLevel,", @level0type=N'USER', @level0name=@currentUser, @level1type = N'external library', @level1name =", packageName)
+        #
+        query <- paste0("DECLARE @currentUser NVARCHAR(128); SELECT @currentUser = CURRENT_USER; EXEC sp_addextendedproperty @name = N'IsTopPackage', @value=",
+                        isTopLevel,", @level0type=N'USER', @level0name=@currentUser, @level1type = N'external library', @level1name =N'", packageName, "'")
     }
 
-    if(!is.null(g_scriptFile)) {
+    if(!is.null(g_scriptFile))
+    {
         cat(query, file=g_scriptFile, append=TRUE)
         cat("\n", file=g_scriptFile, append=TRUE)
     }
-    sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
 
-    if (is.character(sqlResult)){
+    sqlResult <- execute(hodbc, query)
+
+    if (length(sqlResult) == 0)
+    {
         return (TRUE)
     }
 
@@ -1631,10 +1746,13 @@ sqlMakeTopLevel <- function(connectionString, packages, owner, scope)
     changeTo = 1
     haveUser <- (owner != '')
 
-    if (haveUser) {
+    if (haveUser)
+    {
         user = "?"
         query = ""
-    } else {
+    }
+    else
+    {
         user = "@currentUser"
         query = "DECLARE @currentUser NVARCHAR(128);
         SELECT @currentUser = CURRENT_USER;"
@@ -1644,29 +1762,42 @@ sqlMakeTopLevel <- function(connectionString, packages, owner, scope)
 
     packageList <- enumerateTopPackages(connectionString, packages, owner, scope)$name
 
-    tryCatch({
-        hodbc <- odbcDriverConnect(connectionString)
-        checkOdbcHandle(hodbc, connectionString)
+    tryCatch(
+    {
+        hodbc <- connectToServer(connectionString)
 
-        for(pkg in intersect(packages,packageList)) {
-            if (haveUser) {
-                result <- sqlExecute(hodbc, query = query,
-                                     owner, pkg,
-                                     fetch = TRUE)
-            } else {
-                result <- sqlExecute(hodbc, query = query,
-                                     pkg,
-                                     fetch = TRUE)
+        for(pkg in intersect(packages,packageList))
+        {
+            if (haveUser)
+            {
+                queryResult <- dbSendQuery(hodbc, query, owner, pkg)
             }
+            else
+            {
+                queryResult <- dbSendQuery(hodbc, query, pkg)
+            }
+
+            result <- dbFetch(queryResult)
         }
-    }, error = function(err) {
+    },
+    error = function(err)
+    {
         stop(sprintf("Attribution of packages %s failed with error %s",
                      paste(packages, collapse = ', '), err$message), call. = FALSE)
-    }, finally = {
-        if (hodbc != -1){
-            odbcClose(hodbc)
+    },
+    finally =
+    {
+        if(!is.null(queryResult))
+        {
+            dbClearResult(queryResult)
+        }
+
+        if (!is.null(hodbc))
+        {
+            dbDisconnect(hodbc)
         }
     })
+
     return(TRUE)
 }
 
@@ -1696,7 +1827,7 @@ sqlQueryExternalLibraryId <- function(hodbc, packagesNames, scopeint, queryUser)
                     " ;"
     )
 
-    sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
+    sqlResult <- execute(hodbc, query)
 
     if (is.data.frame(sqlResult))
     {
@@ -1734,13 +1865,16 @@ sqlQueryExternalLibrarySetupErrors <- function(hodbc, externalLibraryIds, queryU
                     " ) ELSE (SELECT 'OBJECT_NOT_FOUND' AS OBJECT_NOT_FOUND);"
     )
 
-    sqlResult <- sqlExecute(hodbc, query = query, fetch = TRUE, errors = TRUE, stringsAsFactors = FALSE)
+    sqlResult <- execute(hodbc, query)
 
     if (is.data.frame(sqlResult))
     {
-        if(colnames(sqlResult)[[1]]=="OBJECT_NOT_FOUND"){
+        if(colnames(sqlResult)[[1]]=="OBJECT_NOT_FOUND")
+        {
             sqlResult <- NULL
-        } else {
+        }
+        else
+        {
             sqlResult <- merge(sqlResult, externalLibraryIds)
             rownames(sqlResult) <- sqlResult[, "name"]
         }
@@ -1762,17 +1896,23 @@ findPackages <- function(packages, scopeint)
     success <- TRUE
     resultdf <-data.frame(Package = NA, Found = NA, stringsAsFactors = FALSE)
 
-    if (is.null(packages)) {
+    if (is.null(packages))
+    {
         stop('ERROR: input package list is empty')
         success <- FALSE
     }
 
     lib <-NULL
-    if (scopeint == 0) {
-        lib <-Sys.getenv('MRS_EXTLIB_SHARED_PATH')
-    } else if (scopeint == 1) {
-        lib <-Sys.getenv('MRS_EXTLIB_USER_PATH')
-    } else {
+    if (scopeint == 0)
+    {
+        lib <- Sys.getenv('MRS_EXTLIB_SHARED_PATH')
+    }
+    else if (scopeint == 1)
+    {
+        lib <- Sys.getenv('MRS_EXTLIB_USER_PATH')
+    }
+    else
+    {
         stop(paste0('ERROR: invalid scope=', scopeint))
         success <- FALSE
     }
@@ -1783,7 +1923,8 @@ findPackages <- function(packages, scopeint)
         packagesFound <- find.package(packages, lib.loc = lib, quiet = TRUE)
         packagesNames <- unlist(lapply(packagesFound, basename))
 
-        if (!is.null(packagesNames)){
+        if (!is.null(packagesNames))
+        {
             resultdf[packagesNames, 'Found'] <-TRUE
         }
     }
@@ -1806,25 +1947,34 @@ sqlSyncAndCheckInstalledPackages <- function(hodbc, packages, user = "", queryUs
 
     # sp_execute_external_script will first install packages to the library path
     # and the run R function to check if packages installed
+    #
     checkdf <- sqlRemoteExecuteFun(hodbc, findPackages, packages, scopeint, asuser = user)
 
     setupFailures <- sqlQueryExternalLibrarySetupErrors(hodbc, externalLibraryIds, queryUser)
 
     # issue specific errors for packages that failed to install to the library path
-    if((!is.null(setupFailures)) && (nrow(setupFailures) >0)){
+    #
+    if((!is.null(setupFailures)) && (nrow(setupFailures) > 0))
+    {
         errors <- mapply(
-            function(packageName, errorCode, errorMessage){
-                sprintf("failed to install package (%s) to library path: user='%s', scope='%s', error code='%s', error message='%s'", packageName, user, scope, as.hexmode(errorCode), errorMessage)
+            function(packageName, errorCode, errorMessage)
+            {
+                sprintf("failed to install package (%s) to library path: user='%s', scope='%s', error code='%s', error message='%s'",
+                        packageName, user, scope, as.hexmode(errorCode), errorMessage)
             },
             setupFailures[,"name"], setupFailures[,"error_code"], setupFailures[,"error_message"]
         )
+
         stop(paste(errors, collapse = " ; "), call. = FALSE)
     }
 
     # issue generic errors for packages not found in library path
+    #
     failedPackages <- unlist(mapply(
-        function(packageName,found){
-            if (found == FALSE){
+        function(packageName,found)
+        {
+            if (found == FALSE)
+            {
                 return (packageName)
             }
             return (NULL)
@@ -1833,7 +1983,9 @@ sqlSyncAndCheckInstalledPackages <- function(hodbc, packages, user = "", queryUs
         SIMPLIFY=TRUE,
         USE.NAMES=FALSE
     ))
-    if(length(failedPackages) >0){
+
+    if(length(failedPackages) > 0)
+    {
         stop(sprintf("failed to install packages (%s) to library path: user='%s', scope='%s'", paste(failedPackages, collapse = ", "), user, scope), call. = FALSE)
     }
 
@@ -1868,19 +2020,19 @@ sqlHelperInstallPackages <- function(connectionString, packages, owner = "", sco
     else
     {
         user <- owner
-        if (nchar(owner) >0)
+        if (nchar(owner) > 0)
         {
             queryUser <- paste0("'", owner, "'")
         }
     }
 
-    hodbc <- -1
+    hodbc <- NULL
     haveTransaction <- FALSE
     packagesSuccess <- c()
+
     tryCatch({
-        hodbc <- odbcDriverConnect(connectionString)
-        checkOdbcHandle(hodbc, connectionString)
-        checkResult( odbcSetAutoCommit(hodbc, autoCommit = FALSE), 0, "failed to create transaction")
+        hodbc <- connectToServer(connectionString)
+        checkResult(dbBegin(hodbc), expectedResult=TRUE, errorMessage="failed to create transaction")
         haveTransaction <- TRUE
 
         numPkgs <- nrow(packages)
@@ -1894,6 +2046,7 @@ sqlHelperInstallPackages <- function(connectionString, packages, owner = "", sco
             {
                 write(sprintf("%s  Copying package to Sql server [%d/%d] %s...", pkgTime(), packageIndex, numPkgs, packageName), stdout())
             }
+
             sqlCreateExternalLibrary(hodbc, packageName, filelocation, user)
             sqlAddExtendedProperty(hodbc, packageName, attribute, user)
         }
@@ -1902,27 +2055,38 @@ sqlHelperInstallPackages <- function(connectionString, packages, owner = "", sco
         {
             write(sprintf("%s  Installing packages to library path, this may take some time...", pkgTime()), stdout())
         }
-        packagesSuccess <- sqlSyncAndCheckInstalledPackages(hodbc, packages[,"Package"], user, queryUser, scope);
-        odbcEndTran(hodbc, commit = TRUE)
-    }
-    , error = function(err) {
-        stop( sprintf("Installation of packages %s failed with error %s", paste(packages[,"Package"], collapse = ', '), err$message), call. = FALSE)
-    }
-    , finally = {
-        if(haveTransaction){
-            # rollback / close open transactions otherwise odbcClose() will fail
-            odbcEndTran(hodbc, commit = FALSE)
-        }
-        if(hodbc != -1){
-            odbcClose(hodbc)
-        }
-    }
-    )
 
-    if(length(packagesSuccess) > 0){
-        if(verbose){
+        packagesSuccess <- sqlSyncAndCheckInstalledPackages(hodbc, packages[,"Package"], user, queryUser, scope);
+        dbCommit(hodbc)
+        haveTransaction = FALSE
+    },
+    error = function(err)
+    {
+        stop( sprintf("Installation of packages %s failed with error %s", paste(packages[,"Package"], collapse = ', '), err$message), call. = FALSE)
+    },
+    finally =
+    {
+        if(haveTransaction)
+        {
+            # If we still have a transaction something went wrong and we need to rollback
+            #
+            dbRollback(hodbc)
+        }
+
+        if(!is.null(hodbc))
+        {
+            dbDisconnect(hodbc)
+        }
+    })
+
+    if(length(packagesSuccess) > 0)
+    {
+        if(verbose)
+        {
             write(sprintf("%s  Successfully installed packages on SQL server (%s).", pkgTime(), paste(packagesSuccess, collapse = ', ')), stdout())
-        } else {
+        }
+        else
+        {
             write(sprintf("Successfully installed packages on SQL server (%s).", paste(packagesSuccess, collapse = ', ')), stdout())
         }
     }
@@ -1942,7 +2106,9 @@ sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToRe
         # if current user is already dbo we just proceed, else if user
         # is member of db_owner (e.g. RevoTester) we run as 'dbo' to
         # force it to install into the public folder instead of the private.
+        #
         currentUser <- sqlSelectUser(connectionString);
+
         if (currentUser == "dbo")
         {
             user <- ""
@@ -1957,59 +2123,77 @@ sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToRe
     else
     {
         user <- owner
-        if (nchar(owner) >0)
+        if (nchar(owner) > 0)
         {
             queryUser <- paste0("'", owner, "'")
         }
     }
 
-    hodbc <- -1
+    hodbc <- NULL
     haveTransaction <- FALSE
     pkgsSuccess <- c()
-    tryCatch({
-        hodbc <- odbcDriverConnect(connectionString)
-        checkOdbcHandle(hodbc, connectionString)
 
-        odbcSetAutoCommit(hodbc, autoCommit = FALSE)
-        checkResult( odbcSetAutoCommit(hodbc, autoCommit = FALSE), 0, "failed to create transaction")
+    tryCatch({
+        hodbc <- connectToServer(connectionString)
+
+        checkResult(dbBegin(hodbc), expectedResult=TRUE, errorMessage="failed to create transaction")
+
         haveTransaction <- TRUE
 
         # first drop potentially bad packages that fails to install during SPEES
         # then uninstall fully installed packages that will combine DROP + SPEES
-        if (length(pkgsToDrop) > 0){
+        #
+        if (length(pkgsToDrop) > 0)
+        {
             lapply(pkgsToDrop, sqlDropExternalLibrary, hodbc = hodbc, user=user )
             pkgsSuccess <- c(pkgsSuccess, pkgsToDrop)
         }
 
-        if (length(pkgs) > 0){
+        if (length(pkgs) > 0)
+        {
             # get the external library ids of all packages to be removed so we can cross-reference
             # with the view sys.external_library_setup_errors for errors reported
             # by the external library uninstaller
+            #
             externalLibraryIds <- sqlQueryExternalLibraryId(hodbc, pkgs, scopeint, queryUser)
             lapply(pkgs, sqlDropExternalLibrary, hodbc = hodbc, user=user)
             pkgsSuccess <- c(pkgsSuccess, sqlSyncRemovePackages(hodbc, c(pkgs,pkgsToReport), externalLibraryIds, scope, user, queryUser, verbose))
-        } else if(length(pkgsToReport) > 0){
+        }
+        else if(length(pkgsToReport) > 0)
+        {
             pkgsSuccess <- c(pkgsSuccess, sqlSyncRemovePackages(hodbc, pkgsToReport, externalLibraryIds = NULL, scope, user, queryUser = NULL, verbose = verbose))
         }
 
-        odbcEndTran(hodbc, commit = TRUE)
-    }
-    , error = function(err) {
+        dbCommit(hodbc)
+        haveTransaction = FALSE
+    },
+    error = function(err)
+    {
         stop(sprintf("Removal of packages %s failed with error %s", paste(c(pkgs, pkgsToDrop, pkgsToReport), collapse = ', '), err$message), call. = FALSE)
-    }, finally = {
-        if(haveTransaction){
-            # rollback / close open transactions otherwise odbcClose() will fail
-            odbcEndTran(hodbc, commit = FALSE)
+    },
+    finally =
+    {
+        # If we still have a transaction, there was an error and we rollback
+        #
+        if(haveTransaction)
+        {
+            dbRollback(hodbc)
         }
-        if(hodbc != -1){
-            odbcClose(hodbc)
+
+        if(!is.null(hodbc))
+        {
+            dbDisconnect(hodbc)
         }
     })
 
-    if(length(pkgsSuccess) > 0){
-        if(verbose){
+    if(length(pkgsSuccess) > 0)
+    {
+        if(verbose)
+        {
             write(sprintf("%s  Successfully removed packages from SQL server (%s).", pkgTime(), paste(pkgsSuccess, collapse = ', ')), stdout())
-        } else {
+        }
+        else
+        {
             write(sprintf("Successfully removed packages from SQL server (%s).", paste(pkgsSuccess, collapse = ', ')), stdout())
         }
     }
@@ -2025,7 +2209,8 @@ sqlHelperRemovePackages <- function(connectionString, pkgs, pkgsToDrop, pkgsToRe
 #
 sqlSyncRemovePackages <- function(hodbc, pkgs, externalLibraryIds, scope, user, queryUser, verbose)
 {
-    if(verbose){
+    if(verbose)
+    {
         write(sprintf("%s  Removing packages from library path, this may take some time...", pkgTime()), stdout())
     }
     scopeint <- parseScope(scope)
@@ -2037,21 +2222,28 @@ sqlSyncRemovePackages <- function(hodbc, pkgs, externalLibraryIds, scope, user, 
         setupFailures <- sqlQueryExternalLibrarySetupErrors(hodbc, externalLibraryIds, queryUser)
 
         # issue specific errors for packages that failed to be removed from  the library path
-        if((!is.null(setupFailures)) && (nrow(setupFailures) >0)){
+        #
+        if((!is.null(setupFailures)) && (nrow(setupFailures) > 0))
+        {
             errors <- mapply(
-                function(packageName, errorCode, errorMessage){
+                function(packageName, errorCode, errorMessage)
+                {
                     sprintf("failed to remove package (%s) from library path: user='%s', scope='%s', error code='%s', error message='%s'", packageName, user, scope, as.hexmode(errorCode), errorMessage)
                 },
                 setupFailures[,"name"], setupFailures[,"error_code"], setupFailures[,"error_message"]
             )
+
             stop(paste(errors, collapse = " ; "), call. = FALSE)
         }
     }
 
     # issue generic errors for packages that are still present in the library path
+    #
     failedPackages <- unlist(mapply(
-        function(packageName,found){
-            if (found == TRUE){
+        function(packageName,found)
+        {
+            if (found == TRUE)
+            {
                 return (packageName)
             }
             return (NULL)
@@ -2061,7 +2253,8 @@ sqlSyncRemovePackages <- function(hodbc, pkgs, externalLibraryIds, scope, user, 
         USE.NAMES=FALSE
     ))
 
-    if(length(failedPackages) >0){
+    if(length(failedPackages) > 0)
+    {
         stop(sprintf("failed to remove packages (%s) from library path: user='%s', scope='%s'", paste(failedPackages, collapse = ", "), user, scope), call. = FALSE)
     }
 
@@ -2091,7 +2284,7 @@ sqlEnumTable <- function(connectionString, packagesNames, owner, scopeint)
             queryUser = "'dbo'"
         }
     }
-    else if (nchar(owner) >0)
+    else if (nchar(owner) > 0)
     {
         queryUser <- paste0("'", owner, "'")
     }
@@ -2116,15 +2309,13 @@ sqlEnumTable <- function(connectionString, packagesNames, owner, scopeint)
                      " ;"
    )
 
-    hodbc <- odbcDriverConnect(connectionString)
-    checkOdbcHandle(hodbc, connectionString)
-    on.exit(odbcClose(hodbc), add = TRUE)
-
-    if(!is.null(g_scriptFile)) {
+    if(!is.null(g_scriptFile))
+    {
         cat(query, file=g_scriptFile, append=TRUE)
         cat("\n", file=g_scriptFile, append=TRUE)
     }
-    sqlResult <- sqlQuery(hodbc, query, stringsAsFactors = FALSE)
+
+    sqlResult <- execute(connectionString, query)
 
     resultdf <- data.frame(Package = packagesNames, Found = rep(FALSE, length(packagesNames)), row.names = packagesNames, stringsAsFactors = FALSE)
 
@@ -2142,13 +2333,15 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
     {
         # This function remove, from the given packages dependency lists, all the packages which are top most (and their dependencies) which are not explicitly
         # stated to be removed
-
+        #
         prunedDependencies <- dependencies
 
-        #If we have the topmost package information, remove, from the dependencies, packages which are marked as topmost
-        if ('Attributes' %in% colnames(db)){
-
+        # If we have the topmost package information, remove, from the dependencies, packages which are marked as topmost
+        #
+        if ('Attributes' %in% colnames(db))
+        {
             # Find all the packegs , in the installed packages database, which are explicitly marked as top most
+            #
             topMostInstalledPackages <- db[!is.na(db[,'Attributes']) &
                                                bitwAnd(as.integer(db[,'Attributes']), getPackageTopMostAttributeFlag()) ==  1
                                            ,, drop = FALSE]
@@ -2156,32 +2349,40 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
             topMostDependencies <- unique(unlist(dependencies, recursive = TRUE, use.names = FALSE))
             topMostDependencies <- topMostDependencies[topMostDependencies %in% topMostInstalledPackages[,"Package"]]
 
-            if (length(topMostDependencies) != 0){
+            if (length(topMostDependencies) != 0)
+            {
                 # Exclude, from the top most dependencies the packages which we specifically asked to remove
+                #
                 topMostDependencies <- topMostDependencies[!(topMostDependencies %in% pkgsToRemove)]
             }
 
-            if (length(topMostDependencies) != 0){
+            if (length(topMostDependencies) != 0)
+            {
                 # Get the top most packages dependencies to ensure they can still work
-
+                #
                 topMostDependencies <- unique(c(unlist(tools::package_dependencies(packages = topMostDependencies,
                                                                                    db = db, recursive = TRUE,
                                                                                    verbose = FALSE), recursive = TRUE, use.names = FALSE),
                                                 topMostDependencies))
 
                 # Remove the dependencies which are base classes to allow the correct code to use these
+                #
                 topMostDependencies <- topMostDependencies[!topMostDependencies %in% basePackages]
             }
 
-            if (length(topMostDependencies) != 0){
+            if (length(topMostDependencies) != 0)
+            {
                 skippedDependencies <- character(0)
                 prunedDependencies <- lapply(X = dependencies,
-                                             FUN = function(dependency){
+                                             FUN = function(dependency)
+                                                {
                                                  skippedDependencies <<- c(skippedDependencies, dependency[dependency %in% topMostDependencies])
                                                  dependency[!dependency %in% topMostDependencies]
-                                             })
+                                                }
+                                             )
 
-                if (verbose && length(skippedDependencies) > 0){
+                if (verbose && length(skippedDependencies) > 0)
+                {
                     write(sprintf("%s  skipping following top level dependent packages (%s)...", pkgTime(), paste(unique(skippedDependencies), collapse = ', ')), stdout())
                 }
             }
@@ -2190,7 +2391,6 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
         prunedDependencies
     }
 
-    #
     # prune requested packages to exclude base packages
     #
     basePackages <- installedPackages[installedPackages[,"Priority"] %in% c("base", "recommended"), c("Package", "Priority"), drop = FALSE]$Package
@@ -2215,7 +2415,6 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
     }
     else
     {
-        #
         # get dependency closure for all given packages
         #
         if (verbose)
@@ -2226,6 +2425,7 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
         dependencies <- tools::package_dependencies(packages = pkgs, db = installedPackages, recursive = TRUE, verbose = FALSE)
 
         # Exclude, from the package dependencies, all the packages which are marked as top most and their dependencies
+        #
         dependencies <- excludeTopMostPackagesDependencies(pkgsToRemove = pkgs,
                                                            dependencies = dependencies,
                                                            db = installedPackages,
@@ -2234,7 +2434,6 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
 
         dependencies <- c(dependencies, pkgs)
 
-        #
         # get combined dependency closure w/o base packages
         #
         dependencies <- unique(unlist(c(dependencies, names(dependencies)), recursive = TRUE, use.names = FALSE))
@@ -2249,7 +2448,6 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
 
     if (checkReferences == TRUE)
     {
-        #
         # get reverse dependency closure for all given packages
         #
         if (verbose)
@@ -2288,7 +2486,6 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
 
         pkgsToSkip <- unique(unlist(pkgsToSkip, recursive = TRUE, use.names = FALSE))
 
-        #
         # remove packages which are being referenced by other packages
         #
         dependencies <- dependencies[!(dependencies %in% pkgsToSkip)]
@@ -2299,7 +2496,6 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
         }
     }
 
-    #
     # get the packages in order of dependency closure
     #
     dependencies <- unique(dependencies)
@@ -2309,7 +2505,6 @@ getDependentPackagesToUninstall <- function(pkgs, installedPackages, dependencie
     return (pkgsToRemove)
 }
 
-#
 # Returns dataframe |name (package name)|IsTopPackage (-1,0,1)|
 #
 enumerateTopPackages <- function(connectionString, packages, owner, scope)
@@ -2319,27 +2514,31 @@ enumerateTopPackages <- function(connectionString, packages, owner, scope)
     query <- "DECLARE @principalId INT;
     DECLARE @currentUser NVARCHAR(128);"
 
-    query <- paste0( query, paste(sapply( seq(1,length(packages)), function(i){paste0("DECLARE @pkg", toString(i), " NVARCHAR(MAX);")} ), collapse=" "))
+    query <- paste0( query, paste(sapply( seq(1,length(packages)), function(i) {paste0("DECLARE @pkg", toString(i), " NVARCHAR(MAX);")} ), collapse=" "))
 
     query = paste0( query, "SELECT @currentUser = ")
 
-    if (haveUser) {
-        query<-paste0(query, "?;")
-        data  <- data.frame(name = owner, stringsAsFactors = FALSE)
-    } else {
-        query = paste0(query, "CURRENT_USER;")
-        data  <- data.frame(matrix(nrow=1, ncol=0), stringsAsFactors = FALSE)
+    if (haveUser)
+    {
+        query <- paste0(query, "?;")
+        data <- data.frame(name = owner, stringsAsFactors = FALSE)
+    }
+    else
+    {
+        query <- paste0(query, "CURRENT_USER;")
+        data <- data.frame(matrix(nrow=1, ncol=0), stringsAsFactors = FALSE)
     }
 
     for(pkg in packages)
     {
         data <- cbind(data, pkg, stringsAsFactors = FALSE)
     }
+
     data <- cbind(data, scope = scope, stringsAsFactors = FALSE)
 
 
-    query <- paste0( query, paste(sapply( seq(1,length(packages)), function(i){paste0("SELECT @pkg", toString(i), " = ?;")} ), collapse=" "))
-    pkgcsv <- paste(sapply( seq(1,length(packages)), function(i){paste0("@pkg", toString(i))} ), collapse=",")
+    query <- paste0( query, paste(sapply( seq(1,length(packages)), function(i) {paste0("SELECT @pkg", toString(i), " = ?;")} ), collapse=" "))
+    pkgcsv <- paste(sapply( seq(1,length(packages)), function(i) {paste0("@pkg", toString(i))} ), collapse=",")
 
     query = paste0(query , sprintf("
                                    SELECT @principalId = USER_ID(@currentUser);
@@ -2358,23 +2557,17 @@ enumerateTopPackages <- function(connectionString, packages, owner, scope)
                                    ORDER BY elib.name ASC
                                    ;", pkgcsv))
 
-    tryCatch({
-        hodbc <- odbcDriverConnect(connectionString)
-        checkOdbcHandle(hodbc, connectionString)
-
-        result <- sqlExecute(hodbc, query = query,
-                             data = data,
-                             fetch = TRUE)
-
+    tryCatch(
+    {
+        result <- execute(connectionString, query, data)
         missingPkgs <- packages[!(packages %in% result[,"name"])]
         result <- rbind(result, data.frame(name = missingPkgs, IsTopPackage =  rep(IS_TOP_PACKAGE_MISSING, length(missingPkgs)), stringsAsFactors = FALSE))
-    }, error = function(err) {
+    },
+    error = function(err)
+    {
         stop(sprintf("Failed to enumerate package attributes: pkgs=(%s), error='%s'",
                      paste(packages, collapse = ', '), err$message), call. = FALSE)
-    }, finally = {
-        if (hodbc != -1){
-            odbcClose(hodbc)
-        }
     })
+
     return(result)
 }
