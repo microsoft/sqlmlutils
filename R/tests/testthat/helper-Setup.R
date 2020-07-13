@@ -14,14 +14,9 @@ cat("INFO: sysname=", Sysname, "\n", sep = "")
 Driver <- Sys.getenv("DRIVER")
 if (Driver == '')
 {
-    if(Sysname == "Windows")
-    {
-        Driver <- "SQL Server"
-    }
-    else
-    {
+
         Driver <- "ODBC Driver 17 for SQL Server"
-    }
+
 }
 
 cat("INFO: Driver=", Driver, "\n", sep = "")
