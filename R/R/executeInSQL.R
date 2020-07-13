@@ -380,6 +380,7 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
                          list(result = result, output = output, warnings = funwarnings, errors = funerror)
                          ", funcName, funcBody, paste0(binArgs,collapse=";"), inputDataName, funcName)
 
-    #Call the spees builder to wrap the function; needs the returnVal resultset
+    # Call the spees builder to wrap the function; needs the returnVal resultset
+    #
     speesBuilder(speesBody, inputDataQuery, withResults = TRUE)
 }
