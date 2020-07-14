@@ -6,7 +6,7 @@ from sys import platform
 
 from sqlmlutils import ConnectionInfo, Scope
 
-default_driver = "ODBC Driver 17 for SQL Server" if platform != "win32" else "SQL Server
+default_driver = "ODBC Driver 17 for SQL Server" if platform != "win32" else "SQL Server"
 
 driver = os.environ['DRIVER'] if 'DRIVER' in os.environ else default_driver
 server = os.environ['SERVER'] if 'SERVER' in os.environ else "localhost"
