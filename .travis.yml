@@ -9,6 +9,8 @@ matrix:
         - cd Python
         - ls
         - sudo bash "../Travis-CI/installODBC.sh"
+      script: 
+        - pytest
 
 notifications:
   email: false
