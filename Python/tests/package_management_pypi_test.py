@@ -218,6 +218,7 @@ def test_already_installed_popular_ml_packages():
         assert len(sqlpkgs) == len(newsqlpkgs)
 
 
+@pytest.mark.skip(reason="Too slow for Travis. Un-skip for personal testing")
 def test_installing_popular_ml_packages():
     newpackages = ["plotly", "gensim"]
 
