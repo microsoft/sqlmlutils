@@ -8,7 +8,6 @@ matrix:
         - ls
         - cd Python
         - ls
-      before_script:
         - sudo bash "../Travis-CI/installODBC.sh"
 
 notifications:
