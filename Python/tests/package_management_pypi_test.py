@@ -3,6 +3,7 @@
 
 import io
 import os
+import sys
 import pytest
 
 from contextlib import redirect_stdout

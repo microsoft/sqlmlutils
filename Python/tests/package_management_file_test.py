@@ -3,6 +3,7 @@
 
 import io
 import os
+import sys
 import subprocess
 import tempfile
 from contextlib import redirect_stdout
