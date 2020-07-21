@@ -13,7 +13,7 @@ from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Sco
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
-from conftest import connection, driver
+from conftest import connection, airline_user_connection, driver
 
 path_to_packages = os.path.join((os.path.dirname(os.path.realpath(__file__))), "scripts", "test_packages")
 _SUCCESS_TOKEN = "SUCCESS"
@@ -109,7 +109,7 @@ def test_install_basic_zip_package_different_name():
 
 
 def test_install_whl_files():
-    packages = ["webencodings-0.5.1-py2.py3-none-any.whl", "html5lib-1.0.1-py2.py3-none-any.whl",
+    packages = ["html5lib-1.0.1-py2.py3-none-any.whl",
                 "astor-0.8.1-py2.py3-none-any.whl"]
     module_names = ["webencodings",  "html5lib", "astor"]
     classes_to_check = ["LABELS",  "parse", "code_gen"]
@@ -133,7 +133,7 @@ def test_install_targz_files():
         full_package = os.path.join(path_to_packages, package)
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
-
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Issues with sqlcmd (_execute_sql function) in Linux")
 def test_install_bad_package_badzipfile():
 
     _remove_all_new_packages(pkgmanager)
@@ -203,13 +203,8 @@ def test_scope():
         import testpackageA
         return testpackageA.__file__
 
-    _revotesterconnection = ConnectionInfo(driver=driver,
-											server="localhost",
-											database="AirlineTestDB",
-											uid="Tester",
-											pwd="FakeT3sterPwd!")
-    revopkgmanager = SQLPackageManager(_revotesterconnection)
-    revoexecutor = SQLPythonExecutor(_revotesterconnection)
+    revopkgmanager = SQLPackageManager(airline_user_connection)
+    revoexecutor = SQLPythonExecutor(airline_user_connection)
 
     revopkgmanager.install(package, scope=Scope.private_scope())
     private_location = revoexecutor.execute_function_in_sql(get_location)

@@ -231,7 +231,7 @@ pkgmanager.uninstall("astor")
 1. Make sure a SQL Server with an updated ML Services Python is running on localhost. 
 2. Restore the AirlineTestDB from the .bak file in this repo 
 3. Make sure Trusted (Windows) authentication works for connecting to the database
-4. Setup a user with db_owner role (and not server admin) with uid: "Tester" and password "FakeT3sterPwd!"
+4. Setup a user with db_owner role (and not server admin) with uid: "AirlineUser" and password "FakeT3sterPwd!"
     
 ### Notable TODOs and open issues
 
