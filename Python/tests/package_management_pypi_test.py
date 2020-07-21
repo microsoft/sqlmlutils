@@ -217,7 +217,7 @@ def test_already_installed_popular_ml_packages():
         newsqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(newsqlpkgs)
 
-@pytest.mark.skipif(!sys.platform.startswith("win"), reason="Slow test, don't run on Travis-CI, which uses Linux")
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_installing_popular_ml_packages():
     newpackages = ["plotly", "gensim"]
 
