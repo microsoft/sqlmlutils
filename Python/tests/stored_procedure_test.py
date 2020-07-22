@@ -18,7 +18,7 @@ sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 
 # Prevent truncation of DataFrame when printing 
 #
-set_option("display.max_colwidth", -1)
+set_option("display.max_colwidth", None)
 set_option("display.max_columns", None)
 
 
@@ -71,7 +71,7 @@ def test_no_output_mixed_args_in_df():
         # Prevent truncation of DataFrame when printing
         #
         import pandas as pd
-        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_colwidth", None)
         pd.set_option("display.max_columns", None)
         
         print(val1, val2, val3, val4)
@@ -102,7 +102,7 @@ def test_no_output_mixed_args_in_df_in_params():
         # Prevent truncation of DataFrame when printing
         #
         import pandas as pd
-        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_colwidth", None)
         pd.set_option("display.max_columns", None)
         
         print(val1, val2, val3, val4)
@@ -202,7 +202,7 @@ def test_out_df_mixed_args_in_df():
         # Prevent truncation of DataFrame when printing
         #
         import pandas as pd
-        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_colwidth", None)
         pd.set_option("display.max_columns", None)
         
         print(val1, val2, val3, val5)
@@ -233,7 +233,7 @@ def test_out_df_mixed_in_params_in_df():
         # Prevent truncation of DataFrame when printing
         #
         import pandas as pd
-        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_colwidth", None)
         pd.set_option("display.max_columns", None)
         
         print(val1, val2, val3, val5)
@@ -294,7 +294,7 @@ def test_in_param_out_param():
         # Prevent truncation of DataFrame when printing
         #
         import pandas as pd
-        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_colwidth", None)
         pd.set_option("display.max_columns", None)
         
         print(t2)
