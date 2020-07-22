@@ -85,7 +85,7 @@ def _remove_all_new_packages(manager):
 
 
 packages = ["absl-py==0.1.13", "astor==0.8.1", "bleach==1.5.0",
-            "html5lib==1.0.1", "Markdown==2.6.11", "termcolor==1.1.0", "webencodings==0.5.1"]
+            "html5lib==1.0.1", "Markdown==2.6.11", "termcolor==1.1.0"]
 
 for package in packages:
     pipdownloader = PipDownloader(connection, path_to_packages, package)
@@ -112,8 +112,8 @@ def test_install_basic_zip_package_different_name():
 def test_install_whl_files():
     packages = ["html5lib-1.0.1-py2.py3-none-any.whl",
                 "astor-0.8.1-py2.py3-none-any.whl"]
-    module_names = ["webencodings",  "html5lib", "astor"]
-    classes_to_check = ["LABELS",  "parse", "code_gen"]
+    module_names = ["html5lib", "astor"]
+    classes_to_check = ["parse", "code_gen"]
 
     _remove_all_new_packages(pkgmanager)
 
