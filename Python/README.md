@@ -10,7 +10,7 @@ pip install sqlmlutils
 ```
 To install from file, run:
 ```
-pip install Python/dist/sqlmlutils-1.0.1.zip
+pip install Python/dist/sqlmlutils-1.0.2.zip
 ```
 
 If you are developing on your own branch and want to rebuild and install the package, you can use the buildandinstall.cmd script that is included.

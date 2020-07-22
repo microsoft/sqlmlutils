@@ -8,7 +8,7 @@ matrix:
         - cd Python
         - sudo bash "../Travis-CI/installODBC.sh"
       before_script:
-        - pip install "dist/sqlmlutils-1.0.1.zip"
+        - pip install "dist/sqlmlutils-1.0.2.zip"
       script: 
         - pytest tests
 
