@@ -61,7 +61,7 @@ def test_install_tensorflow():
 
 
 def test_install_many_packages():
-    packages = ["multiprocessing_on_dill==3.5.0a4", "simplejson==3.0.3"]
+    packages = ["multiprocessing_on_dill", "simplejson"]
     
     try:
         for package in packages:
@@ -97,7 +97,7 @@ def test_install_version():
 
 
 def test_dependency_resolution():
-    package = "latex==0.7.0"
+    package = "latex"
 
     try:
         pkgmanager.install(package, upgrade=True)
@@ -118,7 +118,6 @@ def test_dependency_resolution():
 
 
 def test_upgrade_parameter():
-
     try:
         pkg = "cryptography"
 

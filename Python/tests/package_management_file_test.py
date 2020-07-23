@@ -84,8 +84,7 @@ def _remove_all_new_packages(manager):
                     manager.uninstall(pkg, scope=Scope.public_scope())
 
 
-packages = ["absl-py==0.1.13", "astor==0.8.1", "bleach==1.5.0",
-            "html5lib==1.0.1", "Markdown==2.6.11", "termcolor==1.1.0"]
+packages = ["astor==0.8.1", "html5lib==1.0.1", "termcolor==1.1.0"]
 
 for package in packages:
     pipdownloader = PipDownloader(connection, path_to_packages, package)
