@@ -11,7 +11,7 @@ matrix:
         - bash ./buildandinstall.sh
         - pip install --find-links=dist sqlmlutils
       script: 
-        - pytest tests/package_testing.py
+        - pytest tests
 
 notifications:
   email: false

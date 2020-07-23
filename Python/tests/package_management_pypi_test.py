@@ -61,7 +61,7 @@ def test_install_tensorflow():
 
 
 def test_install_many_packages():
-    packages = ["multiprocessing_on_dill", "simplejson"]
+    packages = ["multiprocessing_on_dill==3.5.0a4", "simplejson==3.0.3"]
     
     try:
         for package in packages:
@@ -97,7 +97,7 @@ def test_install_version():
 
 
 def test_dependency_resolution():
-    package = "latex"
+    package = "latex==0.7.0"
 
     try:
         pkgmanager.install(package, upgrade=True)
@@ -166,6 +166,7 @@ def test_upgrade_parameter():
         _drop_all_ddl_packages(connection, scope)
 
 
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Managed Instance has a bug with this test, don't run in Travis-CI (which uses Linux)")
 def test_install_abslpy():
     def useit():
         import absl
@@ -177,7 +178,7 @@ def test_install_abslpy():
             import absl
         
     try:
-        pkgmanager.install("absl-py")
+        pkgmanager.install("absl-py==0.9.0")
 
         pyexecutor.execute_function_in_sql(useit)
 
@@ -201,7 +202,7 @@ def test_install_theano():
 
         pkgmanager.uninstall("Theano")
 
-        pkgmanager.install("theano")
+        pkgmanager.install("theano==1.0.4")
         pyexecutor.execute_function_in_sql(useit)
         pkgmanager.uninstall("theano")
 
@@ -220,7 +221,7 @@ def test_already_installed_popular_ml_packages():
 
 @pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_installing_popular_ml_packages():
-    newpackages = ["plotly", "gensim"]
+    newpackages = ["plotly==4.9.0", "gensim==3.8.3"]
 
     def checkit(pkgname):
         val = __import__(pkgname)
