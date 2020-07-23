@@ -1,6 +1,16 @@
 dist: xenial
 matrix:
-  include:        
+  include:
+    - language: r
+      r: 
+        - 3.5
+      sudo: required
+      cache: packages
+      before_install:
+        - cd R
+        - ls
+      before_script:
+        - sudo bash "../Travis-CI/installODBC.sh"
     - language: python
       python: 
         - 3.7
