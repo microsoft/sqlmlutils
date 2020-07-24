@@ -135,7 +135,7 @@ def test_dependency_resolution():
 # Test that the DepedencyResolver handles ~= requirement spec
 #
 def test_dependency_spec():
-    package = "azure_cli_telemetry"
+    package = "azure-cli-telemetry"
     version = "1.0.4"
     dependent = "portalocker"
 
