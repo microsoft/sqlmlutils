@@ -12,6 +12,8 @@ from sqlmlutils import SQLPythonExecutor, SQLPackageManager, Scope
 
 from conftest import connection, scope
 
+# Clean the external libraries - drop all packages
+#
 def _drop_all_ddl_packages(conn, scope):
     pkgs = _get_sql_package_table(conn)
     if(len(pkgs.index) > 0 ):
@@ -22,44 +24,55 @@ def _drop_all_ddl_packages(conn, scope):
                 except Exception as e:
                     pass
 
+# Get the list of packages installed before we do anything
+# 
 def _get_initial_list(conn, scope):
     pkgs = _get_sql_package_table(conn)
     return pkgs['name']
 
-pyexecutor = SQLPythonExecutor(connection)
-pkgmanager = SQLPackageManager(connection)
-initial_list = _get_sql_package_table(connection)['name']
-
+# Check if a package exists
+#
 def _package_exists(module_name: str):
     mod = __import__(module_name)
     return mod is not None
 
-
+# Check that a package does NOT exist
+# 
 def _package_no_exist(module_name: str):
     import pytest
     with pytest.raises(Exception):
         __import__(module_name)
     return True
 
-@pytest.mark.skip(reason="No version of tensorflow works with currently installed numpy (1.15.4)")
-def test_install_tensorflow():
-    def use_tensorflow():
-        import tensorflow as tf
-        node1 = tf.constant(3.0, tf.float32)
-        return str(node1.dtype)
-    
-    try:
-        pkgmanager.install("tensorflow", upgrade=True)
-        val = pyexecutor.execute_function_in_sql(use_tensorflow)
-        assert 'float32' in val
 
-        pkgmanager.uninstall("tensorflow")
-        val = pyexecutor.execute_function_in_sql(_package_no_exist, "tensorflow")
-        assert val
+pyexecutor = SQLPythonExecutor(connection)
+pkgmanager = SQLPackageManager(connection)
+initial_list = _get_sql_package_table(connection)['name']
+
+# Test installing a single package with different capitalization
+#
+def test_install_different_names():
+
+    def useit():
+        import theano.tensor as T
+        return str(T)
+
+    try:
+        pkgmanager.install("Theano==1.0.4")
+        pyexecutor.execute_function_in_sql(useit)
+
+        pkgmanager.uninstall("Theano")
+
+        pkgmanager.install("theano==1.0.4")
+        pyexecutor.execute_function_in_sql(useit)
+        pkgmanager.uninstall("theano")
+
     finally:
         _drop_all_ddl_packages(connection, scope)
 
 
+# Test installing a couple packages
+#
 def test_install_many_packages():
     packages = ["multiprocessing_on_dill", "simplejson"]
     
@@ -75,7 +88,8 @@ def test_install_many_packages():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-
+# Test the version parameter
+#
 def test_install_version():
     package = "simplejson"
     v = "3.0.3"
@@ -95,12 +109,14 @@ def test_install_version():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-
+# Test that we install dependencies with the main package
+#
 def test_dependency_resolution():
     package = "latex"
+    version = "0.7.0"
 
     try:
-        pkgmanager.install(package, upgrade=True)
+        pkgmanager.install(package, version=version, upgrade=True)
         val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
         assert val
 
@@ -116,7 +132,52 @@ def test_dependency_resolution():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
+# Test that the DepedencyResolver handles ~= requirement spec
+#
+def test_dependency_spec():
+    package = "azure_cli_telemetry"
+    version = "1.0.4"
+    dependent = "portalocker"
 
+    try:
+        # Install the package and its dependencies
+        #
+        pkgmanager.install(package, version=version)
+        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
+        assert val
+
+        pkgs = _get_package_names_list(connection)
+
+        assert package in pkgs
+        assert dependent in pkgs
+            
+        # Uninstall the top package only, not the dependencies
+        #
+        pkgmanager.uninstall(package)
+        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
+        assert val
+        
+        pkgs = _get_package_names_list(connection)
+
+        assert package not in pkgs
+        assert dependent in pkgs
+        
+        # Install the package again, make sure DepedencyResolver can handle ~= Requirement spec
+        #
+        pkgmanager.install(package, version=version)
+        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
+        assert val
+
+        pkgs = _get_package_names_list(connection)
+
+        assert package in pkgs
+        assert dependent in pkgs
+
+    finally:
+        _drop_all_ddl_packages(connection, scope)
+
+# Test that "upgrade" parameter works properly
+#
 def test_upgrade_parameter():
     try:
         pkg = "cryptography"
@@ -164,53 +225,10 @@ def test_upgrade_parameter():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-
-@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Managed Instance has a bug with this test, don't run in Travis-CI (which uses Linux)")
-def test_install_abslpy():
-    def useit():
-        import absl
-        return absl.__file__
-
-    def dontuseit():
-        import pytest
-        with pytest.raises(Exception):
-            import absl
-        
-    try:
-        pkgmanager.install("absl-py==0.9.0")
-
-        pyexecutor.execute_function_in_sql(useit)
-
-        pkgmanager.uninstall("absl-py")
-
-        pyexecutor.execute_function_in_sql(dontuseit)
-
-    finally:
-        _drop_all_ddl_packages(connection, scope)
-
-
-def test_install_theano():
-    pkgmanager.install("Theano")
-
-    def useit():
-        import theano.tensor as T
-        return str(T)
-
-    try:
-        pyexecutor.execute_function_in_sql(useit)
-
-        pkgmanager.uninstall("Theano")
-
-        pkgmanager.install("theano==1.0.4")
-        pyexecutor.execute_function_in_sql(useit)
-        pkgmanager.uninstall("theano")
-
-    finally:
-        _drop_all_ddl_packages(connection, scope)
-
-
+# Test packages that are preinstalled, make sure they do not install again
+# 
 def test_already_installed_popular_ml_packages():
-    installedpackages = ["numpy", "scipy", "pandas", "matplotlib", "seaborn", "bokeh", "nltk", "statsmodels"]
+    installedpackages = ["numpy", "scipy", "pandas"]
 
     sqlpkgs = _get_sql_package_table(connection)
     for package in installedpackages:
@@ -218,6 +236,8 @@ def test_already_installed_popular_ml_packages():
         newsqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(newsqlpkgs)
 
+# Test a couple of popular ML packages
+#
 @pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_installing_popular_ml_packages():
     newpackages = ["plotly==4.9.0", "gensim==3.8.3"]
@@ -232,9 +252,4 @@ def test_installing_popular_ml_packages():
             pyexecutor.execute_function_in_sql(checkit, pkgname=package)
     finally:
         _drop_all_ddl_packages(connection, scope)
-
-
-# TODO: find a bad pypi package to test this scenario
-def test_install_bad_pypi_package():
-    pass
 

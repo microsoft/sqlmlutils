@@ -14,7 +14,7 @@ from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Sco
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
-from conftest import connection, airline_user_connection, driver
+from conftest import connection, airline_user_connection, driver, database
 
 path_to_packages = os.path.join((os.path.dirname(os.path.realpath(__file__))), "scripts", "test_packages")
 _SUCCESS_TOKEN = "SUCCESS"
@@ -24,6 +24,8 @@ pkgmanager = SQLPackageManager(connection)
 
 originals = _get_sql_package_table(connection)
 
+# Check if a package exists or doesn't
+#
 def check_package(package_name: str, exists: bool, class_to_check: str = ""):
     if exists:
         themodule = __import__(package_name)
@@ -34,24 +36,26 @@ def check_package(package_name: str, exists: bool, class_to_check: str = ""):
         with pytest.raises(Exception):
             __import__(package_name)
 
-
+# Execute sql using sqlcmd
+#
 def _execute_sql(script: str) -> bool:
     tmpfile = tempfile.NamedTemporaryFile(delete=False)
     tmpfile.write(script.encode())
     tmpfile.close()
-    command = ["sqlcmd", "-d", "AirlineTestDB", "-i", tmpfile.name]
+    command = ["sqlcmd", "-d", database, "-i", tmpfile.name]
     try:
         output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
         return _SUCCESS_TOKEN in output
     finally:
         os.remove(tmpfile.name)
 
-
+# Uninstall a package and check that it is gone
+#
 def _drop(package_name: str, ddl_name: str):
     pkgmanager.uninstall(package_name)
     pyexecutor.execute_function_in_sql(check_package, package_name=package_name, exists=False)
 
-
+# Install a package and check that it is installed
 def _create(module_name: str, package_file: str, class_to_check: str, drop: bool = True):
     try:
         pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=False)
@@ -61,7 +65,8 @@ def _create(module_name: str, package_file: str, class_to_check: str, drop: bool
         if drop:
             _drop(package_name=module_name, ddl_name=module_name)
 
-
+# Drop all packages that were not there in the original list
+#
 def _remove_all_new_packages(manager):
     df = _get_sql_package_table(connection)
     
@@ -84,12 +89,16 @@ def _remove_all_new_packages(manager):
                     manager.uninstall(pkg, scope=Scope.public_scope())
 
 
+# Download the package zips we will use for these tests
+# 
 packages = ["astor==0.8.1", "html5lib==1.0.1", "termcolor==1.1.0"]
 
 for package in packages:
     pipdownloader = PipDownloader(connection, path_to_packages, package)
     pipdownloader.download_single()
 
+# Test a custom zip package
+#
 def test_install_basic_zip_package():
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
     module_name = "testpackageA"
@@ -98,16 +107,8 @@ def test_install_basic_zip_package():
 
     _create(module_name=module_name, package_file=package, class_to_check="ClassA")
 
-
-def test_install_basic_zip_package_different_name():
-    package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
-    module_name = "testpackageA"
-
-    _remove_all_new_packages(pkgmanager)
-    
-    _create(module_name=module_name, package_file=package, class_to_check="ClassA")
-
-
+# Test some wheel files
+#
 def test_install_whl_files():
     packages = ["html5lib-1.0.1-py2.py3-none-any.whl",
                 "astor-0.8.1-py2.py3-none-any.whl"]
@@ -121,6 +122,8 @@ def test_install_whl_files():
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
 
+# Test tar.gz
+#
 def test_install_targz_files():
     packages = ["termcolor-1.1.0.tar.gz"]
     module_names = ["termcolor"]
@@ -133,6 +136,8 @@ def test_install_targz_files():
         full_package = os.path.join(path_to_packages, package)
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
+# Test a zip that is not a package, then use sqlcmd to make sure it is not in the external_libraries table
+#
 @pytest.mark.skipif(sys.platform.startswith("linux"), reason="Issues with sqlcmd (_execute_sql function) in Linux")
 def test_install_bad_package_badzipfile():
 
@@ -156,12 +161,14 @@ if @val = 0
 
         assert _execute_sql(query)
 
-
+# Test the upgrade parameter
+#
 def test_package_already_exists_on_sql_table():
 
     _remove_all_new_packages(pkgmanager)
 
     # Install a downgraded version of the package first
+    #
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
     pkgmanager.install(package)
     
@@ -175,6 +182,7 @@ def test_package_already_exists_on_sql_table():
     package = os.path.join(path_to_packages, "testpackageA-0.0.2.zip")
 
     # Without upgrade
+    #
     output = io.StringIO()
     with redirect_stdout(output):
         pkgmanager.install(package, upgrade=False)
@@ -184,6 +192,7 @@ def test_package_already_exists_on_sql_table():
     assert version == "0.0.1"
     
     # With upgrade
+    #
     pkgmanager.install(package, upgrade=True)
 
     version = pyexecutor.execute_function_in_sql(check_version)
@@ -192,7 +201,8 @@ def test_package_already_exists_on_sql_table():
     pkgmanager.uninstall("testpackageA")
 
 
-# TODO: more tests for drop external library
+# Test installing in a private scope with a db_owner (not dbo) user 
+#
 def test_scope():
 
     _remove_all_new_packages(pkgmanager)
