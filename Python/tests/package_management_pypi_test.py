@@ -132,18 +132,20 @@ def test_dependency_resolution():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-# Test that the DepedencyResolver handles ~= requirement spec
+# Test that the DepedencyResolver handles ~= requirement spec.
+# Also tests when package name and module name are different.
 #
 def test_dependency_spec():
-    package = "azure-cli-telemetry"
+    package = "azure_cli_telemetry"
     version = "1.0.4"
     dependent = "portalocker"
+    module = "azure"
 
     try:
         # Install the package and its dependencies
         #
         pkgmanager.install(package, version=version)
-        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
+        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=module)
         assert val
 
         pkgs = _get_package_names_list(connection)
@@ -154,7 +156,7 @@ def test_dependency_spec():
         # Uninstall the top package only, not the dependencies
         #
         pkgmanager.uninstall(package)
-        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
+        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=module)
         assert val
         
         pkgs = _get_package_names_list(connection)
@@ -165,7 +167,7 @@ def test_dependency_spec():
         # Install the package again, make sure DepedencyResolver can handle ~= Requirement spec
         #
         pkgmanager.install(package, version=version)
-        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
+        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=module)
         assert val
 
         pkgs = _get_package_names_list(connection)
