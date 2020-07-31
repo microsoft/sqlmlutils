@@ -25,7 +25,7 @@ pkgmanager = SQLPackageManager(connection)
 originals = _get_sql_package_table(connection)
 
 def check_package(package_name: str, exists: bool, class_to_check: str = ""):
-'''Check and assert whether a package exists, and if a class is in the module'''
+"""Check and assert whether a package exists, and if a class is in the module"""
     if exists:
         themodule = __import__(package_name)
         assert themodule is not None
@@ -36,7 +36,7 @@ def check_package(package_name: str, exists: bool, class_to_check: str = ""):
             __import__(package_name)
 
 def _execute_sql(script: str) -> bool:
-'''Execute sql using sqlcmd'''
+"""Execute sql using sqlcmd"""
     tmpfile = tempfile.NamedTemporaryFile(delete=False)
     tmpfile.write(script.encode())
     tmpfile.close()
@@ -48,12 +48,12 @@ def _execute_sql(script: str) -> bool:
         os.remove(tmpfile.name)
 
 def _drop(package_name: str, ddl_name: str):
-'''Uninstall a package and check that it is gone'''
+"""Uninstall a package and check that it is gone"""
     pkgmanager.uninstall(package_name)
     pyexecutor.execute_function_in_sql(check_package, package_name=package_name, exists=False)
 
 def _create(module_name: str, package_file: str, class_to_check: str, drop: bool = True):
-'''Install a package and check that it is installed'''
+"""Install a package and check that it is installed"""
     try:
         pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=False)
         pkgmanager.install(package_file)
@@ -63,7 +63,7 @@ def _create(module_name: str, package_file: str, class_to_check: str, drop: bool
             _drop(package_name=module_name, ddl_name=module_name)
 
 def _remove_all_new_packages(manager):
-'''Drop all packages that were not there in the original list'''
+"""Drop all packages that were not there in the original list"""
     df = _get_sql_package_table(connection)
     
     libs = {df['external_library_id'][i]: (df['name'][i], df['scope'][i]) for i in range(len(df.index))}
@@ -94,7 +94,7 @@ for package in packages:
     pipdownloader.download_single()
 
 def test_install_basic_zip_package():
-'''Test a custom zip package'''
+"""Test a basic zip package"""
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
     module_name = "testpackageA"
 
@@ -103,7 +103,7 @@ def test_install_basic_zip_package():
     _create(module_name=module_name, package_file=package, class_to_check="ClassA")
 
 def test_install_whl_files():
-'''Test some basic wheel files'''
+"""Test some basic wheel files"""
     packages = ["html5lib-1.0.1-py2.py3-none-any.whl",
                 "astor-0.8.1-py2.py3-none-any.whl"]
     module_names = ["html5lib", "astor"]
@@ -116,9 +116,8 @@ def test_install_whl_files():
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
 
-# Test tar.gz
-#
 def test_install_targz_files():
+"""Test a basic tar.gz file"""
     packages = ["termcolor-1.1.0.tar.gz"]
     module_names = ["termcolor"]
     ddl_names = ["termcolor"]
@@ -130,11 +129,8 @@ def test_install_targz_files():
         full_package = os.path.join(path_to_packages, package)
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
-# Test a zip that is not a package, then use sqlcmd to make sure it is not in the external_libraries table
-#
-@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Issues with sqlcmd (_execute_sql function) in Linux")
 def test_install_bad_package_badzipfile():
-
+"""Test a zip that is not a package, then use sqlcmd to make sure it is not in the external_libraries table"""
     _remove_all_new_packages(pkgmanager)
 
     with tempfile.TemporaryDirectory() as temporary_directory:
@@ -155,10 +151,8 @@ if @val = 0
 
         assert _execute_sql(query)
 
-# Test the upgrade parameter
-#
 def test_package_already_exists_on_sql_table():
-
+"""Test the 'upgrade' parameter in installation"""
     _remove_all_new_packages(pkgmanager)
 
     # Install a downgraded version of the package first
@@ -195,10 +189,8 @@ def test_package_already_exists_on_sql_table():
     pkgmanager.uninstall("testpackageA")
 
 
-# Test installing in a private scope with a db_owner (not dbo) user 
-#
 def test_scope():
-
+"""Test installing in a private scope with a db_owner (not dbo) user"""
     _remove_all_new_packages(pkgmanager)
 
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
@@ -207,9 +199,13 @@ def test_scope():
         import testpackageA
         return testpackageA.__file__
 
+    # The airline_user_connection is NOT dbo, so it has access to both Private and Public scopes
+    # 
     revopkgmanager = SQLPackageManager(airline_user_connection)
     revoexecutor = SQLPythonExecutor(airline_user_connection)
 
+    # Install a package into the private scope
+    #
     revopkgmanager.install(package, scope=Scope.private_scope())
     private_location = revoexecutor.execute_function_in_sql(get_location)
 
@@ -219,6 +215,8 @@ def test_scope():
 
     revopkgmanager.uninstall(pkg_name, scope=Scope.private_scope())
 
+    # Try the same installation in public scope
+    #
     revopkgmanager.install(package, scope=Scope.public_scope())
     public_location = revoexecutor.execute_function_in_sql(get_location)
 
@@ -227,5 +225,7 @@ def test_scope():
 
     revopkgmanager.uninstall(pkg_name, scope=Scope.public_scope())
 
+    # Make sure the package was removed properly
+    #
     revoexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
     pyexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
