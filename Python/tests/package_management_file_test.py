@@ -14,7 +14,7 @@ from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Sco
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
-from conftest import connection, airline_user_connection, driver, database
+from conftest import connection, airline_user_connection, database, sqlcmd
 
 path_to_packages = os.path.join((os.path.dirname(os.path.realpath(__file__))), "scripts", "test_packages")
 _SUCCESS_TOKEN = "SUCCESS"
@@ -24,9 +24,8 @@ pkgmanager = SQLPackageManager(connection)
 
 originals = _get_sql_package_table(connection)
 
-# Check if a package exists or doesn't
-#
 def check_package(package_name: str, exists: bool, class_to_check: str = ""):
+'''Check and assert whether a package exists, and if a class is in the module'''
     if exists:
         themodule = __import__(package_name)
         assert themodule is not None
@@ -36,27 +35,25 @@ def check_package(package_name: str, exists: bool, class_to_check: str = ""):
         with pytest.raises(Exception):
             __import__(package_name)
 
-# Execute sql using sqlcmd
-#
 def _execute_sql(script: str) -> bool:
+'''Execute sql using sqlcmd'''
     tmpfile = tempfile.NamedTemporaryFile(delete=False)
     tmpfile.write(script.encode())
     tmpfile.close()
-    command = ["sqlcmd", "-d", database, "-i", tmpfile.name]
+    command = [sqlcmd, "-d", database, "-i", tmpfile.name]
     try:
         output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
         return _SUCCESS_TOKEN in output
     finally:
         os.remove(tmpfile.name)
 
-# Uninstall a package and check that it is gone
-#
 def _drop(package_name: str, ddl_name: str):
+'''Uninstall a package and check that it is gone'''
     pkgmanager.uninstall(package_name)
     pyexecutor.execute_function_in_sql(check_package, package_name=package_name, exists=False)
 
-# Install a package and check that it is installed
 def _create(module_name: str, package_file: str, class_to_check: str, drop: bool = True):
+'''Install a package and check that it is installed'''
     try:
         pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=False)
         pkgmanager.install(package_file)
@@ -65,9 +62,8 @@ def _create(module_name: str, package_file: str, class_to_check: str, drop: bool
         if drop:
             _drop(package_name=module_name, ddl_name=module_name)
 
-# Drop all packages that were not there in the original list
-#
 def _remove_all_new_packages(manager):
+'''Drop all packages that were not there in the original list'''
     df = _get_sql_package_table(connection)
     
     libs = {df['external_library_id'][i]: (df['name'][i], df['scope'][i]) for i in range(len(df.index))}
@@ -97,9 +93,8 @@ for package in packages:
     pipdownloader = PipDownloader(connection, path_to_packages, package)
     pipdownloader.download_single()
 
-# Test a custom zip package
-#
 def test_install_basic_zip_package():
+'''Test a custom zip package'''
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
     module_name = "testpackageA"
 
@@ -107,9 +102,8 @@ def test_install_basic_zip_package():
 
     _create(module_name=module_name, package_file=package, class_to_check="ClassA")
 
-# Test some wheel files
-#
 def test_install_whl_files():
+'''Test some basic wheel files'''
     packages = ["html5lib-1.0.1-py2.py3-none-any.whl",
                 "astor-0.8.1-py2.py3-none-any.whl"]
     module_names = ["html5lib", "astor"]

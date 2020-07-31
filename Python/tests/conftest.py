@@ -5,6 +5,7 @@ import os
 
 from sqlmlutils import ConnectionInfo, Scope
 
+sqlcmd = os.environ['SQLCMD'] if 'SQLCMD' in os.environ else "sqlcmd"
 driver = os.environ['DRIVER'] if 'DRIVER' in os.environ else "SQL Server"
 server = os.environ['SERVER'] if 'SERVER' in os.environ else "localhost"
 database = os.environ['DATABASE'] if 'DATABASE' in os.environ else "AirlineTestDB"

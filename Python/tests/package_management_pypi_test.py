@@ -12,6 +12,10 @@ from sqlmlutils import SQLPythonExecutor, SQLPackageManager, Scope
 
 from conftest import connection, scope
 
+pyexecutor = SQLPythonExecutor(connection)
+pkgmanager = SQLPackageManager(connection)
+initial_list = _get_sql_package_table(connection)['name']
+
 # Clean the external libraries - drop all packages
 #
 def _drop_all_ddl_packages(conn, scope):
@@ -23,12 +27,6 @@ def _drop_all_ddl_packages(conn, scope):
                     SQLPackageManager(conn)._drop_sql_package(pkg, scope=scope)
                 except Exception as e:
                     pass
-
-# Get the list of packages installed before we do anything
-# 
-def _get_initial_list(conn, scope):
-    pkgs = _get_sql_package_table(conn)
-    return pkgs['name']
 
 # Check if a package exists
 #
@@ -43,11 +41,6 @@ def _package_no_exist(module_name: str):
     with pytest.raises(Exception):
         __import__(module_name)
     return True
-
-
-pyexecutor = SQLPythonExecutor(connection)
-pkgmanager = SQLPackageManager(connection)
-initial_list = _get_sql_package_table(connection)['name']
 
 # Test installing a single package with different capitalization
 #
