@@ -27,7 +27,7 @@ set_option("display.max_columns", None)
 ###################
 
 def test_no_output():
-"""Test a function without output param/dataset"""
+    """Test a function without output param/dataset"""
     def my_func():
         print("blah blah blah")
         
@@ -51,7 +51,7 @@ def test_no_output():
 
 
 def test_no_output_mixed_args():
-"""Test a function without output, with mixed input parameters"""
+    """Test a function without output, with mixed input parameters"""
     def mixed(val1: int, val2: str, val3: float, val4: bool):
         print(val1, val2, val3, val4)
 
@@ -70,7 +70,7 @@ def test_no_output_mixed_args():
 
 
 def test_no_output_mixed_args_in_df():
-"""Test a function without output, with mixed input parameters and with input data set"""
+    """Test a function without output, with mixed input parameters and with input data set"""
     def mixed(val1: int, val2: str, val3: float, val4: bool, val5: DataFrame):
         # Prevent truncation of DataFrame when printing
         #
@@ -102,7 +102,7 @@ def test_no_output_mixed_args_in_df():
 
 
 def test_no_output_mixed_args_in_df_in_params():
-"""Test a function without output, with input parameters specified (not implicit)"""
+    """Test a function without output, with input parameters specified (not implicit)"""
     def mixed(val1: int, val2: str, val3: float, val4: bool, val5: DataFrame):
         # Prevent truncation of DataFrame when printing
         #
@@ -139,7 +139,7 @@ def test_no_output_mixed_args_in_df_in_params():
 ################
 
 def test_out_df_no_params():
-"""Test a function with output data set but no parameters"""
+    """Test a function with output data set but no parameters"""
     def no_params():
         df = DataFrame()
         df["col1"] = [1, 2, 3, 4, 5]
@@ -160,7 +160,7 @@ def test_out_df_no_params():
 
 
 def test_out_df_with_args():
-"""Test a function with output data set and input args"""
+    """Test a function with output data set and input args"""
     def my_func_with_args(arg1: str, arg2: str):
         return DataFrame({"arg1": [arg1], "arg2": [arg2]})
 
@@ -185,7 +185,7 @@ def test_out_df_with_args():
 
 
 def test_out_df_in_df():
-"""Test a function with input and output data set"""
+    """Test a function with input and output data set"""
     def in_data(in_df: DataFrame):
         return in_df
 
@@ -206,7 +206,7 @@ def test_out_df_in_df():
 
 
 def test_out_df_mixed_args_in_df():
-"""Test a function with input, output data set and input params"""
+    """Test a function with input, output data set and input params"""
     def mixed(val1: int, val2: str, val3: float, val4: DataFrame, val5: bool):
         # Prevent truncation of DataFrame when printing
         #
@@ -238,7 +238,7 @@ def test_out_df_mixed_args_in_df():
 
 
 def test_out_df_mixed_in_params_in_df():
-"""Test a function with input, output data set and specified input params"""
+    """Test a function with input, output data set and specified input params"""
     def mixed(val1, val2, val3, val4, val5):
         # Prevent truncation of DataFrame when printing
         #
@@ -272,7 +272,7 @@ def test_out_df_mixed_in_params_in_df():
 
 
 def test_out_of_order_args():
-"""Test a function with specified input params and out of order named params"""
+    """Test a function with specified input params and out of order named params"""
     def mixed(val1, val2, val3, val4, val5):
         return DataFrame({"val1": [val1], "val2": [val2], "val3": [val3], "val5": [val5]})
 
@@ -301,7 +301,7 @@ def test_out_of_order_args():
 
 
 def test_in_param_out_param():
-"""Test a function with input and output params"""
+    """Test a function with input and output params"""
     def in_out(t1, t2, t3):
         # Prevent truncation of DataFrame when printing
         #
@@ -331,7 +331,7 @@ def test_in_param_out_param():
 
 
 def test_in_df_out_df_dict():
-"""Test a function with input and output data set, but as dictionary not DataFrame"""
+    """Test a function with input and output data set, but as dictionary not DataFrame"""
     def func(in_df: DataFrame):
         return {"out_df": in_df}
 
@@ -358,7 +358,7 @@ def test_in_df_out_df_dict():
 ################
 
 def test_script_no_params():
-"""Test a script with no params, with print output"""
+    """Test a script with no params, with print output"""
     script = os.path.join(script_dir, "exec_script_no_params.py")
 
     name = "exec_script_no_params"
@@ -381,7 +381,7 @@ def test_script_no_params():
 
 
 def test_script_no_out_params():
-"""Test a script with input params, with print output"""
+    """Test a script with input params, with print output"""
     script = os.path.join(script_dir, "exec_script_no_out_params.py")
 
     name = "exec_script_no_out_params"
@@ -405,7 +405,7 @@ def test_script_no_out_params():
 
 
 def test_script_out_df():
-"""Test a script with an output data set"""
+    """Test a script with an output data set"""
     script = os.path.join(script_dir, "exec_script_sproc_out_df.py")
 
     name = "exec_script_out_df"
@@ -427,7 +427,7 @@ def test_script_out_df():
 
 
 def test_script_out_param():
-"""Test a script with output params"""
+    """Test a script with output params"""
     script = os.path.join(script_dir, "exec_script_out_param.py")
 
     name = "exec_script_out_param"
@@ -451,7 +451,7 @@ def test_script_out_param():
 ##################
 
 def test_execute_bad_param_types():
-"""Test functions with unsupported or mismatched inputs"""
+    """Test functions with unsupported or mismatched inputs"""
     def bad_func(input1: bin):
         pass
 
@@ -474,7 +474,7 @@ def test_execute_bad_param_types():
 
 
 def test_create_bad_name():
-"""Test creating a sproc with an unsupported name"""
+    """Test creating a sproc with an unsupported name"""
     def foo():
         return 1
     with pytest.raises(RuntimeError):
@@ -482,7 +482,7 @@ def test_create_bad_name():
 
 
 def test_no_output_bad_num_args():
-"""Test function with incorrect, untyped, or unmatched input params"""
+    """Test function with incorrect, untyped, or unmatched input params"""
     def mixed(val1: str, val2, val3, val4):
         print(val1, val2, val3)
         print(val4)
@@ -511,7 +511,7 @@ def test_no_output_bad_num_args():
 
 
 def test_annotation_vs_input_param():
-"""Test function with annotations that don't match input params"""
+    """Test function with annotations that don't match input params"""
     def foo(val1: str, val2: int, val3: int):
         print(val1)
         print(val2)
@@ -526,7 +526,7 @@ def test_annotation_vs_input_param():
 
 
 def test_bad_script_path():
-"""Test nonexistent script"""
+    """Test nonexistent script"""
     with pytest.raises(FileNotFoundError):
         sqlpy.create_sproc_from_script(name="badScript", path_to_script="NonexistentScriptPath")
 
