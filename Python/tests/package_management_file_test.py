@@ -14,7 +14,7 @@ from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Sco
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
-from conftest import connection, airline_user_connection, database, sqlcmd
+from conftest import connection, airline_user_connection, server, database, uid, pwd, sqlcmd
 
 path_to_packages = os.path.join((os.path.dirname(os.path.realpath(__file__))), "scripts", "test_packages")
 _SUCCESS_TOKEN = "SUCCESS"
@@ -40,7 +40,7 @@ def _execute_sql(script: str) -> bool:
     tmpfile = tempfile.NamedTemporaryFile(delete=False)
     tmpfile.write(script.encode())
     tmpfile.close()
-    command = [sqlcmd, "-d", database, "-i", tmpfile.name]
+    command = [sqlcmd, "-S", server, "-d", database, "-U", uid, "-P", pwd, "-i", tmpfile.name]
     try:
         output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
         return _SUCCESS_TOKEN in output
