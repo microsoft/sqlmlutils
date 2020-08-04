@@ -14,7 +14,7 @@ from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Sco
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
-from conftest import connection, airline_user_connection, server, database, uid, pwd, sqlcmd
+from conftest import connection, airline_user_connection, server, database, uid, pwd
 
 path_to_packages = os.path.join((os.path.dirname(os.path.realpath(__file__))), "scripts", "test_packages")
 _SUCCESS_TOKEN = "SUCCESS"
@@ -34,18 +34,6 @@ def check_package(package_name: str, exists: bool, class_to_check: str = ""):
         import pytest
         with pytest.raises(Exception):
             __import__(package_name)
-
-def _execute_sql(script: str) -> bool:
-    """Execute sql using sqlcmd"""
-    tmpfile = tempfile.NamedTemporaryFile(delete=False)
-    tmpfile.write(script.encode())
-    tmpfile.close()
-    command = [sqlcmd, "-S", server, "-d", database, "-U", uid, "-P", pwd, "-i", tmpfile.name]
-    try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
-        return _SUCCESS_TOKEN in output
-    finally:
-        os.remove(tmpfile.name)
 
 def _drop(package_name: str, ddl_name: str):
     """Uninstall a package and check that it is gone"""
@@ -130,7 +118,7 @@ def test_install_targz_files():
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
 def test_install_bad_package_badzipfile():
-    """Test a zip that is not a package, then use sqlcmd to make sure it is not in the external_libraries table"""
+    """Test a zip that is not a package, then make sure it is not in the external_libraries table"""
     _remove_all_new_packages(pkgmanager)
 
     with tempfile.TemporaryDirectory() as temporary_directory:
@@ -141,15 +129,6 @@ def test_install_bad_package_badzipfile():
             pkgmanager.install(badpackagefile)
 
         assert "badpackageA" not in _get_package_names_list(connection)
-
-        query = """
-declare @val int;
-set @val = (select count(*) from sys.external_libraries where name='badpackageA')
-if @val = 0
-    print('{}')
-""".format(_SUCCESS_TOKEN)
-
-        assert _execute_sql(query)
 
 def test_package_already_exists_on_sql_table():
     """Test the 'upgrade' parameter in installation"""
