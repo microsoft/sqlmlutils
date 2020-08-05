@@ -29,7 +29,7 @@ class DependencyResolver:
         for requirement in target_requirements:
             reqmet = self._package_exists_on_server(requirement.name)
 
-            reqmet = reqmet and self._check_if_installed_package_meets_spec(
+            reqmet = reqmet & self._check_if_installed_package_meets_spec(
                      self._server_packages, requirement)
 
             if not reqmet or requirement.name == self._target_package:
