@@ -58,22 +58,6 @@ def test_install_different_names():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-def test_install_many_packages():
-    """Test installing a couple packages"""
-    packages = ["multiprocessing_on_dill", "simplejson"]
-    
-    try:
-        for package in packages:
-            pkgmanager.install(package, upgrade=True)
-            val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
-            assert val
-
-            pkgmanager.uninstall(package)
-            val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
-            assert val
-    finally:
-        _drop_all_ddl_packages(connection, scope)
-
 def test_install_version():
     """Test the 'version' installation parameter"""
     package = "simplejson"
@@ -91,28 +75,6 @@ def test_install_version():
         pkgmanager.uninstall(package)
         val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
         assert val
-    finally:
-        _drop_all_ddl_packages(connection, scope)
-
-def test_dependency_resolution():
-    """Test that dependencies are installed with the main package"""
-    package = "latex"
-    version = "0.7.0"
-
-    try:
-        pkgmanager.install(package, version=version, upgrade=True)
-        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
-        assert val
-
-        pkgs = _get_package_names_list(connection)
-
-        assert package in pkgs
-        assert "funcsigs" in pkgs
-
-        pkgmanager.uninstall(package)
-        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
-        assert val
-
     finally:
         _drop_all_ddl_packages(connection, scope)
 

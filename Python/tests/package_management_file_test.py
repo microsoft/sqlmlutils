@@ -14,7 +14,7 @@ from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Sco
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
-from conftest import connection, airline_user_connection, server, database, uid, pwd
+from conftest import connection, airline_user_connection
 
 path_to_packages = os.path.join((os.path.dirname(os.path.realpath(__file__))), "scripts", "test_packages")
 _SUCCESS_TOKEN = "SUCCESS"
