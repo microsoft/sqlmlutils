@@ -1267,11 +1267,13 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
 
         if (length(downloadedPkg) < 1)
         {
+            write(sprintf("%s Could not find binary version in repo, trying source instead...", pkgTime()), stdout())
+
             #
             # try source package if binary package isn't there
+            # with source packages, we need to build the binary on the client
             #
-            downloadedPkg <- utils::download.packages(pkg$Package, destdir = destdir,
-                                                      available = sourcePackages, type = "source", quiet = TRUE)
+            downloadedPkg = buildSourcePackage(pkg$Package, destdir, sourcePackages)
         }
 
         if (length(downloadedPkg) < 1)
@@ -1290,6 +1292,37 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
     return (downloadedPkgs)
 }
 
+buildSourcePackage <- function(name, destdir, sourcePackages)
+{
+    downloadedPkg <- utils::download.packages(name, destdir = destdir,
+                                              available = sourcePackages, type = "source", quiet = TRUE)
+    pkgPath <- normalizePath(downloadedPkg[1,2], mustWork = FALSE)
+
+    write(sprintf("%s Found source package, building into a binary package...", pkgTime()), stdout())
+
+    utils::install.packages(pkgPath, INSTALL_opts = "--build",
+                            repos=NULL, lib = destdir, quiet = TRUE)
+
+    binaryFile = list.files(pattern=glob2rx(paste0(name, "*zip")))[1]
+
+    if(is.na(binaryFile))
+    {
+        binaryFile = list.files(pattern=glob2rx(paste0(name, "*tar.gz")))[1]
+    }
+
+    pkgMatrix = NULL
+
+    if(!is.na(binaryFile))
+    {
+        if(file.copy(from=binaryFile, to=destdir))
+        {
+            file.remove(binaryFile)
+            pkgMatrix = matrix(c(name, file.path(destdir, binaryFile)), ncol=2)
+        }
+    }
+
+    pkgMatrix
+}
 
 #
 # Installs packages using external library ddl support
