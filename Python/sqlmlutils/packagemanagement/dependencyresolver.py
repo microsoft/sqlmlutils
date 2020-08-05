@@ -29,7 +29,7 @@ class DependencyResolver:
         for requirement in target_requirements:
             reqmet = self._package_exists_on_server(requirement.name)
 
-            reqmet = reqmet & self._check_if_installed_package_meets_spec(
+            reqmet = reqmet and self._check_if_installed_package_meets_spec(
                      self._server_packages, requirement)
 
             if not reqmet or requirement.name == self._target_package:
@@ -39,12 +39,7 @@ class DependencyResolver:
     def _package_exists_on_server(self, pkgname):
         return any([self.clean_requirement_name(pkgname.lower()) ==
                     self.clean_requirement_name(serverpkg[0].lower())
-                    for serverpkg in self._server_packages])
-
-    def _check_package_meets_req(self, requirement):
-        pkgs = self._server_packages
-        req = Requirement.parse(requirement)
-        
+                    for serverpkg in self._server_packages])        
 
     @staticmethod
     def clean_requirement_name(reqname: str):
