@@ -10,7 +10,7 @@ from distutils.version import LooseVersion
 pipversion = LooseVersion(pip.__version__ )
 
 if pipversion >= LooseVersion("19.3"):
-    from pip._internal import pep425tags
+    from wheel import pep425tags
     from pip._internal.main import main as pipmain
 elif pipversion > LooseVersion("10"):
     from pip._internal import pep425tags

@@ -3,6 +3,7 @@
 
 import io
 import os
+import sys
 import subprocess
 import tempfile
 from contextlib import redirect_stdout
@@ -13,7 +14,7 @@ from sqlmlutils import ConnectionInfo, SQLPackageManager, SQLPythonExecutor, Sco
 from package_helper_functions import _get_sql_package_table, _get_package_names_list
 from sqlmlutils.packagemanagement.pipdownloader import PipDownloader
 
-from conftest import connection
+from conftest import connection, airline_user_connection
 
 path_to_packages = os.path.join((os.path.dirname(os.path.realpath(__file__))), "scripts", "test_packages")
 _SUCCESS_TOKEN = "SUCCESS"
@@ -24,6 +25,7 @@ pkgmanager = SQLPackageManager(connection)
 originals = _get_sql_package_table(connection)
 
 def check_package(package_name: str, exists: bool, class_to_check: str = ""):
+    """Check and assert whether a package exists, and if a class is in the module"""
     if exists:
         themodule = __import__(package_name)
         assert themodule is not None
@@ -33,25 +35,13 @@ def check_package(package_name: str, exists: bool, class_to_check: str = ""):
         with pytest.raises(Exception):
             __import__(package_name)
 
-
-def _execute_sql(script: str) -> bool:
-    tmpfile = tempfile.NamedTemporaryFile(delete=False)
-    tmpfile.write(script.encode())
-    tmpfile.close()
-    command = ["sqlcmd", "-d", "AirlineTestDB", "-i", tmpfile.name]
-    try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
-        return _SUCCESS_TOKEN in output
-    finally:
-        os.remove(tmpfile.name)
-
-
 def _drop(package_name: str, ddl_name: str):
+    """Uninstall a package and check that it is gone"""
     pkgmanager.uninstall(package_name)
     pyexecutor.execute_function_in_sql(check_package, package_name=package_name, exists=False)
 
-
 def _create(module_name: str, package_file: str, class_to_check: str, drop: bool = True):
+    """Install a package and check that it is installed"""
     try:
         pyexecutor.execute_function_in_sql(check_package, package_name=module_name, exists=False)
         pkgmanager.install(package_file)
@@ -60,8 +50,8 @@ def _create(module_name: str, package_file: str, class_to_check: str, drop: bool
         if drop:
             _drop(package_name=module_name, ddl_name=module_name)
 
-
 def _remove_all_new_packages(manager):
+    """Drop all packages that were not there in the original list"""
     df = _get_sql_package_table(connection)
     
     libs = {df['external_library_id'][i]: (df['name'][i], df['scope'][i]) for i in range(len(df.index))}
@@ -83,36 +73,29 @@ def _remove_all_new_packages(manager):
                     manager.uninstall(pkg, scope=Scope.public_scope())
 
 
-packages = ["absl-py==0.1.13", "astor==0.8.1", "bleach==1.5.0",
-            "html5lib==1.0.1", "Markdown==2.6.11", "termcolor==1.1.0", "webencodings==0.5.1"]
+# Download the package zips we will use for these tests
+# 
+packages = ["astor==0.8.1", "html5lib==1.0.1", "termcolor==1.1.0"]
 
 for package in packages:
     pipdownloader = PipDownloader(connection, path_to_packages, package)
     pipdownloader.download_single()
 
 def test_install_basic_zip_package():
+    """Test a basic zip package"""
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
     module_name = "testpackageA"
 
     _remove_all_new_packages(pkgmanager)
 
     _create(module_name=module_name, package_file=package, class_to_check="ClassA")
-
-
-def test_install_basic_zip_package_different_name():
-    package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
-    module_name = "testpackageA"
-
-    _remove_all_new_packages(pkgmanager)
-    
-    _create(module_name=module_name, package_file=package, class_to_check="ClassA")
-
 
 def test_install_whl_files():
-    packages = ["webencodings-0.5.1-py2.py3-none-any.whl", "html5lib-1.0.1-py2.py3-none-any.whl",
+    """Test some basic wheel files"""
+    packages = ["html5lib-1.0.1-py2.py3-none-any.whl",
                 "astor-0.8.1-py2.py3-none-any.whl"]
-    module_names = ["webencodings",  "html5lib", "astor"]
-    classes_to_check = ["LABELS",  "parse", "code_gen"]
+    module_names = ["html5lib", "astor"]
+    classes_to_check = ["parse", "code_gen"]
 
     _remove_all_new_packages(pkgmanager)
 
@@ -122,6 +105,7 @@ def test_install_whl_files():
 
 
 def test_install_targz_files():
+    """Test a basic tar.gz file"""
     packages = ["termcolor-1.1.0.tar.gz"]
     module_names = ["termcolor"]
     ddl_names = ["termcolor"]
@@ -133,9 +117,8 @@ def test_install_targz_files():
         full_package = os.path.join(path_to_packages, package)
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
-
 def test_install_bad_package_badzipfile():
-
+    """Test a zip that is not a package, then make sure it is not in the external_libraries table"""
     _remove_all_new_packages(pkgmanager)
 
     with tempfile.TemporaryDirectory() as temporary_directory:
@@ -147,21 +130,12 @@ def test_install_bad_package_badzipfile():
 
         assert "badpackageA" not in _get_package_names_list(connection)
 
-        query = """
-declare @val int;
-set @val = (select count(*) from sys.external_libraries where name='badpackageA')
-if @val = 0
-    print('{}')
-""".format(_SUCCESS_TOKEN)
-
-        assert _execute_sql(query)
-
-
 def test_package_already_exists_on_sql_table():
-
+    """Test the 'upgrade' parameter in installation"""
     _remove_all_new_packages(pkgmanager)
 
     # Install a downgraded version of the package first
+    #
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
     pkgmanager.install(package)
     
@@ -175,6 +149,7 @@ def test_package_already_exists_on_sql_table():
     package = os.path.join(path_to_packages, "testpackageA-0.0.2.zip")
 
     # Without upgrade
+    #
     output = io.StringIO()
     with redirect_stdout(output):
         pkgmanager.install(package, upgrade=False)
@@ -184,6 +159,7 @@ def test_package_already_exists_on_sql_table():
     assert version == "0.0.1"
     
     # With upgrade
+    #
     pkgmanager.install(package, upgrade=True)
 
     version = pyexecutor.execute_function_in_sql(check_version)
@@ -192,9 +168,8 @@ def test_package_already_exists_on_sql_table():
     pkgmanager.uninstall("testpackageA")
 
 
-# TODO: more tests for drop external library
 def test_scope():
-
+    """Test installing in a private scope with a db_owner (not dbo) user"""
     _remove_all_new_packages(pkgmanager)
 
     package = os.path.join(path_to_packages, "testpackageA-0.0.1.zip")
@@ -203,13 +178,13 @@ def test_scope():
         import testpackageA
         return testpackageA.__file__
 
-    _revotesterconnection = ConnectionInfo(server="localhost",
-                                                      database="AirlineTestDB",
-                                                      uid="Tester",
-                                                      pwd="FakeT3sterPwd!")
-    revopkgmanager = SQLPackageManager(_revotesterconnection)
-    revoexecutor = SQLPythonExecutor(_revotesterconnection)
+    # The airline_user_connection is NOT dbo, so it has access to both Private and Public scopes
+    # 
+    revopkgmanager = SQLPackageManager(airline_user_connection)
+    revoexecutor = SQLPythonExecutor(airline_user_connection)
 
+    # Install a package into the private scope
+    #
     revopkgmanager.install(package, scope=Scope.private_scope())
     private_location = revoexecutor.execute_function_in_sql(get_location)
 
@@ -219,6 +194,8 @@ def test_scope():
 
     revopkgmanager.uninstall(pkg_name, scope=Scope.private_scope())
 
+    # Try the same installation in public scope
+    #
     revopkgmanager.install(package, scope=Scope.public_scope())
     public_location = revoexecutor.execute_function_in_sql(get_location)
 
@@ -227,5 +204,7 @@ def test_scope():
 
     revopkgmanager.uninstall(pkg_name, scope=Scope.public_scope())
 
+    # Make sure the package was removed properly
+    #
     revoexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
     pyexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)

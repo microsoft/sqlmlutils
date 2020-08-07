@@ -3,6 +3,7 @@
 
 import operator
 
+from pkg_resources import Requirement
 from distutils.version import LooseVersion
 
 class DependencyResolver:
@@ -28,9 +29,8 @@ class DependencyResolver:
         for requirement in target_requirements:
             reqmet = self._package_exists_on_server(requirement.name)
 
-            for spec in requirement.specs:
-                reqmet = reqmet & self._check_if_installed_package_meets_spec(
-                    self._server_packages, requirement.name, spec)
+            reqmet = reqmet and self._check_if_installed_package_meets_spec(
+                     self._server_packages, requirement)
 
             if not reqmet or requirement.name == self._target_package:
                 required_packages.append(self.clean_requirement_name(requirement.name))
@@ -39,26 +39,20 @@ class DependencyResolver:
     def _package_exists_on_server(self, pkgname):
         return any([self.clean_requirement_name(pkgname.lower()) ==
                     self.clean_requirement_name(serverpkg[0].lower())
-                    for serverpkg in self._server_packages])
+                    for serverpkg in self._server_packages])        
 
     @staticmethod
     def clean_requirement_name(reqname: str):
         return reqname.replace("-", "_")
 
     @staticmethod
-    def _check_if_installed_package_meets_spec(package_tuples, name, spec):
-        op_str = spec[0]
-        req_version = spec[1]
-
+    def _check_if_installed_package_meets_spec(package_tuples, requirement):
         installed_package_name_and_version = [package for package in package_tuples \
-            if DependencyResolver.clean_requirement_name(name.lower()) == \
+            if DependencyResolver.clean_requirement_name(requirement.name.lower()) == \
                 DependencyResolver.clean_requirement_name(package[0].lower())]
             
         if not installed_package_name_and_version:
             return False
 
-        installed_package_name_and_version = installed_package_name_and_version[0]
-        installed_version = installed_package_name_and_version[1]
-
-        operator_map = {'>': 'gt', '>=': 'ge', '<': 'lt', '==': 'eq', '<=': 'le', '!=': 'ne'}
-        return getattr(operator, operator_map[op_str])(LooseVersion(installed_version), LooseVersion(req_version))
+        installed_version = installed_package_name_and_version[0][1]
+        return Requirement.parse(requirement.line).specifier.contains(installed_version)
