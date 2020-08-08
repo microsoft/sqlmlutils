@@ -1292,6 +1292,8 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
     return (downloadedPkgs)
 }
 
+#
+#' @importFrom utils glob2rx
 buildSourcePackage <- function(name, destdir, sourcePackages)
 {
     downloadedPkg <- utils::download.packages(name, destdir = destdir,
