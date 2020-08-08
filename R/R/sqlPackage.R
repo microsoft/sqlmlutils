@@ -774,7 +774,6 @@ checkVersion <- function(connectionString)
 # SQL Server 2016 SP1  13.0.4001.0
 # SQL Server 2016      13.0.1601.5
 #
-#' @importFrom utils tail
 sqlCheckPackageManagementVersion <- function(connectionString)
 {
     versionClass <- NA
@@ -801,7 +800,8 @@ sqlCheckPackageManagementVersion <- function(connectionString)
     }
     else
     {
-        stop(sprintf("The package management feature is not enabled for the current user or not supported on SQL Server version %s", paste(tail(version, -1), collapse='.')), call. = FALSE)
+        stop(sprintf("The package management feature is not enabled for the current user or not supported on SQL Server version %s",
+                     paste(utils::tail(version, -1), collapse='.')), call. = FALSE)
     }
 
     return(versionClass)
@@ -814,7 +814,6 @@ sqlCheckPackageManagementVersion <- function(connectionString)
 #   list( serverType = "azure", major = 12, minor = 0, build = 2000, revision = 8)
 #   list( serverType = "box", major = 15, minor = 0, build = 400, revision = 107)
 #
-#' @importFrom utils tail
 sqlPackageManagementVersion <- function(connectionString)
 {
     force(connectionString)
@@ -834,13 +833,13 @@ sqlPackageManagementVersion <- function(connectionString)
     {
         # SQL in Azure & Managed Instance
         #
-        pmversion <- append(list(serverType = "azure"), tail(serverProperties, -2))
+        pmversion <- append(list(serverType = "azure"), utils::tail(serverProperties, -2))
     }
     else
     {
         # SQL box product
         #
-        pmversion <- append(list(serverType = "box"), tail(serverProperties, -2))
+        pmversion <- append(list(serverType = "box"), utils::tail(serverProperties, -2))
     }
 
     return (pmversion)
@@ -1291,9 +1290,6 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
 
     return (downloadedPkgs)
 }
-
-#
-#' @importFrom utils glob2rx
 buildSourcePackage <- function(name, destdir, sourcePackages)
 {
     downloadedPkg <- utils::download.packages(name, destdir = destdir,
@@ -1305,11 +1301,11 @@ buildSourcePackage <- function(name, destdir, sourcePackages)
     utils::install.packages(pkgPath, INSTALL_opts = "--build",
                             repos=NULL, lib = destdir, quiet = TRUE)
 
-    binaryFile = list.files(pattern=glob2rx(paste0(name, "*zip")))[1]
+    binaryFile = list.files(pattern=utils::glob2rx(paste0(name, "*zip")))[1]
 
     if(is.na(binaryFile))
     {
-        binaryFile = list.files(pattern=glob2rx(paste0(name, "*tar.gz")))[1]
+        binaryFile = list.files(pattern=utils::glob2rx(paste0(name, "*tar.gz")))[1]
     }
 
     pkgMatrix = NULL
