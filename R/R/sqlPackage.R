@@ -1266,7 +1266,7 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
 
         if (length(downloadedPkg) < 1)
         {
-            write(sprintf("%s Could not find binary version in repo, trying source instead...", pkgTime()), stdout())
+            write(sprintf("%s  Could not find binary version in repo, trying source instead...", pkgTime()), stdout())
 
             #
             # try source package if binary package isn't there
@@ -1290,13 +1290,14 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
 
     return (downloadedPkgs)
 }
+
 buildSourcePackage <- function(name, destdir, sourcePackages)
 {
     downloadedPkg <- utils::download.packages(name, destdir = destdir,
                                               available = sourcePackages, type = "source", quiet = TRUE)
     pkgPath <- normalizePath(downloadedPkg[1,2], mustWork = FALSE)
 
-    write(sprintf("%s Found source package, building into a binary package...", pkgTime()), stdout())
+    write(sprintf("%s  Found source package, building into a binary package...", pkgTime()), stdout())
 
     utils::install.packages(pkgPath, INSTALL_opts = "--build",
                             repos=NULL, lib = destdir, quiet = TRUE)
