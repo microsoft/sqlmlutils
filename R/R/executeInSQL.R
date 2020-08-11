@@ -238,7 +238,15 @@ execute <- function(connection, script, ...)
             hodbc <- connection
         }
 
-        queryResult <- dbSendQuery(hodbc, script, ...)
+        queryResult <- dbSendQuery(hodbc, script)
+
+        # Bind parameterized queries
+        #
+        if(length(list(...)) != 0)
+        {
+            dbBind(queryResult, ...)
+        }
+
         res <- dbFetch(queryResult)
 
         binVal <- res$returnVal

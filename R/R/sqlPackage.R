@@ -749,7 +749,9 @@ checkVersion <- function(connectionString)
 
     if (is.character(versionClass) &&  versionClass == "ExtLib")
     {
-        return (list(serverIsWindows = serverIsWindows, rversion = serverVersion[['rversion']]))
+        return (list(serverIsWindows = serverIsWindows,
+                     rversion = serverVersion[['rversion']],
+                     sysname = serverVersion[['sysname']]))
     }
     else
     {
@@ -1243,7 +1245,7 @@ prunePackagesToInstallExtLib <- function(dependentPackages, topMostPackages, ins
     return (list(prunedPackagesToInstall, prunedPackagesToTop))
 }
 
-downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePackages,
+downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePackages, serverVersion,
                                         verbose = getOption("verbose"), pkgType = getOption("pkgType"))
 {
     downloadedPkgs <- NULL
@@ -1266,13 +1268,24 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
 
         if (length(downloadedPkg) < 1)
         {
-            write(sprintf("%s Could not find binary version in repo, trying source instead...", pkgTime()), stdout())
+            write(sprintf("%s  Could not find binary version in repo, trying source instead...", pkgTime()), stdout())
 
             #
             # try source package if binary package isn't there
-            # with source packages, we need to build the binary on the client
-            #
-            downloadedPkg = buildSourcePackage(pkg$Package, destdir, sourcePackages)
+
+            if(serverVersion$sysname == Sys.info()[['sysname']])
+            {
+                #
+                # If the server and client are the same type,
+                # with source packages, we may need to build the binary on the client
+                #
+                downloadedPkg = buildSourcePackage(pkg$Package, destdir, sourcePackages)
+            }
+            else
+            {
+                downloadedPkg <- utils::download.packages(pkg$Package, destdir = destdir,
+                                                          available = sourcePackages, type = pkgType, quiet = TRUE)
+            }
         }
 
         if (length(downloadedPkg) < 1)
@@ -1290,13 +1303,14 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
 
     return (downloadedPkgs)
 }
+
 buildSourcePackage <- function(name, destdir, sourcePackages)
 {
     downloadedPkg <- utils::download.packages(name, destdir = destdir,
                                               available = sourcePackages, type = "source", quiet = TRUE)
     pkgPath <- normalizePath(downloadedPkg[1,2], mustWork = FALSE)
 
-    write(sprintf("%s Found source package, building into a binary package...", pkgTime()), stdout())
+    write(sprintf("%s  Found source package, building into a binary package...", pkgTime()), stdout())
 
     utils::install.packages(pkgPath, INSTALL_opts = "--build",
                             repos=NULL, lib = destdir, quiet = TRUE)
@@ -1581,7 +1595,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
                 #
                 downloadPkgs <- downloadDependentPackages(pkgs = pkgsToDownload, destdir = downloadDir,
                                                           binaryPackages = binaryPackages, sourcePackages = sourcePackages,
-                                                          verbose = verbose, pkgType = pkgType)
+                                                          serverVersion=serverVersion, verbose = verbose, pkgType = pkgType)
             }
 
             if (length(pkgsToDownload) > 0)
