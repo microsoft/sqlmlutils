@@ -240,6 +240,8 @@ execute <- function(connection, script, ...)
 
         queryResult <- dbSendQuery(hodbc, script)
 
+        # Bind parameterized queries
+        #
         if(length(list(...)) != 0)
         {
             dbBind(queryResult, ...)
