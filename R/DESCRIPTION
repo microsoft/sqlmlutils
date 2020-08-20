@@ -1,7 +1,7 @@
 Package: sqlmlutils
 Type: Package
 Title: Wraps R code into executable SQL Server stored procedures
-Version: 0.7.3
+Version: 0.7.4
 Author: Microsoft Corporation
 Maintainer: Microsoft Corporation <msrpack@microsoft.com>
 Depends:

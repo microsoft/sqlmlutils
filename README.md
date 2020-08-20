@@ -29,7 +29,7 @@ Windows:
 From command prompt, run 
 ```
 R.exe -e "install.packages('odbc')"
-R.exe CMD INSTALL dist/sqlmlutils_0.7.3.zip
+R.exe CMD INSTALL dist/sqlmlutils_0.7.4.zip
 ```
 OR
 To build a new package file and install, run
@@ -40,7 +40,7 @@ To build a new package file and install, run
 Linux
 ```
 R.exe -e "install.packages('odbc')"
-R.exe CMD INSTALL dist/sqlmlutils_0.7.3.tar.gz
+R.exe CMD INSTALL dist/sqlmlutils_0.7.4.tar.gz
 ```
 
 # Details
