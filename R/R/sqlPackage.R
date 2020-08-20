@@ -1260,7 +1260,6 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
             write(sprintf("%s  Downloading package [%d/%d] %s (%s)...", pkgTime(), pkgIndex, numPkgs, pkg$Package, pkg$Version), stdout())
         }
 
-        #
         # try first binary package
         #
         downloadedPkg <- utils::download.packages(pkg$Package, destdir = destdir,
@@ -1270,12 +1269,10 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
         {
             write(sprintf("%s  Could not find binary version in repo, trying source instead...", pkgTime()), stdout())
 
-            #
             # try source package if binary package isn't there
-
+            #
             if(serverVersion$sysname == Sys.info()[['sysname']])
             {
-                #
                 # If the server and client are the same type,
                 # with source packages, we may need to build the binary on the client
                 #
@@ -1283,6 +1280,9 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
             }
             else
             {
+                # If the server and client are NOT the same type, 
+                # we just download the source package and send it to the server to build
+                #
                 downloadedPkg <- utils::download.packages(pkg$Package, destdir = destdir,
                                                           available = sourcePackages, type = pkgType, quiet = TRUE)
             }
@@ -1306,15 +1306,23 @@ downloadDependentPackages <- function(pkgs, destdir, binaryPackages, sourcePacka
 
 buildSourcePackage <- function(name, destdir, sourcePackages)
 {
+    # Download the source package to the destdir folder
+    #
     downloadedPkg <- utils::download.packages(name, destdir = destdir,
                                               available = sourcePackages, type = "source", quiet = TRUE)
     pkgPath <- normalizePath(downloadedPkg[1,2], mustWork = FALSE)
 
     write(sprintf("%s  Found source package, building into a binary package...", pkgTime()), stdout())
 
+    # Build the source into a binary package.
+    # This will also install the package to the destdir since we cannot build without installing.
+    # 
     utils::install.packages(pkgPath, INSTALL_opts = "--build",
                             repos=NULL, lib = destdir, quiet = TRUE)
 
+    # Find the binary (zip for Windows, tar.gz for Unix) that was created. 
+    # install.packages creates the binary file in the current working directory.
+    #
     binaryFile = list.files(pattern=utils::glob2rx(paste0(name, "*zip")))[1]
 
     if(is.na(binaryFile))
@@ -1324,6 +1332,10 @@ buildSourcePackage <- function(name, destdir, sourcePackages)
 
     pkgMatrix = NULL
 
+    # Copy the binary file from the current working directory to the destdir
+    # so we know exactly where it is. 
+    # Construct a matrix with similar structure to download.packages return value.
+    # 
     if(!is.na(binaryFile))
     {
         if(file.copy(from=binaryFile, to=destdir))
@@ -1422,6 +1434,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
         else if (scope == "PRIVATE")
         {
             # fail dbo calls to install to private scope as dbo can only install to public
+            #
             scopeint <- parseScope(scope)
             allowed <- sqlCheckPermission(connectionString, scope, owner)
 
@@ -1454,6 +1467,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
     }
 
     # check scope and permission to write to scoped folder
+    #
     scope <- normalizeScope(scope)
     scopeint <- parseScope(scope)
 
