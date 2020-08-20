@@ -10,7 +10,7 @@ pip install sqlmlutils
 ```
 To install from file, run:
 ```
-pip install Python/dist/sqlmlutils-1.0.1.zip
+pip install --find-links=Python/dist sqlmlutils
 ```
 
 If you are developing on your own branch and want to rebuild and install the package, you can use the buildandinstall.cmd script that is included.
@@ -231,7 +231,7 @@ pkgmanager.uninstall("astor")
 1. Make sure a SQL Server with an updated ML Services Python is running on localhost. 
 2. Restore the AirlineTestDB from the .bak file in this repo 
 3. Make sure Trusted (Windows) authentication works for connecting to the database
-4. Setup a user with db_owner role (and not server admin) with uid: "Tester" and password "FakeT3sterPwd!"
+4. Setup a user with db_owner role (and not server admin) with uid: "AirlineUser" and password "FakeT3sterPwd!"
     
 ### Notable TODOs and open issues
 

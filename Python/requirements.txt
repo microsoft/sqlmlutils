@@ -4,3 +4,4 @@ dill>=0.2.6
 pkginfo>=1.4.2
 requirements-parser>=0.2.0
 pandas>=0.19.2
+wheel>=0.32.3
