@@ -17,8 +17,9 @@ from .sqlbuilder import RETURN_COLUMN_NAME, STDOUT_COLUMN_NAME, STDERR_COLUMN_NA
 
 class SQLPythonExecutor:
 
-    def __init__(self, connection_info: ConnectionInfo):
+    def __init__(self, connection_info: ConnectionInfo, language_name: str = "Python"):
         self._connection_info = connection_info
+        self._language_name = language_name
 
     def execute_function_in_sql(self,
                                 func: Callable, *args,
@@ -47,8 +48,15 @@ class SQLPythonExecutor:
         >>> print(ret)
         [0.28366218546322625, 0.28366218546322625]
         """
-        df, _ = execute_query(SpeesBuilderFromFunction(func, input_data_query, *args, **kwargs), self._connection_info)
+        df, _ = execute_query(SpeesBuilderFromFunction(func=func, 
+                                                    input_data_query=input_data_query, 
+                                                    language_name=self._language_name, 
+                                                    *args, 
+                                                    **kwargs), 
+                            self._connection_info)
+                            
         results, output, error = self._get_results(df)
+        
         if output is not None: 
             print(output)
         if error is not None:
@@ -71,7 +79,7 @@ class SQLPythonExecutor:
                 content = script_file.read()
         except FileNotFoundError:
             raise FileNotFoundError("File does not exist!")
-        execute_query(SpeesBuilder(content, input_data_query=input_data_query), connection=self._connection_info)
+        execute_query(SpeesBuilder(content, input_data_query=input_data_query, language_name=self._language_name), connection=self._connection_info)
 
     def execute_sql_query(self,
                           sql_query: str,
@@ -130,7 +138,11 @@ class SQLPythonExecutor:
         out_copy = output_params.copy() if output_params is not None else None
 
         # Save the stored procedure in database
-        execute_query(StoredProcedureBuilderFromFunction(name, func, in_copy, out_copy), 
+        execute_query(StoredProcedureBuilderFromFunction(name=name,
+                                                        func=func,
+                                                        input_params=in_copy,
+                                                        output_params=out_copy, 
+                                                        language_name=self._language_name), 
                         self._connection_info)
         return True
 
@@ -173,7 +185,11 @@ class SQLPythonExecutor:
         in_copy = input_params.copy() if input_params is not None else None
         out_copy = output_params.copy() if output_params is not None else None
         
-        execute_query(StoredProcedureBuilder(name, content, in_copy, out_copy),
+        execute_query(StoredProcedureBuilder(name=name, 
+                                            func=content, 
+                                            input_params=in_copy,
+                                            output_params=out_copy, 
+                                            language_name=self._language_name),
                         self._connection_info)
         return True
 

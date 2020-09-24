@@ -115,7 +115,7 @@ class SpeesBuilderFromFunction(SpeesBuilder):
         stderr=STDERR_COLUMN_NAME
     )
 
-    def __init__(self, func: Callable, input_data_query: str = "", *args, **kwargs):
+    def __init__(self, func: Callable, input_data_query: str = "", language_name: str = "Python", *args, **kwargs):
         """Instantiate a _SpeesBuilderFromFunction object.
 
         :param func: function to execute_function_in_sql on the SQL Server.
@@ -128,7 +128,8 @@ class SpeesBuilderFromFunction(SpeesBuilder):
         self._function_text = self._build_wrapper_python_script(func, with_inputdf, *args, **kwargs)
         super().__init__(script=self._function_text,
                          with_results_text=self._WITH_RESULTS_TEXT,
-                         input_data_query=input_data_query)
+                         input_data_query=input_data_query,
+                         language_name=language_name)
 
     # Generates a Python script that encapsulates a user defined function and the arguments to that function.
     # This script is "shipped" over the SQL Server machine.
