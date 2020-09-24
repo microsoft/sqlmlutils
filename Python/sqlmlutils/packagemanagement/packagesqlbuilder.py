@@ -24,8 +24,6 @@ class CreateLibraryBuilder(SQLBuilder):
 
     @property
     def base_script(self) -> str:
-        sqlpkgname = self._name
-        language_name = self.language_name
         authorization = _get_authorization(self._scope)
         dummy_spees = _get_dummy_spees()
 
@@ -45,10 +43,10 @@ FROM (CONTENT = ?) WITH (LANGUAGE = '{language_name}');
 -- Dummy SPEES
 {dummy_spees}
 """.format(
-    sqlpkgname=sqlpkgname,
+    sqlpkgname=self._name,
     authorization=authorization,
     dummy_spees=dummy_spees,
-    language_name=language_name
+    language_name=self._language_name
 )
 
 
