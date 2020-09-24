@@ -50,7 +50,8 @@ class SpeesBuilder(SQLBuilder):
                  script: str,
                  with_results_text: str = _WITH_RESULTS_TEXT,
                  input_data_query: str = "",
-                 script_parameters_text: str = ""):
+                 script_parameters_text: str = "",
+                 language_name: str = "Python"):
         """Instantiate a _SpeesBuilder object.
 
         :param script: maps to @script parameter in the SQL query parameter
@@ -62,18 +63,20 @@ class SpeesBuilder(SQLBuilder):
         self._input_data_query = input_data_query
         self._script_parameters_text = script_parameters_text
         self._with_results_text = with_results_text
+        self._language_name = language_name
 
     @property
     def base_script(self):
         return """
 exec sp_execute_external_script
-@language = N'Python',
+@language = N'{language_name}',
 @script = ?,
 @input_data_1 = ?
 {script_parameters_text}
 {with_results_text}
 """.format(script_parameters_text=self._script_parameters_text,
-            with_results_text=self._with_results_text)
+            with_results_text=self._with_results_text,
+            language_name=self._language_name)
 
     @property
     def params(self):
@@ -185,7 +188,12 @@ OutputDataSet["{returncol}"] = [dill.dumps({returncol}).hex()]
 
 class StoredProcedureBuilder(SQLBuilder):
 
-    def __init__(self, name: str, script: str, input_params: dict = None, output_params: dict = None):
+    def __init__(self, 
+                name: str,
+                script: str,
+                input_params: dict = None,
+                output_params: dict = None,
+                language_name: str = "Python"):
 
         """StoredProcedureBuilder SQL stored procedures based on Python functions.
 
@@ -228,7 +236,7 @@ CREATE PROCEDURE {name}
 AS
 SET NOCOUNT ON;
 EXEC sp_execute_external_script
-@language = N'Python',
+@language = N'{language_name}',
 @script = N'
 from io import StringIO
 import sys
@@ -243,13 +251,19 @@ sys.stderr = _stderr
 """.format(
     name=self._name,
     param_declarations=self._param_declarations,
+    language_name=self._language_name,
     script=self._script,
     stdout=STDOUT_COLUMN_NAME,
     stderr=STDERR_COLUMN_NAME,
     script_parameter_text=self._script_parameter_text
 )
 
-    def script_parameter_text(self, in_names: List[str], in_types: dict, out_names: List[str], out_types: dict) -> str:
+    def script_parameter_text(self,
+                            in_names: List[str],
+                            in_types: dict, 
+                            out_names: List[str], 
+                            out_types: dict) -> str:
+                            
         if not in_names and not out_names:
             return ""
 

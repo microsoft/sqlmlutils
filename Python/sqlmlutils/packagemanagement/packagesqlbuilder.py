@@ -9,8 +9,9 @@ from sqlmlutils.packagemanagement.scope import Scope
 
 class CreateLibraryBuilder(SQLBuilder):
 
-    def __init__(self, pkg_name: str, pkg_filename: str, scope: Scope):
+    def __init__(self, pkg_name: str, pkg_filename: str, scope: Scope, language_name: str = "Python"):
         self._name = clean_library_name(pkg_name)
+        self._language_name = language_name
         self._filename = pkg_filename
         self._scope = scope
 
@@ -24,6 +25,7 @@ class CreateLibraryBuilder(SQLBuilder):
     @property
     def base_script(self) -> str:
         sqlpkgname = self._name
+        language_name = self.language_name
         authorization = _get_authorization(self._scope)
         dummy_spees = _get_dummy_spees()
 
@@ -38,21 +40,23 @@ END CATCH
         
 -- Create the library
 CREATE EXTERNAL LIBRARY [{sqlpkgname}] {authorization}
-FROM (CONTENT = ?) WITH (LANGUAGE = 'Python');
+FROM (CONTENT = ?) WITH (LANGUAGE = '{language_name}');
 
 -- Dummy SPEES
 {dummy_spees}
 """.format(
     sqlpkgname=sqlpkgname,
     authorization=authorization,
-    dummy_spees=dummy_spees
+    dummy_spees=dummy_spees,
+    language_name=language_name
 )
 
 
 class CheckLibraryBuilder(SQLBuilder):
 
-    def __init__(self, pkg_name: str, scope: Scope):
+    def __init__(self, pkg_name: str, scope: Scope, language_name: str = "Python"):
         self._name = clean_library_name(pkg_name)
+        self._language_name = language_name
         self._scope = scope
 
     @property
@@ -100,7 +104,7 @@ assert package_exists_in_scope("{name}", "{scope}") != False
 -- Check to make sure the package was installed
 BEGIN TRY
     exec sp_execute_external_script
-    @language = N'Python',
+    @language = N'{language_name}',
     @script = ?
     print('Package successfully installed.')
 END TRY
@@ -108,13 +112,14 @@ BEGIN CATCH
     print('Package installation failed.');
     THROW;
 END CATCH
-"""
+""".format(language_name = self._language_name)
 
 
 class DropLibraryBuilder(SQLBuilder):
 
-    def __init__(self, sql_package_name: str, scope: Scope):
+    def __init__(self, sql_package_name: str, scope: Scope, language_name: str = "Python"):
         self._name = clean_library_name(sql_package_name)
+        self._language_name = language_name
         self._scope = scope
 
     @property
@@ -141,6 +146,6 @@ def _get_authorization(scope: Scope) -> str:
 def _get_dummy_spees() -> str:
     return """
 exec sp_execute_external_script
-@language = N'Python',
+@language = N'{language_name}',
 @script = N''
-"""
+""".format(language_name = self._language_name)
