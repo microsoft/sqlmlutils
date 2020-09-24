@@ -68,7 +68,7 @@ class SpeesBuilder(SQLBuilder):
     @property
     def base_script(self):
         return """
-exec sp_execute_external_script
+EXEC sp_execute_external_script
 @language = N'{language_name}',
 @script = ?,
 @input_data_1 = ?
@@ -376,7 +376,7 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
 
     create procedure MyStoredProcedure @arg1 varchar(MAX), @arg2 varchar(MAX), @arg3 varchar(MAX) as
 
-    exec sp_execute_external_script
+    EXEC sp_execute_external_script
     @language = N'Python',
     @script=N'
     def foobar(arg1, arg2, arg3):

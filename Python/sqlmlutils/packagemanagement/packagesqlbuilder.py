@@ -103,7 +103,7 @@ assert package_exists_in_scope("{name}", "{scope}") != False
         return """    
 -- Check to make sure the package was installed
 BEGIN TRY
-    exec sp_execute_external_script
+    EXEC sp_execute_external_script
     @language = N'{language_name}',
     @script = ?
     print('Package successfully installed.')
@@ -145,7 +145,7 @@ def _get_authorization(scope: Scope) -> str:
 
 def _get_dummy_spees() -> str:
     return """
-exec sp_execute_external_script
+EXEC sp_execute_external_script
 @language = N'{language_name}',
 @script = N''
 """.format(language_name = self._language_name)

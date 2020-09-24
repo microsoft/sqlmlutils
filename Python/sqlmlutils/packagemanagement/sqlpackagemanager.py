@@ -19,9 +19,10 @@ from sqlmlutils.sqlqueryexecutor import execute_query, SQLQueryExecutor
 
 class SQLPackageManager:
 
-    def __init__(self, connection_info: ConnectionInfo):
+    def __init__(self, connection_info: ConnectionInfo, language_name: str = "Python"):
         self._connection_info = connection_info
         self._pyexecutor = SQLPythonExecutor(connection_info)
+        self._language_name = language_name
 
     def install(self,
                 package: str,
@@ -121,12 +122,13 @@ class SQLPackageManager:
                        SELECT name, language, scope   \
                        FROM sys.external_libraries AS elib   \
                        WHERE elib.principal_id=@principalId   \
-                       AND elib.language='Python' AND elib.scope={scope_num}   \
-                       ORDER BY elib.name ASC;".format(scope_num=scope_num)
+                       AND elib.language='{language_name}' AND elib.scope={scope_num}   \
+                       ORDER BY elib.name ASC;".format(language_name=self._language_name,
+                                                        scope_num=scope_num)
         return self._pyexecutor.execute_sql_query(query, owner)
 
     def _drop_sql_package(self, sql_package_name: str, scope: Scope, out_file: str = None):
-        builder = DropLibraryBuilder(sql_package_name=sql_package_name, scope=scope)
+        builder = DropLibraryBuilder(sql_package_name=sql_package_name, scope=scope, language_name=self._language_name)
         execute_query(builder, self._connection_info, out_file)
 
     # TODO: Support not dependencies
@@ -189,8 +191,7 @@ class SQLPackageManager:
                 sqlexecutor._cnxn.rollback()
                 raise RuntimeError("Package installation failed, installed dependencies were rolled back.") from e
 
-    @staticmethod
-    def _install_single(sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):
+    def _install_single(self, sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):
         name = str(get_package_name_from_file(package_file))
         version = str(get_package_version_from_file(package_file))
         print("Installing {name} version: {version}".format(name=name, version=version))
@@ -200,9 +201,9 @@ class SQLPackageManager:
             with zipfile.ZipFile(prezip, 'w') as zipf:
                 zipf.write(package_file, os.path.basename(package_file))
 
-            builder = CreateLibraryBuilder(pkg_name=name, pkg_filename=prezip, scope=scope)
+            builder = CreateLibraryBuilder(pkg_name=name, pkg_filename=prezip, scope=scope, language_name=self._language_name)
             sqlexecutor.execute(builder, out_file=out_file)
-            builder = CheckLibraryBuilder(pkg_name=name, scope=scope)
+            builder = CheckLibraryBuilder(pkg_name=name, scope=scope, language_name=self._language_name)
             sqlexecutor.execute(builder, out_file=out_file)
 
     @staticmethod
