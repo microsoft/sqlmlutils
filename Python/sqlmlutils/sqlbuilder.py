@@ -215,6 +215,7 @@ class StoredProcedureBuilder(SQLBuilder):
         self._name = name
         self._input_params = input_params
         self._output_params = output_params
+        self._language_name = language_name
         self._param_declarations = ""
 
         names_of_input_args = list(self._input_params)
@@ -390,8 +391,11 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
     @arg3 = @arg3
     """
 
-    def __init__(self, name: str, func: Callable,
-                 input_params: dict = None, output_params: dict = None):
+    def __init__(self, 
+                name: str, func: Callable,
+                input_params: dict = None, 
+                output_params: dict = None,
+                language_name: str = "Python"):
         """StoredProcedureBuilderFromFunction SQL stored procedures based on Python functions.
 
         :param name: name of the stored procedure
@@ -411,6 +415,7 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
         self._func = func
         self._name = name
         self._output_params = output_params
+        self._language_name = language_name
 
         # Get function text and escape single quotes
         function_text = textwrap.dedent(inspect.getsource(self._func)).replace("'","''")

@@ -99,8 +99,7 @@ class SQLQueryExecutor:
         server=self._connection._server if self._connection._port == "" \
             else "{server},{port}".format(
                 server=self._connection._server, 
-                port=self._connection._port
-            )
+                port=self._connection._port)
 
         self._cnxn = pyodbc.connect(self._connection.connection_string,
                                     autocommit=True)

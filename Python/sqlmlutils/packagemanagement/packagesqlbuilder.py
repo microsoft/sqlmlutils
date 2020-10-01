@@ -25,7 +25,7 @@ class CreateLibraryBuilder(SQLBuilder):
     @property
     def base_script(self) -> str:
         authorization = _get_authorization(self._scope)
-        dummy_spees = _get_dummy_spees()
+        dummy_spees = _get_dummy_spees(self._language_name)
 
         return """
 set NOCOUNT on  
@@ -56,14 +56,21 @@ class CheckLibraryBuilder(SQLBuilder):
         self._name = clean_library_name(pkg_name)
         self._language_name = language_name
         self._scope = scope
+        
+        if self._language_name == "Python":
+            self._private_path_env = "MRS_EXTLIB_USER_PATH"
+            self._public_path_env = "MRS_EXTLIB_SHARED_PATH"
+        else:
+            self._private_path_env = "PRIVATELIBPATH"
+            self._public_path_env = "PUBLICLIBPATH"
 
     @property
     def params(self):
         return """ 
 import os
 import re
-_ENV_NAME_USER_PATH = "MRS_EXTLIB_USER_PATH"
-_ENV_NAME_SHARED_PATH = "MRS_EXTLIB_SHARED_PATH"
+_ENV_NAME_USER_PATH = "{private_path_env}"
+_ENV_NAME_SHARED_PATH = "{public_path_env}"
 
 def _is_dist_info_file(name, file):
     return re.match(name + r"-.*egg", file) or re.match(name + r"-.*dist-info", file)
@@ -94,7 +101,10 @@ def package_exists_in_scope(sql_package_name: str, scope=None) -> bool:
 # Check that the package exists in scope.
 # For some reason this check works but there is a bug in pyODBC when asserting this is True.
 assert package_exists_in_scope("{name}", "{scope}") != False
-""".format(name=self._name, scope=self._scope._name)
+""".format(private_path_env=self._private_path_env, 
+        public_path_env=self._public_path_env, 
+        name=self._name, 
+        scope=self._scope._name)
 
     @property
     def base_script(self) -> str:
@@ -129,9 +139,8 @@ DROP EXTERNAL LIBRARY [{name}] {auth}
 """.format(
     name=self._name,
     auth=_get_authorization(self._scope),
-    dummy_spees=_get_dummy_spees()
+    dummy_spees=_get_dummy_spees(self._language_name)
 )
-
 
 def clean_library_name(pkgname: str):
     return pkgname.replace("-", "_").lower()
@@ -141,9 +150,9 @@ def _get_authorization(scope: Scope) -> str:
     return "AUTHORIZATION dbo" if scope == Scope.public_scope() else ""
 
 
-def _get_dummy_spees() -> str:
+def _get_dummy_spees(language_name: str) -> str:
     return """
 EXEC sp_execute_external_script
 @language = N'{language_name}',
 @script = N''
-""".format(language_name = self._language_name)
+""".format(language_name = language_name)

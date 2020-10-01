@@ -21,7 +21,7 @@ class SQLPackageManager:
 
     def __init__(self, connection_info: ConnectionInfo, language_name: str = "Python"):
         self._connection_info = connection_info
-        self._pyexecutor = SQLPythonExecutor(connection_info)
+        self._pyexecutor = SQLPythonExecutor(connection_info, language_name=language_name)
         self._language_name = language_name
 
     def install(self,
@@ -105,25 +105,27 @@ class SQLPackageManager:
         return Scope.public_scope() if is_sysadmin == 1 else Scope.private_scope()
         
     def _get_packages_by_user(self, owner='', scope: Scope=Scope.private_scope()):
-        has_user = (owner != '')
+        scope_num = 1 if scope == Scope.private_scope() else 0
+        
+        if scope_num == 0 and owner == '':
+            owner = "dbo"
 
         query = "DECLARE @principalId INT;  \
                 DECLARE @currentUser NVARCHAR(128);  \
                 SELECT @currentUser = "
 
-        if has_user:
+        if owner != '':
             query += "?;\n"
         else:
             query += "CURRENT_USER;\n"
         
-        scope_num = 1 if scope == Scope.private_scope() else 0
-
         query += "SELECT @principalId = USER_ID(@currentUser);  \
                        SELECT name, language, scope   \
                        FROM sys.external_libraries AS elib   \
                        WHERE elib.principal_id=@principalId   \
                        AND elib.language='{language_name}' AND elib.scope={scope_num}   \
-                       ORDER BY elib.name ASC;".format(language_name=self._language_name,
+                       ORDER BY elib.name ASC; \
+                       GO".format(language_name=self._language_name,
                                                         scope_num=scope_num)
         return self._pyexecutor.execute_sql_query(query, owner)
 
@@ -148,7 +150,7 @@ class SQLPackageManager:
             target_package = target_package + "==" + version
 
         with tempfile.TemporaryDirectory() as temporary_directory:
-            pipdownloader = PipDownloader(self._connection_info, temporary_directory, target_package)
+            pipdownloader = PipDownloader(self._connection_info, temporary_directory, target_package, language_name = self._language_name)
             target_package_file = pipdownloader.download_single()
             self._install_from_file(target_package_file, scope, upgrade, out_file=out_file)
 
@@ -164,7 +166,7 @@ class SQLPackageManager:
 
         # Download requirements from PyPI
         with tempfile.TemporaryDirectory() as temporary_directory:
-            pipdownloader = PipDownloader(self._connection_info, temporary_directory, target_package_file)
+            pipdownloader = PipDownloader(self._connection_info, temporary_directory, target_package_file, language_name = self._language_name)
 
             # For now, we download all target package dependencies from PyPI.
             target_package_requirements, requirements_downloaded = pipdownloader.download()
@@ -203,6 +205,7 @@ class SQLPackageManager:
 
             builder = CreateLibraryBuilder(pkg_name=name, pkg_filename=prezip, scope=scope, language_name=self._language_name)
             sqlexecutor.execute(builder, out_file=out_file)
+            
             builder = CheckLibraryBuilder(pkg_name=name, scope=scope, language_name=self._language_name)
             sqlexecutor.execute(builder, out_file=out_file)
 

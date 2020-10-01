@@ -6,7 +6,7 @@ from setuptools import setup
 setup(
     name='sqlmlutils',
     packages=['sqlmlutils', 'sqlmlutils/packagemanagement'],
-    version='1.0.2',
+    version='1.1.0',
     url='https://github.com/Microsoft/sqlmlutils/Python',
     license='MIT License',
     description='A client side package for working with SQL Server',

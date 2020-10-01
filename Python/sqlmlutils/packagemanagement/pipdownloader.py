@@ -12,11 +12,12 @@ from sqlmlutils.packagemanagement import servermethods
 
 class PipDownloader:
 
-    def __init__(self, connection: ConnectionInfo, downloaddir: str, targetpackage: str):
+    def __init__(self, connection: ConnectionInfo, downloaddir: str, targetpackage: str, language_name: str):
         self._connection = connection
         self._downloaddir = downloaddir
         self._targetpackage = targetpackage
-        server_info = SQLPythonExecutor(connection).execute_function_in_sql(servermethods.get_server_info)
+        self._language_name = language_name
+        server_info = SQLPythonExecutor(connection, self._language_name).execute_function_in_sql(servermethods.get_server_info)
         globals().update(server_info)
 
     def download(self):
