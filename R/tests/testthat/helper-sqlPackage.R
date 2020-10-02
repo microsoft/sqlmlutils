@@ -121,9 +121,9 @@ helper_CreateExternalLibrary <- function(connectionString, packageName, authoriz
 helper_callDummySPEES <- function(connectionString, languageName)
 {
     cat(sprintf("\nINFO: call dummy sp_execute_external_library to trigger install.\r\n"))
-    speesStr = "EXECUTE sp_execute_external_script
+    speesStr = paste0("EXECUTE sp_execute_external_script
     @LANGUAGE = N'", languageName,"',
-    @SCRIPT = N'invisible(NULL)'"
+    @SCRIPT = N'invisible(NULL)'")
 
     sqlmlutils:::execute(connectionString, speesStr)
 }

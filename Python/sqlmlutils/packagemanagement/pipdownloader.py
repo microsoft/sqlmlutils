@@ -12,7 +12,7 @@ from sqlmlutils.packagemanagement import servermethods
 
 class PipDownloader:
 
-    def __init__(self, connection: ConnectionInfo, downloaddir: str, targetpackage: str, language_name: str):
+    def __init__(self, connection: ConnectionInfo, downloaddir: str, targetpackage: str, language_name: str = "Python"):
         self._connection = connection
         self._downloaddir = downloaddir
         self._targetpackage = targetpackage
