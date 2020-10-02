@@ -95,7 +95,7 @@ sql_install.packages <- function(connectionString,
                                  pkgs,
                                  skipMissing = FALSE, repos,
                                  verbose = getOption("verbose"), scope = "private", owner = '',
-                                 scriptFile = NULL)
+                                 scriptFile = NULL, languageName = "R")
 {
     assign("g_scriptFile", scriptFile, envir = install.env)
     checkOwner(owner)
@@ -187,8 +187,9 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
     if (length(missingPackagesLib) > 0)
     {
         # check if package is also missing in the internal table
+        #
         tablePackages <- sqlEnumTable(connectionString, missingPackagesLib, owner, scopeint)
-        missingPackages <- tablePackages[tablePackages$Package == missingPackagesLib & tablePackages$Found == FALSE,"Package",drop=FALSE]$Package
+        missingPackages <- tablePackages[tablePackages$Package == missingPackagesLib & tablePackages$Found == FALSE, "Package", drop=FALSE]$Package
 
         if (length(missingPackages) > 0)
         {
@@ -197,7 +198,8 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
 
         # if a package is only in the table we still want to drop external library it
         # (e.g. package may be failing to install after a create external library outside sqlmlutils)
-        pkgsToDrop <- tablePackages[tablePackages$Package == missingPackagesLib & tablePackages$Found == TRUE,"Package",drop=FALSE]$Package
+        #
+        pkgsToDrop <- tablePackages[tablePackages$Package == missingPackagesLib & tablePackages$Found == TRUE, "Package", drop=FALSE]$Package
         pkgs <- pkgs[pkgs %in% installedPackages$Package]
     }
 
@@ -216,6 +218,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
         pkgs <- pkgsToUninstall$Package
 
         # check if packages to uninstall are in the table as well and be drop external library
+        #
         tablePackages <- sqlEnumTable(connectionString, pkgs, owner, scopeint)
         pkgsToReport <- tablePackages[tablePackages$Package == pkgs & tablePackages$Found == FALSE, "Package", drop=FALSE]$Package
         if (length(pkgsToReport) > 0)
@@ -224,6 +227,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
             # It may be scheduled to be removed with the next sp_execute_external_script call or
             # it may be failing to remove at all!
             # In any case we will track the package and report on its status to the caller
+            #
             pkgs <- pkgs[!(pkgs %in% pkgsToReport)]
         }
     }
@@ -258,7 +262,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
 #
 # @return data frame returned by FUN
 #
-sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asuser = NULL, includeFun = list())
+sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asuser = NULL, includeFun = list(), languageName)
 {
     g_scriptFile <- local(g_scriptFile, install.env)
 
@@ -454,7 +458,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
 
     query <- paste0(query
                     ,"\nEXEC sp_execute_external_script"
-                    ,"\n@language = N'R'"
+                    ,"\n@language = N'", languageName,"'"
                     ,"\n,@script = N'",script, "';"
     )
 
@@ -1681,7 +1685,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
 #
 # Calls CREATE EXTERNAL LIBRARY on a package
 #
-sqlCreateExternalLibrary <- function(hodbc, packageName, packageFile, user = "")
+sqlCreateExternalLibrary <- function(hodbc, packageName, packageFile, user = "", languageName)
 {
     g_scriptFile <- local(g_scriptFile, install.env)
 
@@ -1702,7 +1706,7 @@ sqlCreateExternalLibrary <- function(hodbc, packageName, packageFile, user = "")
         query <- paste0(query, " AUTHORIZATION ", user)
     }
 
-    query <- paste0(query, " FROM (CONTENT=", pkgContent ,") WITH (LANGUAGE = 'R');")
+    query <- paste0(query, " FROM (CONTENT=", pkgContent ,") WITH (LANGUAGE = '", languageName,"');")
 
     if(!is.null(g_scriptFile))
     {
@@ -1863,7 +1867,7 @@ sqlMakeTopLevel <- function(connectionString, packages, owner, scope)
 #
 # Returns data frame with packages names and associated external library id  |name|external_library_id|
 #
-sqlQueryExternalLibraryId <- function(hodbc, packagesNames, scopeint, queryUser)
+sqlQueryExternalLibraryId <- function(hodbc, packagesNames, scopeint, queryUser, languageName)
 {
     query <- paste0(
         " SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;", # Sets transactions isolation level to read uncommited for the current connections so we can read external library ids
@@ -1881,7 +1885,7 @@ sqlQueryExternalLibraryId <- function(hodbc, packagesNames, scopeint, queryUser)
                     paste0("'", paste(packagesNames, collapse = "','"), "'"),
                     ")",
                     " AND elib.principal_id=@principalId",
-                    " AND elib.language='R' AND elib.scope=", scopeint,
+                    " AND elib.language='", languageName,"' AND elib.scope=", scopeint,
                     " ORDER BY elib.name ASC",
                     " ;"
     )
@@ -2326,7 +2330,7 @@ sqlSyncRemovePackages <- function(hodbc, pkgs, externalLibraryIds, scope, user, 
 # All submitted packages will be listed.
 # If a package was  found in the database, find value will be TRUE otherwise FALSE
 #
-sqlEnumTable <- function(connectionString, packagesNames, owner, scopeint)
+sqlEnumTable <- function(connectionString, packagesNames, owner, scopeint, languageName)
 {
     g_scriptFile <- local(g_scriptFile, install.env)
     queryUser <- "CURRENT_USER"
@@ -2363,7 +2367,7 @@ sqlEnumTable <- function(connectionString, packagesNames, owner, scopeint)
                      paste0("'", paste(packagesNames, collapse = "','"), "'"),
                      ")",
                      " AND elib.principal_id=@principalId",
-                     " AND elib.language='R' AND elib.scope=", scopeint,
+                     " AND elib.language='", languageName,"' AND elib.scope=", scopeint,
                      " ORDER BY elib.name ASC",
                      " ;"
    )
@@ -2612,9 +2616,9 @@ enumerateTopPackages <- function(connectionString, packages, owner, scope)
                                    INNER JOIN eprop
                                    ON eprop.major_id = elib.external_library_id AND elib.name in (%s)
                                    AND elib.principal_id=@principalId
-                                   AND elib.language='R' AND elib.scope=?
+                                   AND elib.language='%s' AND elib.scope=?
                                    ORDER BY elib.name ASC
-                                   ;", pkgcsv))
+                                   ;", pkgcsv, languageName))
 
     tryCatch(
     {

@@ -62,7 +62,7 @@
 #'@export
 createSprocFromFunction <- function (connectionString, name, func,
                                      inputParams = NULL, outputParams = NULL,
-                                     getScript = FALSE)
+                                     getScript = FALSE, languageName = "R")
 {
     possibleTypes <- c("posixct", "numeric", "character", "integer", "logical", "raw", "dataframe")
 
@@ -83,7 +83,7 @@ createSprocFromFunction <- function (connectionString, name, func,
         stop("inputParams and function arguments do not match!")
     }
 
-    procScript <- generateTSQL(func = func, spName = name, inputParams = inputParams, outputParams = outputParams)
+    procScript <- generateTSQL(func = func, spName = name, inputParams = inputParams, outputParams = outputParams, languageName = languageName)
 
     if (getScript)
     {
@@ -106,7 +106,7 @@ createSprocFromFunction <- function (connectionString, name, func,
 #'@export
 createSprocFromScript <- function (connectionString, name, script,
                                    inputParams = NULL, outputParams = NULL,
-                                   getScript = FALSE)
+                                   getScript = FALSE, languageName = "R")
 {
     if (file.exists(script))
     {
@@ -131,7 +131,7 @@ createSprocFromScript <- function (connectionString, name, script,
         if (!tolower(x) %in% possibleTypes) stop("Possible output types are POSIXct, numeric, character, integer, logical, raw, and DataFrame.")
     })
 
-    procScript <- generateTSQLFromScript(script = text, spName = name, inputParams = inputParams, outputParams = outputParams)
+    procScript <- generateTSQLFromScript(script = text, spName = name, inputParams = inputParams, outputParams = outputParams, languageName = languageName)
 
     if (getScript)
     {

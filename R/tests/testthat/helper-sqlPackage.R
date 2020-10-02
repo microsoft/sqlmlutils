@@ -97,7 +97,7 @@ helper_ExecuteSQLDDL <- function(connectionString, sqlDDL)
     sqlmlutils:::execute(connectionString, sqlDDL)
 }
 
-helper_CreateExternalLibrary <- function(connectionString, packageName, authorization=NULL, content)
+helper_CreateExternalLibrary <- function(connectionString, packageName, authorization=NULL, content, languageName)
 {
     # 1. issue 'CREATE EXTERNAL LIBRARY'
     createExtLibDDLString = paste0("CREATE EXTERNAL LIBRARY [", packageName, "]")
@@ -108,21 +108,21 @@ helper_CreateExternalLibrary <- function(connectionString, packageName, authoriz
 
     if (substr(content, 0, 2) == "0x")
     {
-        createExtLibDDLString = paste0(createExtLibDDLString, " FROM (content = ", content, ") WITH (LANGUAGE = 'R')")
+        createExtLibDDLString = paste0(createExtLibDDLString, " FROM (content = ", content, ") WITH (LANGUAGE = '", languageName,"')")
     }
     else
     {
-        createExtLibDDLString = paste0(createExtLibDDLString, " FROM (content = '", content, "') WITH (LANGUAGE = 'R')")
+        createExtLibDDLString = paste0(createExtLibDDLString, " FROM (content = '", content, "') WITH (LANGUAGE = '", languageName,"')")
     }
 
     helper_ExecuteSQLDDL(connectionString = connectionString, sqlDDL = createExtLibDDLString)
 }
 
-helper_callDummySPEES <- function(connectionString)
+helper_callDummySPEES <- function(connectionString, languageName)
 {
     cat(sprintf("\nINFO: call dummy sp_execute_external_library to trigger install.\r\n"))
     speesStr = "EXECUTE sp_execute_external_script
-    @LANGUAGE = N'R',
+    @LANGUAGE = N'", languageName,"',
     @SCRIPT = N'invisible(NULL)'"
 
     sqlmlutils:::execute(connectionString, speesStr)
