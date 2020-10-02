@@ -46,7 +46,7 @@ helper_isLinux <- function()
 
 helper_isServerLinux <- function()
 {
-    return (sqlmlutils:::sqlRemoteExecuteFun(helper_getSetting("connectionStringDBO"), helper_isLinux))
+    return (sqlmlutils:::sqlRemoteExecuteFun(helper_getSetting("connectionStringDBO"), helper_isLinux, languageName="R"))
 }
 
 #
@@ -54,7 +54,7 @@ helper_isServerLinux <- function()
 #
 helper_remote.require <- function(connectionString, packageName)
 {
-    return (suppressWarnings((sqlmlutils:::sqlRemoteExecuteFun(connectionString, require, package = packageName, useRemoteFun = TRUE ))))
+    return (suppressWarnings((sqlmlutils:::sqlRemoteExecuteFun(connectionString, require, package = packageName, useRemoteFun = TRUE , languageName="R"))))
 }
 
 helper_checkPackageStatusRequire <- function(connectionString, packageName, expectedInstallStatus)
@@ -70,7 +70,7 @@ helper_checkPackageStatusRequire <- function(connectionString, packageName, expe
 #
 helper_remote.find.package <- function(connectionString, packageName)
 {
-  findResult <- sqlmlutils:::sqlRemoteExecuteFun(connectionString, find.package, package = packageName, quiet = TRUE, useRemoteFun = TRUE )
+  findResult <- sqlmlutils:::sqlRemoteExecuteFun(connectionString, find.package, package = packageName, quiet = TRUE, useRemoteFun = TRUE, languageName="R" )
 
   return (is.character(findResult) && (length(findResult) > 0))
 }
@@ -85,7 +85,7 @@ helper_checkPackageStatusFind <- function(connectionString, packageName, expecte
 
 helper_checkSqlLibPaths <- function(connectionString, minimumCount)
 {
-    sqlLibPaths = sqlmlutils:::sqlRemoteExecuteFun(connectionString, .libPaths, useRemoteFun = TRUE )
+    sqlLibPaths = sqlmlutils:::sqlRemoteExecuteFun(connectionString, .libPaths, useRemoteFun = TRUE, languageName="R" )
     cat(paste0( "INFO: lib paths = ", sqlLibPaths, colapse = "\r\n"))
     expect_true(length(sqlLibPaths) >= minimumCount)
 }
@@ -118,7 +118,7 @@ helper_CreateExternalLibrary <- function(connectionString, packageName, authoriz
     helper_ExecuteSQLDDL(connectionString = connectionString, sqlDDL = createExtLibDDLString)
 }
 
-helper_callDummySPEES <- function(connectionString, languageName)
+helper_callDummySPEES <- function(connectionString, languageName="R")
 {
     cat(sprintf("\nINFO: call dummy sp_execute_external_library to trigger install.\r\n"))
     speesStr = paste0("EXECUTE sp_execute_external_script

@@ -186,7 +186,7 @@ class SQLPythonExecutor:
         out_copy = output_params.copy() if output_params is not None else None
         
         execute_query(StoredProcedureBuilder(name=name, 
-                                            func=content, 
+                                            script=content, 
                                             input_params=in_copy,
                                             output_params=out_copy, 
                                             language_name=self._language_name),
