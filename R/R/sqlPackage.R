@@ -262,7 +262,7 @@ sql_remove.packages <- function(connectionString, pkgs, dependencies = TRUE, che
 #
 # @return data frame returned by FUN
 #
-sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asuser = NULL, includeFun = list(), languageName)
+sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asuser = NULL, includeFun = list(), languageName = "R")
 {
     g_scriptFile <- local(g_scriptFile, install.env)
 
@@ -458,7 +458,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
 
     query <- paste0(query
                     ,"\nEXEC sp_execute_external_script"
-                    ,"\n@language = N'", languageName,"'"
+                    ,"\n@language = N'", languageName, "'"
                     ,"\n,@script = N'",script, "';"
     )
 

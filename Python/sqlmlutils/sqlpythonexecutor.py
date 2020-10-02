@@ -48,9 +48,9 @@ class SQLPythonExecutor:
         >>> print(ret)
         [0.28366218546322625, 0.28366218546322625]
         """
-        df, _ = execute_query(SpeesBuilderFromFunction(func=func, 
-                                                    input_data_query=input_data_query, 
-                                                    language_name=self._language_name, 
+        df, _ = execute_query(SpeesBuilderFromFunction(func, 
+                                                    input_data_query, 
+                                                    self._language_name, 
                                                     *args, 
                                                     **kwargs), 
                             self._connection_info)
