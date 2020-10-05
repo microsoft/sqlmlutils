@@ -9,7 +9,8 @@ executeFunctionInSQL(
   func,
   ...,
   inputDataQuery = "",
-  getScript = FALSE
+  getScript = FALSE,
+  languageName = "R"
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ executeFunctionInSQL(
 The result of the query will be put into a data frame into the first argument in the function}
 
 \item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
+
+\item{languageName}{string. Use a language name other than the default R, if using an EXTERNAL LANGUAGE.}
 }
 \value{
 The returned value from the function

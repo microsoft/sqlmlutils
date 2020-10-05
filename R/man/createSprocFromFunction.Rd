@@ -11,7 +11,8 @@ createSprocFromFunction(
   func,
   inputParams = NULL,
   outputParams = NULL,
-  getScript = FALSE
+  getScript = FALSE,
+  languageName = "R"
 )
 
 createSprocFromScript(
@@ -20,7 +21,8 @@ createSprocFromScript(
   script,
   inputParams = NULL,
   outputParams = NULL,
-  getScript = FALSE
+  getScript = FALSE,
+  languageName = "R"
 )
 }
 \arguments{
@@ -37,6 +39,8 @@ where the names are the arguments and the values are the types}
 where the names are the arguments and the values are the types}
 
 \item{getScript}{boolean. Return the tsql script that would be run on the server instead of running it}
+
+\item{languageName}{string. Use a language name other than the default R, if using an EXTERNAL LANGUAGE.}
 
 \item{script}{character string. The path to the script to wrap in the stored procedure}
 }

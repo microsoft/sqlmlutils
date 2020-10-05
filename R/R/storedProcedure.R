@@ -17,6 +17,7 @@
 #'@param outputParams named list. The types of the outputs,
 #'where the names are the arguments and the values are the types
 #'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
+#'@param languageName string. Use a language name other than the default R, if using an EXTERNAL LANGUAGE.
 #'
 #'@section Warning:
 #'You can add output parameters to the stored procedure

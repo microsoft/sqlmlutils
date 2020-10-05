@@ -12,7 +12,8 @@ sql_installed.packages(
   subarch = NULL,
   scope = "private",
   owner = "",
-  scriptFile = NULL
+  scriptFile = NULL,
+  languageName = "R"
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ sql_installed.packages(
 \item{owner}{character string of a user whose private packages shall be listed (availableto dbo or db_owner users only)}
 
 \item{scriptFile}{character string - a file where to record the tsql that is run by the function.}
+
+\item{languageName}{string. Use a language name other than the default R, if using an EXTERNAL LANGUAGE.}
 }
 \value{
 matrix with enumerated packages
