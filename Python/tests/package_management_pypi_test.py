@@ -123,8 +123,8 @@ def test_dependency_spec():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-def test_upgrade_parameter():
-    """Test that "upgrade" installation parameter"""
+def test_no_upgrade_parameter():
+    """Test new version but no "upgrade" installation parameter"""
     try:
         pkg = "cryptography"
 
@@ -151,8 +151,22 @@ def test_upgrade_parameter():
         sqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(originalsqlpkgs)
 
-        #################
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
+
+def test_upgrade_parameter():
+    """Test the "upgrade" installation parameter"""
+    try:
+        pkg = "cryptography"
+
+        first_version = "2.7"
+        second_version = "2.8"
+        
+        # Install package first so we can test upgrade param
+        #
+        pkgmanager.install(pkg, version=first_version)
+        
         def check_version():
             import cryptography as cp
             return cp.__version__
