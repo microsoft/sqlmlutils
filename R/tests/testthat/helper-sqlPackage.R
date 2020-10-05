@@ -97,7 +97,7 @@ helper_ExecuteSQLDDL <- function(connectionString, sqlDDL)
     sqlmlutils:::execute(connectionString, sqlDDL)
 }
 
-helper_CreateExternalLibrary <- function(connectionString, packageName, authorization=NULL, content, languageName)
+helper_CreateExternalLibrary <- function(connectionString, packageName, authorization=NULL, content, languageName="R")
 {
     # 1. issue 'CREATE EXTERNAL LIBRARY'
     createExtLibDDLString = paste0("CREATE EXTERNAL LIBRARY [", packageName, "]")
