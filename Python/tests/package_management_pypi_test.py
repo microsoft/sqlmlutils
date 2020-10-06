@@ -160,8 +160,7 @@ def test_already_installed_popular_ml_packages():
         newsqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(newsqlpkgs)
 
-
-
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_dependency_spec():
     """Test that the DepedencyResolver handles ~= requirement spec.
     Also tests when package name and module name are different."""
