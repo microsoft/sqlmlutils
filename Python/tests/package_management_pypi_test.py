@@ -78,51 +78,6 @@ def test_install_version():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-def test_dependency_spec():
-    """Test that the DepedencyResolver handles ~= requirement spec.
-    Also tests when package name and module name are different."""
-    package = "azure_cli_telemetry"
-    version = "1.0.4"
-    dependent = "portalocker"
-    module = "azure"
-
-    try:
-        # Install the package and its dependencies
-        #
-        pkgmanager.install(package, version=version)
-        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=module)
-        assert val
-
-        pkgs = _get_package_names_list(connection)
-
-        assert package in pkgs
-        assert dependent in pkgs
-            
-        # Uninstall the top package only, not the dependencies
-        #
-        pkgmanager.uninstall(package)
-        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=module)
-        assert val
-        
-        pkgs = _get_package_names_list(connection)
-
-        assert package not in pkgs
-        assert dependent in pkgs
-        
-        # Install the package again, make sure DepedencyResolver can handle ~= Requirement spec
-        #
-        pkgmanager.install(package, version=version)
-        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=module)
-        assert val
-
-        pkgs = _get_package_names_list(connection)
-
-        assert package in pkgs
-        assert dependent in pkgs
-
-    finally:
-        _drop_all_ddl_packages(connection, scope)
-
 def test_no_upgrade_parameter():
     """Test new version but no "upgrade" installation parameter"""
     try:
@@ -167,6 +122,10 @@ def test_upgrade_parameter():
         #
         pkgmanager.install(pkg, version=first_version)
         
+        # Get sql packages
+        #
+        originalsqlpkgs = _get_sql_package_table(connection)
+        
         def check_version():
             import cryptography as cp
             return cp.__version__
@@ -200,6 +159,42 @@ def test_already_installed_popular_ml_packages():
         pkgmanager.install(package)
         newsqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(newsqlpkgs)
+
+
+
+def test_dependency_spec():
+    """Test that the DepedencyResolver handles ~= requirement spec.
+    Also tests when package name and module name are different."""
+    package = "azure_cli_telemetry"
+    version = "1.0.4"
+    dependent = "portalocker"
+    module = "azure"
+
+    try:
+        # Install the package and its dependencies
+        #
+        pkgmanager.install(package, version=version)
+        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=module)
+        assert val
+
+        pkgs = _get_package_names_list(connection)
+
+        assert package in pkgs
+        assert dependent in pkgs
+            
+        # Uninstall the top package only, not the dependencies
+        #
+        pkgmanager.uninstall(package)
+        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=module)
+        assert val
+        
+        pkgs = _get_package_names_list(connection)
+
+        assert package not in pkgs
+        assert dependent in pkgs
+        
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 @pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_installing_popular_ml_packages():
