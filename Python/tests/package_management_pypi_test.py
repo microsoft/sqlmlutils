@@ -38,7 +38,8 @@ def _package_no_exist(module_name: str):
     with pytest.raises(Exception):
         __import__(module_name)
     return True
-
+    
+    
 def test_install_different_names():
     """Test installing a single package with different capitalization"""
     def useit():
@@ -78,6 +79,7 @@ def test_install_version():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_no_upgrade_parameter():
     """Test new version but no "upgrade" installation parameter"""
     try:
@@ -110,6 +112,7 @@ def test_no_upgrade_parameter():
         _drop_all_ddl_packages(connection, scope)
 
 
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_upgrade_parameter():
     """Test the "upgrade" installation parameter"""
     try:
@@ -150,6 +153,7 @@ def test_upgrade_parameter():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_already_installed_popular_ml_packages():
     """Test packages that are preinstalled, make sure they do not install anything extra"""
     installedpackages = ["numpy", "scipy", "pandas"]
