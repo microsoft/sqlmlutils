@@ -18,6 +18,11 @@ from .sqlbuilder import RETURN_COLUMN_NAME, STDOUT_COLUMN_NAME, STDERR_COLUMN_NA
 class SQLPythonExecutor:
 
     def __init__(self, connection_info: ConnectionInfo, language_name: str = "Python"):
+        """Initialize a PythonExecutor to execute functions or queries in SQL Server.
+
+        :param connection_info: The ConnectionInfo object that holds the connection string and other information.
+        :param language_name: The name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE. 
+        """
         self._connection_info = connection_info
         self._language_name = language_name
 
@@ -56,7 +61,7 @@ class SQLPythonExecutor:
                             self._connection_info)
                             
         results, output, error = self._get_results(df)
-        
+
         if output is not None: 
             print(output)
         if error is not None:

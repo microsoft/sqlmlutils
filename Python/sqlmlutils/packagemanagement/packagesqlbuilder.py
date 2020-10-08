@@ -9,7 +9,7 @@ from sqlmlutils.packagemanagement.scope import Scope
 
 class CreateLibraryBuilder(SQLBuilder):
 
-    def __init__(self, pkg_name: str, pkg_filename: str, scope: Scope, language_name: str = "Python"):
+    def __init__(self, pkg_name: str, pkg_filename: str, scope: Scope, language_name: str):
         self._name = clean_library_name(pkg_name)
         self._language_name = language_name
         self._filename = pkg_filename
@@ -52,7 +52,7 @@ FROM (CONTENT = ?) WITH (LANGUAGE = '{language_name}');
 
 class CheckLibraryBuilder(SQLBuilder):
 
-    def __init__(self, pkg_name: str, scope: Scope, language_name: str = "Python"):
+    def __init__(self, pkg_name: str, scope: Scope, language_name: str):
         self._name = clean_library_name(pkg_name)
         self._language_name = language_name
         self._scope = scope
@@ -125,7 +125,7 @@ END CATCH
 
 class DropLibraryBuilder(SQLBuilder):
 
-    def __init__(self, sql_package_name: str, scope: Scope, language_name: str = "Python"):
+    def __init__(self, sql_package_name: str, scope: Scope, language_name: str):
         self._name = clean_library_name(sql_package_name)
         self._language_name = language_name
         self._scope = scope

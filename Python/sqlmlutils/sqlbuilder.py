@@ -58,6 +58,7 @@ class SpeesBuilder(SQLBuilder):
         :param with_results_text: with results text used to defined the expected data schema of the SQL query
         :param input_data_query: maps to @input_data_1 SQL query parameter
         :param script_parameters_text: maps to @params SQL query parameter
+        :param language_name: name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE
         """
         self._script = self.modify_script(script)
         self._input_data_query = input_data_query
@@ -115,12 +116,13 @@ class SpeesBuilderFromFunction(SpeesBuilder):
         stderr=STDERR_COLUMN_NAME
     )
 
-    def __init__(self, func: Callable, input_data_query: str = "", language_name: str = "Python", *args, **kwargs):
+    def __init__(self, func: Callable, input_data_query: str = "", language_name: str, *args, **kwargs):
         """Instantiate a _SpeesBuilderFromFunction object.
 
         :param func: function to execute_function_in_sql on the SQL Server.
         The spees query is built based on this function.
         :param input_data_query: query text for @input_data_1 parameter
+        :param language_name: name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE
         :param args: positional arguments to function call in SPEES
         :param kwargs: keyword arguments to function call in SPEES
         """
@@ -202,6 +204,7 @@ class StoredProcedureBuilder(SQLBuilder):
         :param script: function to base the stored procedure on
         :param input_params: input parameters type annotation dictionary for the stored procedure
         :param output_params: output parameters type annotation dictionary from the stored procedure
+        :param language_name: name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE
         """
         if input_params is None:
             input_params = {}
@@ -401,8 +404,9 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
         :param name: name of the stored procedure
         :param func: function to base the stored procedure on
         :param input_params: input parameters type annotation dictionary for the stored procedure
-        Can you function type annotations instead; if both, they must match
+        Can use function type annotations instead; if both, they must match
         :param output_params: output parameters type annotation dictionary from the stored procedure
+        :param language_name: name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE
         """
         if input_params is None:
             input_params = {}

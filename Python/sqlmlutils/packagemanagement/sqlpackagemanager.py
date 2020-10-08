@@ -20,6 +20,11 @@ from sqlmlutils.sqlqueryexecutor import execute_query, SQLQueryExecutor
 class SQLPackageManager:
 
     def __init__(self, connection_info: ConnectionInfo, language_name: str = "Python"):
+        """Initialize a SQLPackageManager to manage packages on the SQL Server.
+
+        :param connection_info: The ConnectionInfo object that holds the connection string and other information.
+        :param language_name: The name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE. 
+        """
         self._connection_info = connection_info
         self._pyexecutor = SQLPythonExecutor(connection_info, language_name=language_name)
         self._language_name = language_name
@@ -126,7 +131,7 @@ class SQLPackageManager:
                        AND elib.language='{language_name}' AND elib.scope={scope_num}   \
                        ORDER BY elib.name ASC; \
                        GO".format(language_name=self._language_name,
-                                                        scope_num=scope_num)
+                                  scope_num=scope_num)
         return self._pyexecutor.execute_sql_query(query, owner)
 
     def _drop_sql_package(self, sql_package_name: str, scope: Scope, out_file: str = None):
