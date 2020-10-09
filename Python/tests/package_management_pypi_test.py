@@ -110,7 +110,7 @@ def test_no_upgrade_parameter():
         # Make sure that the version we have on the server is still the first one
         #
         installed_version = pyexecutor.execute_function_in_sql(_check_version, pkg)
-        assert first_version = installed_version
+        assert first_version == installed_version
 
         # Make sure nothing excess was accidentally installed
         #
