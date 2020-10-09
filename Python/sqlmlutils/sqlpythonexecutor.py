@@ -54,8 +54,8 @@ class SQLPythonExecutor:
         [0.28366218546322625, 0.28366218546322625]
         """
         df, _ = execute_query(SpeesBuilderFromFunction(func, 
-                                                    input_data_query, 
                                                     self._language_name, 
+                                                    input_data_query, 
                                                     *args, 
                                                     **kwargs), 
                             self._connection_info)

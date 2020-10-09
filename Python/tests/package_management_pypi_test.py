@@ -108,6 +108,7 @@ def test_no_upgrade_parameter():
         assert "exists on server. Set upgrade to True" in output.getvalue()
 
         # Make sure that the version we have on the server is still the first one
+        #
         installed_version = pyexecutor.execute_function_in_sql(_check_version, pkg)
         assert first_version = installed_version
 

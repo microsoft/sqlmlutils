@@ -116,7 +116,7 @@ class SpeesBuilderFromFunction(SpeesBuilder):
         stderr=STDERR_COLUMN_NAME
     )
 
-    def __init__(self, func: Callable, input_data_query: str = "", language_name: str, *args, **kwargs):
+    def __init__(self, func: Callable, language_name: str, input_data_query: str = "", *args, **kwargs):
         """Instantiate a _SpeesBuilderFromFunction object.
 
         :param func: function to execute_function_in_sql on the SQL Server.
