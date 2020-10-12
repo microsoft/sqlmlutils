@@ -25,5 +25,5 @@ def get_server_info():
         "impl_version_info": pep425tags.get_impl_version_info(),
         "abbr_impl": pep425tags.get_abbr_impl(),
         "abi_tag": pep425tags.get_abi_tag(),
-        "platform": pep425tags.get_platform("")
+        "platform": pep425tags.get_platform("_")
     }
