@@ -12,7 +12,7 @@ def show_installed_packages():
 
 def get_server_info():
     from distutils.version import LooseVersion
-    import pip
+    import pip, sysconfig
     pipversion = LooseVersion(pip.__version__)
 
     if pipversion >= LooseVersion("19.3"):
@@ -25,5 +25,5 @@ def get_server_info():
         "impl_version_info": pep425tags.get_impl_version_info(),
         "abbr_impl": pep425tags.get_abbr_impl(),
         "abi_tag": pep425tags.get_abi_tag(),
-        "platform": pep425tags.get_platform("_")
+        "platform": sysconfig.get_platform().replace("-","_")
     }
