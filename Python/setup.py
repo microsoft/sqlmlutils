@@ -21,7 +21,7 @@ setup(
         'pkginfo',
         'requirements-parser',	
         'pandas',
-        'wheel'
+        'wheel<0.35.0'
     ],
     python_requires='>=3.5'
 )
