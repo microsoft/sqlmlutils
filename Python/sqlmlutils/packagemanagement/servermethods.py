@@ -22,8 +22,8 @@ def get_server_info():
     else:
         from pip import pep425tags
     return {
-        "impl_version_info": pep425tags.get_impl_version_info(),
-        "abbr_impl": pep425tags.get_abbr_impl(),
-        "abi_tag": pep425tags.get_abi_tag(),
-        "platform": sysconfig.get_platform().replace("-","_")
+        "impl_version_info": pep425tags.get_impl_version_info(), #(3,7)
+        "abbr_impl": pep425tags.get_abbr_impl(), #'cp'
+        "abi_tag": pep425tags.get_abi_tag(), #'cp37m'
+        "platform": sysconfig.get_platform().replace("-","_") #'win_amd64', 'linux_x86_64'
     }
