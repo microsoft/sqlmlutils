@@ -19,7 +19,7 @@ pip install sqlmlutils
 ```
 To install from file:
 ```
-pip install Python/dist/sqlmlutils-1.0.1.zip
+pip install Python/dist/sqlmlutils-1.1.0.zip
 ```
 
 R:
@@ -29,7 +29,7 @@ Windows:
 From command prompt, run 
 ```
 R.exe -e "install.packages('odbc')"
-R.exe CMD INSTALL dist/sqlmlutils_0.7.4.zip
+R.exe CMD INSTALL dist/sqlmlutils_1.0.0.zip
 ```
 OR
 To build a new package file and install, run
@@ -40,7 +40,7 @@ To build a new package file and install, run
 Linux
 ```
 R.exe -e "install.packages('odbc')"
-R.exe CMD INSTALL dist/sqlmlutils_0.7.4.tar.gz
+R.exe CMD INSTALL dist/sqlmlutils_1.0.0.tar.gz
 ```
 
 # Details

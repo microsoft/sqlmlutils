@@ -56,6 +56,7 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
 #'@param inputDataQuery character string. A string to query the database.
 #' The result of the query will be put into a data frame into the first argument in the function
 #'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
+#'@param languageName string. Use a language name other than the default R, if using an EXTERNAL LANGUAGE.
 #'
 #'@return The returned value from the function
 #'
@@ -78,7 +79,7 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
 #'
 #'@import odbc
 #'@export
-executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "", getScript = FALSE)
+executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "", getScript = FALSE, languageName = "R")
 {
     inputDataName <- "InputDataSet"
     listArgs <- list(...)
@@ -99,7 +100,11 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 
     binArgs <- serialize(listArgs, NULL)
 
-    spees <- speesBuilderFromFunction(func = func, inputDataQuery = inputDataQuery, inputDataName = inputDataName, binArgs)
+    spees <- speesBuilderFromFunction(func = func,
+                                      inputDataQuery = inputDataQuery,
+                                      inputDataName = inputDataName,
+                                      binArgs = binArgs,
+                                      languageName = languageName)
 
     if (getScript)
     {
@@ -120,6 +125,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 #'@param inputDataQuery character string. A string to query the database.
 #' The result of the query will be put into a data frame into the variable "InputDataSet" in the environment
 #'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
+#'@param languageName string. Use a language name other than the default R, if using an EXTERNAL LANGUAGE.
 #'
 #'@return The returned value from the last line of the script
 #'
@@ -127,7 +133,7 @@ executeFunctionInSQL <- function(connectionString, func, ..., inputDataQuery = "
 #'\code{\link{executeFunctionInSQL}} to execute a user function instead of a script in SQL
 #'
 #'@export
-executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", getScript = FALSE)
+executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", getScript = FALSE, languageName = "R")
 {
 
     if (file.exists(script))
@@ -146,8 +152,12 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", ge
         eval(parse(text = script))
     }
 
-    executeFunctionInSQL(connectionString = connectionString, func = func,
-                         script = text, inputDataQuery = inputDataQuery, getScript = getScript)
+    executeFunctionInSQL(connectionString = connectionString,
+                         func = func,
+                         script = text,
+                         inputDataQuery = inputDataQuery,
+                         getScript = getScript,
+                         languageName = languageName)
 }
 
 
@@ -157,6 +167,7 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", ge
 #'@param connectionString character string. The connectionString to the database
 #'@param sqlQuery character string. The query to execute
 #'@param getScript boolean. Return the tsql script that would be run on the server instead of running it
+#'@param languageName string. Use a language name other than the default R, if using an EXTERNAL LANGUAGE.
 #'
 #'@return The data frame returned by the query to the database
 #'
@@ -169,15 +180,18 @@ executeScriptInSQL <- function(connectionString, script, inputDataQuery = "", ge
 #'
 #'
 #'@export
-executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE)
+executeSQLQuery <- function(connectionString, sqlQuery, getScript = FALSE, languageName = "R")
 {
     #We use the serialize method here instead of OutputDataSet <- InputDataSet to preserve column names
 
     script <- " serializedResult <- as.character(serialize(list(result = InputDataSet), NULL))
-                OutputDataSet <- data.frame(returnVal=serializedResult)
+                OutputDataSet <- data.frame(returnVal=serializedResult, stringsAsFactors=FALSE)
                 list(result = InputDataSet)
               "
-    spees <- speesBuilder(script = script, inputDataQuery = sqlQuery, TRUE)
+    spees <- speesBuilder(script = script,
+                          inputDataQuery = sqlQuery,
+                          languageName = languageName,
+                          withResults = TRUE)
 
     if (getScript)
     {
@@ -318,18 +332,18 @@ execute <- function(connection, script, ...)
 # @param inputDataQuery The query on the database
 # @param withResults Whether to have a result set, outside of the OutputDataSet
 #
-speesBuilder <- function(script, inputDataQuery, withResults = FALSE)
+speesBuilder <- function(script, inputDataQuery, languageName, withResults = FALSE)
 {
     resultSet <- if (withResults) "with result sets((returnVal varchar(MAX)))" else ""
 
     sprintf("exec sp_execute_external_script
-            @language = N'R',
+            @language = N'%s',
             @script = N'
             %s
             ',
             @input_data_1 = N'%s'
             %s
-            ", script, inputDataQuery, resultSet)
+            ", languageName, script, inputDataQuery, resultSet)
 }
 
 #
@@ -343,7 +357,7 @@ speesBuilder <- function(script, inputDataQuery, withResults = FALSE)
 # @return The spees script to execute
 # The spees script will return a data frame with the results, serialized
 #
-speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArgs)
+speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArgs, languageName)
 {
     funcName <- deparse(substitute(func))
     funcBody <- gsub('"', '\"', paste0(deparse(func), collapse = "\n"))
@@ -384,11 +398,11 @@ speesBuilderFromFunction <- function(func, inputDataQuery, inputDataName, binArg
                          options(warn=oldWarn)
 
                          serializedResult <- as.character(serialize(list(result, output, funwarnings, funerror), NULL))
-                         OutputDataSet <- data.frame(returnVal=serializedResult)
+                         OutputDataSet <- data.frame(returnVal=serializedResult, stringsAsFactors=FALSE)
                          list(result = result, output = output, warnings = funwarnings, errors = funerror)
                          ", funcName, funcBody, paste0(binArgs,collapse=";"), inputDataName, funcName)
 
     # Call the spees builder to wrap the function; needs the returnVal resultset
     #
-    speesBuilder(speesBody, inputDataQuery, withResults = TRUE)
+    speesBuilder(speesBody, inputDataQuery, languageName=languageName, withResults = TRUE)
 }

@@ -19,9 +19,15 @@ from sqlmlutils.sqlqueryexecutor import execute_query, SQLQueryExecutor
 
 class SQLPackageManager:
 
-    def __init__(self, connection_info: ConnectionInfo):
+    def __init__(self, connection_info: ConnectionInfo, language_name: str = "Python"):
+        """Initialize a SQLPackageManager to manage packages on the SQL Server.
+
+        :param connection_info: The ConnectionInfo object that holds the connection string and other information.
+        :param language_name: The name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE. 
+        """
         self._connection_info = connection_info
-        self._pyexecutor = SQLPythonExecutor(connection_info)
+        self._pyexecutor = SQLPythonExecutor(connection_info, language_name=language_name)
+        self._language_name = language_name
 
     def install(self,
                 package: str,
@@ -104,29 +110,32 @@ class SQLPackageManager:
         return Scope.public_scope() if is_sysadmin == 1 else Scope.private_scope()
         
     def _get_packages_by_user(self, owner='', scope: Scope=Scope.private_scope()):
-        has_user = (owner != '')
+        scope_num = 1 if scope == Scope.private_scope() else 0
+        
+        if scope_num == 0 and owner == '':
+            owner = "dbo"
 
         query = "DECLARE @principalId INT;  \
                 DECLARE @currentUser NVARCHAR(128);  \
                 SELECT @currentUser = "
 
-        if has_user:
+        if owner != '':
             query += "?;\n"
         else:
             query += "CURRENT_USER;\n"
         
-        scope_num = 1 if scope == Scope.private_scope() else 0
-
         query += "SELECT @principalId = USER_ID(@currentUser);  \
                        SELECT name, language, scope   \
                        FROM sys.external_libraries AS elib   \
                        WHERE elib.principal_id=@principalId   \
-                       AND elib.language='Python' AND elib.scope={scope_num}   \
-                       ORDER BY elib.name ASC;".format(scope_num=scope_num)
+                       AND elib.language='{language_name}' AND elib.scope={scope_num}   \
+                       ORDER BY elib.name ASC; \
+                       GO".format(language_name=self._language_name,
+                                  scope_num=scope_num)
         return self._pyexecutor.execute_sql_query(query, owner)
 
     def _drop_sql_package(self, sql_package_name: str, scope: Scope, out_file: str = None):
-        builder = DropLibraryBuilder(sql_package_name=sql_package_name, scope=scope)
+        builder = DropLibraryBuilder(sql_package_name=sql_package_name, scope=scope, language_name=self._language_name)
         execute_query(builder, self._connection_info, out_file)
 
     # TODO: Support not dependencies
@@ -146,7 +155,7 @@ class SQLPackageManager:
             target_package = target_package + "==" + version
 
         with tempfile.TemporaryDirectory() as temporary_directory:
-            pipdownloader = PipDownloader(self._connection_info, temporary_directory, target_package)
+            pipdownloader = PipDownloader(self._connection_info, temporary_directory, target_package, language_name = self._language_name)
             target_package_file = pipdownloader.download_single()
             self._install_from_file(target_package_file, scope, upgrade, out_file=out_file)
 
@@ -162,7 +171,7 @@ class SQLPackageManager:
 
         # Download requirements from PyPI
         with tempfile.TemporaryDirectory() as temporary_directory:
-            pipdownloader = PipDownloader(self._connection_info, temporary_directory, target_package_file)
+            pipdownloader = PipDownloader(self._connection_info, temporary_directory, target_package_file, language_name = self._language_name)
 
             # For now, we download all target package dependencies from PyPI.
             target_package_requirements, requirements_downloaded = pipdownloader.download()
@@ -189,8 +198,7 @@ class SQLPackageManager:
                 sqlexecutor._cnxn.rollback()
                 raise RuntimeError("Package installation failed, installed dependencies were rolled back.") from e
 
-    @staticmethod
-    def _install_single(sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):
+    def _install_single(self, sqlexecutor: SQLQueryExecutor, package_file: str, scope: Scope, is_target=False, out_file: str=None):
         name = str(get_package_name_from_file(package_file))
         version = str(get_package_version_from_file(package_file))
         print("Installing {name} version: {version}".format(name=name, version=version))
@@ -200,9 +208,10 @@ class SQLPackageManager:
             with zipfile.ZipFile(prezip, 'w') as zipf:
                 zipf.write(package_file, os.path.basename(package_file))
 
-            builder = CreateLibraryBuilder(pkg_name=name, pkg_filename=prezip, scope=scope)
+            builder = CreateLibraryBuilder(pkg_name=name, pkg_filename=prezip, scope=scope, language_name=self._language_name)
             sqlexecutor.execute(builder, out_file=out_file)
-            builder = CheckLibraryBuilder(pkg_name=name, scope=scope)
+            
+            builder = CheckLibraryBuilder(pkg_name=name, scope=scope, language_name=self._language_name)
             sqlexecutor.execute(builder, out_file=out_file)
 
     @staticmethod

@@ -50,30 +50,34 @@ class SpeesBuilder(SQLBuilder):
                  script: str,
                  with_results_text: str = _WITH_RESULTS_TEXT,
                  input_data_query: str = "",
-                 script_parameters_text: str = ""):
+                 script_parameters_text: str = "",
+                 language_name: str = "Python"):
         """Instantiate a _SpeesBuilder object.
 
         :param script: maps to @script parameter in the SQL query parameter
         :param with_results_text: with results text used to defined the expected data schema of the SQL query
         :param input_data_query: maps to @input_data_1 SQL query parameter
         :param script_parameters_text: maps to @params SQL query parameter
+        :param language_name: name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE
         """
         self._script = self.modify_script(script)
         self._input_data_query = input_data_query
         self._script_parameters_text = script_parameters_text
         self._with_results_text = with_results_text
+        self._language_name = language_name
 
     @property
     def base_script(self):
         return """
-exec sp_execute_external_script
-@language = N'Python',
+EXEC sp_execute_external_script
+@language = N'{language_name}',
 @script = ?,
 @input_data_1 = ?
 {script_parameters_text}
 {with_results_text}
 """.format(script_parameters_text=self._script_parameters_text,
-            with_results_text=self._with_results_text)
+            with_results_text=self._with_results_text,
+            language_name=self._language_name)
 
     @property
     def params(self):
@@ -112,12 +116,13 @@ class SpeesBuilderFromFunction(SpeesBuilder):
         stderr=STDERR_COLUMN_NAME
     )
 
-    def __init__(self, func: Callable, input_data_query: str = "", *args, **kwargs):
+    def __init__(self, func: Callable, language_name: str, input_data_query: str = "", *args, **kwargs):
         """Instantiate a _SpeesBuilderFromFunction object.
 
         :param func: function to execute_function_in_sql on the SQL Server.
         The spees query is built based on this function.
         :param input_data_query: query text for @input_data_1 parameter
+        :param language_name: name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE
         :param args: positional arguments to function call in SPEES
         :param kwargs: keyword arguments to function call in SPEES
         """
@@ -125,7 +130,8 @@ class SpeesBuilderFromFunction(SpeesBuilder):
         self._function_text = self._build_wrapper_python_script(func, with_inputdf, *args, **kwargs)
         super().__init__(script=self._function_text,
                          with_results_text=self._WITH_RESULTS_TEXT,
-                         input_data_query=input_data_query)
+                         input_data_query=input_data_query,
+                         language_name=language_name)
 
     # Generates a Python script that encapsulates a user defined function and the arguments to that function.
     # This script is "shipped" over the SQL Server machine.
@@ -185,7 +191,12 @@ OutputDataSet["{returncol}"] = [dill.dumps({returncol}).hex()]
 
 class StoredProcedureBuilder(SQLBuilder):
 
-    def __init__(self, name: str, script: str, input_params: dict = None, output_params: dict = None):
+    def __init__(self, 
+                name: str,
+                script: str,
+                input_params: dict = None,
+                output_params: dict = None,
+                language_name: str = "Python"):
 
         """StoredProcedureBuilder SQL stored procedures based on Python functions.
 
@@ -193,6 +204,7 @@ class StoredProcedureBuilder(SQLBuilder):
         :param script: function to base the stored procedure on
         :param input_params: input parameters type annotation dictionary for the stored procedure
         :param output_params: output parameters type annotation dictionary from the stored procedure
+        :param language_name: name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE
         """
         if input_params is None:
             input_params = {}
@@ -206,6 +218,7 @@ class StoredProcedureBuilder(SQLBuilder):
         self._name = name
         self._input_params = input_params
         self._output_params = output_params
+        self._language_name = language_name
         self._param_declarations = ""
 
         names_of_input_args = list(self._input_params)
@@ -228,7 +241,7 @@ CREATE PROCEDURE {name}
 AS
 SET NOCOUNT ON;
 EXEC sp_execute_external_script
-@language = N'Python',
+@language = N'{language_name}',
 @script = N'
 from io import StringIO
 import sys
@@ -243,13 +256,19 @@ sys.stderr = _stderr
 """.format(
     name=self._name,
     param_declarations=self._param_declarations,
+    language_name=self._language_name,
     script=self._script,
     stdout=STDOUT_COLUMN_NAME,
     stderr=STDERR_COLUMN_NAME,
     script_parameter_text=self._script_parameter_text
 )
 
-    def script_parameter_text(self, in_names: List[str], in_types: dict, out_names: List[str], out_types: dict) -> str:
+    def script_parameter_text(self,
+                            in_names: List[str],
+                            in_types: dict, 
+                            out_names: List[str], 
+                            out_types: dict) -> str:
+                            
         if not in_names and not out_names:
             return ""
 
@@ -362,7 +381,7 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
 
     create procedure MyStoredProcedure @arg1 varchar(MAX), @arg2 varchar(MAX), @arg3 varchar(MAX) as
 
-    exec sp_execute_external_script
+    EXEC sp_execute_external_script
     @language = N'Python',
     @script=N'
     def foobar(arg1, arg2, arg3):
@@ -375,15 +394,19 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
     @arg3 = @arg3
     """
 
-    def __init__(self, name: str, func: Callable,
-                 input_params: dict = None, output_params: dict = None):
+    def __init__(self, 
+                name: str, func: Callable,
+                input_params: dict = None, 
+                output_params: dict = None,
+                language_name: str = "Python"):
         """StoredProcedureBuilderFromFunction SQL stored procedures based on Python functions.
 
         :param name: name of the stored procedure
         :param func: function to base the stored procedure on
         :param input_params: input parameters type annotation dictionary for the stored procedure
-        Can you function type annotations instead; if both, they must match
+        Can use function type annotations instead; if both, they must match
         :param output_params: output parameters type annotation dictionary from the stored procedure
+        :param language_name: name of the language to be executed in sp_execute_external_script, if using EXTERNAL LANGUAGE
         """
         if input_params is None:
             input_params = {}
@@ -396,6 +419,7 @@ class StoredProcedureBuilderFromFunction(StoredProcedureBuilder):
         self._func = func
         self._name = name
         self._output_params = output_params
+        self._language_name = language_name
 
         # Get function text and escape single quotes
         function_text = textwrap.dedent(inspect.getsource(self._func)).replace("'","''")

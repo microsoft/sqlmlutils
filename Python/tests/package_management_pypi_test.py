@@ -39,6 +39,11 @@ def _package_no_exist(module_name: str):
         __import__(module_name)
     return True
 
+def _check_version(module_name):
+    """Get the version of an installed package"""
+    module = __import__(module_name)
+    return module.__version__
+
 def test_install_different_names():
     """Test installing a single package with different capitalization"""
     def useit():
@@ -78,53 +83,9 @@ def test_install_version():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-def test_dependency_spec():
-    """Test that the DepedencyResolver handles ~= requirement spec.
-    Also tests when package name and module name are different."""
-    package = "azure_cli_telemetry"
-    version = "1.0.4"
-    dependent = "portalocker"
-    module = "azure"
-
-    try:
-        # Install the package and its dependencies
-        #
-        pkgmanager.install(package, version=version)
-        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=module)
-        assert val
-
-        pkgs = _get_package_names_list(connection)
-
-        assert package in pkgs
-        assert dependent in pkgs
-            
-        # Uninstall the top package only, not the dependencies
-        #
-        pkgmanager.uninstall(package)
-        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=module)
-        assert val
-        
-        pkgs = _get_package_names_list(connection)
-
-        assert package not in pkgs
-        assert dependent in pkgs
-        
-        # Install the package again, make sure DepedencyResolver can handle ~= Requirement spec
-        #
-        pkgmanager.install(package, version=version)
-        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=module)
-        assert val
-
-        pkgs = _get_package_names_list(connection)
-
-        assert package in pkgs
-        assert dependent in pkgs
-
-    finally:
-        _drop_all_ddl_packages(connection, scope)
-
-def test_upgrade_parameter():
-    """Test that "upgrade" installation parameter"""
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
+def test_no_upgrade_parameter():
+    """Test new version but no "upgrade" installation parameter"""
     try:
         pkg = "cryptography"
 
@@ -146,18 +107,37 @@ def test_upgrade_parameter():
             pkgmanager.install(pkg, upgrade=False, version=second_version)
         assert "exists on server. Set upgrade to True" in output.getvalue()
 
+        # Make sure that the version we have on the server is still the first one
+        #
+        installed_version = pyexecutor.execute_function_in_sql(_check_version, pkg)
+        assert first_version == installed_version
+
         # Make sure nothing excess was accidentally installed
         #
         sqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(originalsqlpkgs)
 
-        #################
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
-        def check_version():
-            import cryptography as cp
-            return cp.__version__
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
+def test_upgrade_parameter():
+    """Test the "upgrade" installation parameter"""
+    try:
+        pkg = "cryptography"
 
-        oldversion = pyexecutor.execute_function_in_sql(check_version)
+        first_version = "2.7"
+        second_version = "2.8"
+
+        # Install package first so we can test upgrade param
+        #
+        pkgmanager.install(pkg, version=first_version)
+
+        # Get sql packages
+        #
+        originalsqlpkgs = _get_sql_package_table(connection)
+
+        oldversion = pyexecutor.execute_function_in_sql(_check_version, pkg)
 
         # Test installing WITH the upgrade parameter
         #
@@ -177,6 +157,7 @@ def test_upgrade_parameter():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_already_installed_popular_ml_packages():
     """Test packages that are preinstalled, make sure they do not install anything extra"""
     installedpackages = ["numpy", "scipy", "pandas"]
@@ -186,6 +167,41 @@ def test_already_installed_popular_ml_packages():
         pkgmanager.install(package)
         newsqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(newsqlpkgs)
+
+@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
+def test_dependency_spec():
+    """Test that the DepedencyResolver handles ~= requirement spec.
+    Also tests when package name and module name are different."""
+    package = "azure_cli_telemetry"
+    version = "1.0.4"
+    dependent = "portalocker"
+    module = "azure"
+
+    try:
+        # Install the package and its dependencies
+        #
+        pkgmanager.install(package, version=version)
+        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=module)
+        assert val
+
+        pkgs = _get_package_names_list(connection)
+
+        assert package in pkgs
+        assert dependent in pkgs
+
+        # Uninstall the top package only, not the dependencies
+        #
+        pkgmanager.uninstall(package)
+        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=module)
+        assert val
+
+        pkgs = _get_package_names_list(connection)
+
+        assert package not in pkgs
+        assert dependent in pkgs
+
+    finally:
+        _drop_all_ddl_packages(connection, scope)
 
 @pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_installing_popular_ml_packages():

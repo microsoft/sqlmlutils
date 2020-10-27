@@ -12,7 +12,8 @@ sql_install.packages(
   verbose = getOption("verbose"),
   scope = "private",
   owner = "",
-  scriptFile = NULL
+  scriptFile = NULL,
+  languageName = "R"
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ sql_install.packages(
 \item{owner}{character string. Should be either empty '' or a valid SQL database user account name. Only 'dbo' or users in 'db_owner' role for a database can specify this value to install packages on behalf of other users. A user who is member of the 'db_owner' group can set owner='dbo' to install on the "public" folder.}
 
 \item{scriptFile}{character string - a file where to record the tsql that is run by the function.}
+
+\item{languageName}{string. Use a language name other than the default R, if using an EXTERNAL LANGUAGE.}
 }
 \value{
 invisible(NULL)

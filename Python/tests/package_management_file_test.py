@@ -78,7 +78,7 @@ def _remove_all_new_packages(manager):
 packages = ["astor==0.8.1", "html5lib==1.0.1", "termcolor==1.1.0"]
 
 for package in packages:
-    pipdownloader = PipDownloader(connection, path_to_packages, package)
+    pipdownloader = PipDownloader(connection, path_to_packages, package, language_name="Python")
     pipdownloader.download_single()
 
 def test_install_basic_zip_package():

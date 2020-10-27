@@ -14,14 +14,14 @@ getSqlType <- function(rType)
 
 # creates the top part of the sql script (up to R code)
 #
-getHeader <- function(spName, inputParams, outputParams)
+getHeader <- function(spName, inputParams, outputParams, languageName)
 {
-    header <- c(paste0 ("CREATE PROCEDURE ", spName),
+    header <- c(paste0("CREATE PROCEDURE ", spName),
                 handleHeadParams(inputParams, outputParams),
                 "AS",
                 "BEGIN TRY",
                 "exec sp_execute_external_script",
-                "@language = N'R',","@script = N'")
+                paste0("@language = N'", languageName,"',"),"@script = N'")
 
     return(paste0(header, collapse = "\n"))
 }
@@ -54,11 +54,11 @@ handleHeadParams <- function(inputParams, outputParams)
     return(paste0(paramString, collapse = ",\n"))
 }
 
-generateTSQL <- function(func, spName, inputParams = NULL, outputParams = NULL )
+generateTSQL <- function(func, spName, inputParams, outputParams, languageName)
 {
     # header to drop and create a stored procedure
     #
-    header <- getHeader(spName, inputParams, outputParams)
+    header <- getHeader(spName, inputParams = inputParams, outputParams = outputParams, languageName = languageName)
 
     # vector containing R code
     #
@@ -71,11 +71,11 @@ generateTSQL <- function(func, spName, inputParams = NULL, outputParams = NULL )
     return(paste0(header, rCode, tail, sep = "\n"))
 }
 
-generateTSQLFromScript <- function(script, spName, inputParams, outputParams)
+generateTSQLFromScript <- function(script, spName, inputParams, outputParams, languageName)
 {
     # header to drop and create a stored procedure
     #
-    header <- getHeader(spName, inputParams = inputParams, outputParams = outputParams)
+    header <- getHeader(spName, inputParams = inputParams, outputParams = outputParams, languageName = languageName)
 
     # vector containing R code
     #
