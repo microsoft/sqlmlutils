@@ -29,10 +29,10 @@ check_sproc                     # Check whether a stored procedure exists in the
 drop_sproc                      # Drop a stored procedure from the SQL database
 execute_sproc                   # Execute a stored procedure in the SQL database 
 
-install_package                 # Install a Python package on the SQL database
-remove_package                  # Remove a Python package from the SQL database
+install                         # Install a Python package on the SQL database
+remove                          # Remove a Python package from the SQL database
 list                            # Enumerate packages that are installed on the SQL database
-get_packages_by_user            # Enumerate external libraries installed by specific user in specific scope
+_get_packages_by_user           # Enumerate external libraries installed by specific user in specific scope
 ```
 
 # Examples
