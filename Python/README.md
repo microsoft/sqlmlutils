@@ -19,20 +19,22 @@ If you are developing on your own branch and want to rebuild and install the pac
 
 Shown below are the important functions sqlmlutils provides:
 ```python
-execute_function_in_sql         # Execute a python function inside the SQL database
-execute_script_in_sql           # Execute a python script inside the SQL database
-execute_sql_query               # Execute a sql query in the database and return the resultant table
+SQLPythonExecutor functions:
+  execute_function_in_sql         # Execute a python function inside the SQL database
+  execute_script_in_sql           # Execute a python script inside the SQL database
+  execute_sql_query               # Execute a sql query in the database and return the resultant table
 
-create_sproc_from_function      # Create a stored procedure based on a Python function inside the SQL database
-create_sproc_from_script        # Create a stored procedure based on a Python script inside the SQL database
-check_sproc                     # Check whether a stored procedure exists in the SQL database
-drop_sproc                      # Drop a stored procedure from the SQL database
-execute_sproc                   # Execute a stored procedure in the SQL database 
+  create_sproc_from_function      # Create a stored procedure based on a Python function inside the SQL database
+  create_sproc_from_script        # Create a stored procedure based on a Python script inside the SQL database
+  check_sproc                     # Check whether a stored procedure exists in the SQL database
+  drop_sproc                      # Drop a stored procedure from the SQL database
+  execute_sproc                   # Execute a stored procedure in the SQL database 
 
-install                         # Install a Python package on the SQL database
-remove                          # Remove a Python package from the SQL database
-list                            # Enumerate packages that are installed on the SQL database
-_get_packages_by_user           # Enumerate external libraries installed by specific user in specific scope
+SQLPackageManager functions:
+  install                         # Install a Python package on the SQL database
+  uninstall                       # Remove a Python package from the SQL database
+  list                            # Enumerate packages that are installed on the SQL database
+  _get_packages_by_user           # Enumerate external libraries installed by specific user in specific scope
 ```
 
 # Examples
