@@ -8,7 +8,7 @@ context("Tests for sqlmlutils package management top level")
 
 test_that("package top level install and remove",
 {
-    trycatch({
+    tryCatch({
         connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
         scope <- "private"
     

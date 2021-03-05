@@ -8,7 +8,7 @@ context("Tests for sqlmlutils package management create external library")
 
 test_that("Package APIs interop with Create External Library",
 {
-    trycatch({
+    tryCatch({
         cat("\nINFO: test if package management interops properly with packages installed directly with CREATE EXTERNAL LIBRARY\n
           Note:\n
             packages installed with CREATE EXTERNAL LIBRARY won't have top-level attribute set in extended properties\n

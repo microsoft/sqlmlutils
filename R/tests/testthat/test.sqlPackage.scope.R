@@ -8,7 +8,7 @@ context("Tests for sqlmlutils package management scope")
 
 test_that("dbo cannot install package into private scope",
 {
-    trycatch({
+    tryCatch({
         skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
     
         connectionStringDBO <- helper_getSetting("connectionStringDBO")
@@ -25,7 +25,7 @@ test_that("dbo cannot install package into private scope",
 
 test_that( "package install and remove by scope",
 {
-    trycatch({
+    tryCatch({
         skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
     
         connectionStringDBO <- helper_getSetting("connectionStringDBO")

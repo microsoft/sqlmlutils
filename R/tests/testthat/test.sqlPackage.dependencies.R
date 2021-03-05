@@ -8,7 +8,7 @@ context("Tests for sqlmlutils package management dependencies")
 
 test_that("single package install and removal with no dependencies",
 {
-    trycatch({
+    tryCatch({
         #
         # Set scope to public for trusted connection on Windows
         #
@@ -62,7 +62,7 @@ test_that("single package install and removal with no dependencies",
 
 test_that( "package install and uninstall with dependency",
 {
-    trycatch({
+    tryCatch({
         connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
         scope <- "private"
     
@@ -123,7 +123,7 @@ test_that( "package install and uninstall with dependency",
 
 test_that( "Installing a package that is already in use",
 {
-    trycatch({
+    tryCatch({
         connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
         scope <- "private"
     
