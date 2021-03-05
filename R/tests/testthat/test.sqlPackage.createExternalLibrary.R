@@ -8,16 +8,16 @@ context("Tests for sqlmlutils package management create external library")
 
 test_that("Package APIs interop with Create External Library",
 {
+    cat("\nINFO: test if package management interops properly with packages installed directly with CREATE EXTERNAL LIBRARY\n
+      Note:\n
+        packages installed with CREATE EXTERNAL LIBRARY won't have top-level attribute set in extended properties\n
+        By default we will consider them top-level packages\n")
+
+    connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
+    scope <- "private"
+    packageName <- c("glue")
+    
     tryCatch({
-        cat("\nINFO: test if package management interops properly with packages installed directly with CREATE EXTERNAL LIBRARY\n
-          Note:\n
-            packages installed with CREATE EXTERNAL LIBRARY won't have top-level attribute set in extended properties\n
-            By default we will consider them top-level packages\n")
-    
-        connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
-        scope <- "private"
-        packageName <- c("glue")
-    
         cat("\nINFO: checking remote lib paths...\n")
         helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
     
@@ -83,6 +83,6 @@ test_that("Package APIs interop with Create External Library",
         expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
     }, finally={
-        helper_cleanAllExternalLibraries()
+        helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
     })
 })

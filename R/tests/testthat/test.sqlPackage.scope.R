@@ -8,28 +8,28 @@ context("Tests for sqlmlutils package management scope")
 
 test_that("dbo cannot install package into private scope",
 {
-    tryCatch({
-        skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
+    skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
+
+    connectionStringDBO <- helper_getSetting("connectionStringDBO")
+    packageName <- c("xtable")
     
-        connectionStringDBO <- helper_getSetting("connectionStringDBO")
-        packageName <- c("xtable")
-    
+    tryCatch({    
         output <- try(capture.output(sql_install.packages(connectionString = connectionStringDBO, packageName, verbose = TRUE, scope="private")))
         expect_true(inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Permission denied for installing packages on SQL server for current user", output)))
         helper_checkPackageStatusRequire( connectionString = connectionStringDBO,  packageName, FALSE)
     }, finally={
-        helper_cleanAllExternalLibraries()
+        helper_cleanAllExternalLibraries(connectionStringDBO)
     })
 })
 
-test_that( "package install and remove by scope",
+test_that( "package install and remove, PUBLIC scope",
 {
+    skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
+
+    connectionStringDBO <- helper_getSetting("connectionStringDBO")
+
     tryCatch({
-        skip_if(helper_isServerLinux(), "Linux tests do not have support for Trusted user." )
-    
-        connectionStringDBO <- helper_getSetting("connectionStringDBO")
-    
         packageName <- c("A3")
         dependentPackageName <- "xtable"
     
@@ -65,12 +65,19 @@ test_that( "package install and remove by scope",
         cat("\nTEST: dbo: removing packages from public scope...\n")
         sql_remove.packages( connectionStringDBO, packageName, scope = 'public', owner = owner, verbose = TRUE)
         helper_checkPackageStatusFind(connectionStringDBO, packageName, FALSE)
-    
-        #
-        # --- AirlineUser user install and remove tests ---
-        #
-        connectionStringAirlineUser <- helper_getSetting("connectionStringAirlineUser")
-    
+    }, finally={
+        helper_cleanAllExternalLibraries(connectionStringDBO)
+    })
+})
+
+test_that( "package install and remove, PRIVATE scope",
+{
+    #
+    # --- AirlineUser user install and remove tests ---
+    #
+    connectionStringAirlineUser <- helper_getSetting("connectionStringAirlineUser")
+
+    tryCatch({
         #
         # remove packages from private scope
         #
@@ -92,6 +99,6 @@ test_that( "package install and remove by scope",
         sql_remove.packages( connectionStringAirlineUser, packageName, scope = 'private', verbose = TRUE)
         helper_checkPackageStatusFind(connectionStringAirlineUser, packageName, FALSE)
     }, finally={
-        helper_cleanAllExternalLibraries()
+        helper_cleanAllExternalLibraries(connectionStringAirlineUser)
     })
 })

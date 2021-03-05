@@ -8,10 +8,10 @@ context("Tests for sqlmlutils package management top level")
 
 test_that("package top level install and remove",
 {
+    connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
+    scope <- "private"
+
     tryCatch({
-        connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
-        scope <- "private"
-    
         #
         # check package management is installed
         #
@@ -89,6 +89,6 @@ test_that("package top level install and remove",
     
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
     }, finally={
-        helper_cleanAllExternalLibraries()
+        helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
     })
 })

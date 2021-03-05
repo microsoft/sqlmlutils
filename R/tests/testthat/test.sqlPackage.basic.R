@@ -8,15 +8,15 @@ context("Tests for sqlmlutils package management")
 
 test_that( "successfull install and remove of package with special char in name that requires [] in t-sql",
 {
+    #
+    # Set scope to public for trusted connection on Windows
+    #
+    scope <- if(!helper_isServerLinux()) "public" else "private"
+
+    packageName <- c("assertive.base")
+    connectionStringDBO <- helper_getSetting("connectionStringDBO")
+
     tryCatch({
-        #
-        # Set scope to public for trusted connection on Windows
-        #
-        scope <- if(!helper_isServerLinux()) "public" else "private"
-    
-        packageName <- c("assertive.base")
-        connectionStringDBO <- helper_getSetting("connectionStringDBO")
-    
         #
         # Remove old packages if any and verify they aren't there
         #
@@ -49,6 +49,6 @@ test_that( "successfull install and remove of package with special char in name 
     
         helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
     }, finally={
-        helper_cleanAllExternalLibraries()
+        helper_cleanAllExternalLibraries(connectionStringDBO)
     })
 })

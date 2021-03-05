@@ -8,15 +8,15 @@ context("Tests for sqlmlutils package management dependencies")
 
 test_that("single package install and removal with no dependencies",
 {
+    #
+    # Set scope to public for trusted connection on Windows
+    #
+    scope <- if(!helper_isServerLinux()) "public" else "private"
+
+    connectionStringDBO <- helper_getSetting("connectionStringDBO")
+    packageName <- c("glue")
+    
     tryCatch({
-        #
-        # Set scope to public for trusted connection on Windows
-        #
-        scope <- if(!helper_isServerLinux()) "public" else "private"
-
-        connectionStringDBO <- helper_getSetting("connectionStringDBO")
-        packageName <- c("glue")
-
         #
         # check package management is installed
         #
@@ -56,16 +56,16 @@ test_that("single package install and removal with no dependencies",
 
         helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
     }, finally={
-        helper_cleanAllExternalLibraries()
+        helper_cleanAllExternalLibraries(connectionStringDBO)
     })
 })
 
 test_that( "package install and uninstall with dependency",
 {
-    tryCatch({
-        connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
-        scope <- "private"
+    connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
+    scope <- "private"
     
+    tryCatch({
         #
         # check package management is installed
         #
@@ -117,16 +117,16 @@ test_that( "package install and uninstall with dependency",
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
     }, finally={
-        helper_cleanAllExternalLibraries()
+        helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
     })
 })
 
 test_that( "Installing a package that is already in use",
 {
+    connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
+    scope <- "private"
+
     tryCatch({
-        connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
-        scope <- "private"
-    
         #
         # check package management is installed
         #
@@ -148,6 +148,6 @@ test_that( "Installing a package that is already in use",
         output <- capture.output(sql_install.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope))
         expect_true(TRUE %in% (grepl("already installed", output)))
     }, finally={
-        helper_cleanAllExternalLibraries()
+        helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
     })
 })
