@@ -155,3 +155,12 @@ helper_tryCatchValue <- function(expr)
         warning = warningSave
     )
 }
+
+helper_cleanAllExternalLibraries <- function()
+{
+  names <- sqlmlutils:::execute(connection, "select * from sys.external_libraries")$name
+  for(name in names)
+  {
+    sqlmlutils:::execute(connection, paste0("DROP EXTERNAL LIBRARY ", name))
+  }
+}
