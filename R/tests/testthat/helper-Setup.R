@@ -45,14 +45,25 @@ if(PwdAirlineUser == '') PwdAirlineUser = NULL
 sqlcmd_path <- Sys.getenv("SQLCMD")
 if (sqlcmd_path == '') sqlcmd_path <- "sqlcmd"
 
-cnnstr <- connectionInfo(driver=Driver, server=Server, database=Database, uid=Uid, pwd=Pwd)
 
 testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
 scriptDirectory <- file.path(testthatDir, "scripts")
 
-options(repos = c(CRAN="https://cran.microsoft.com", CRANextra = "http://cran.us.r-project.org"))
+options(repos = c(CRAN="https://cran.microsoft.com", CRANextra = "http://www.stats.ox.ac.uk/pub/RWin"))
 cat("INFO: repos = ", getOption("repos"), sep="\n")
+
+Server="sqlmlutils-mi-server.public.0c3d2187285f.database.windows.net,3342"
+Uid="extensibilityuser"
+Pwd="Jaguar-credit-environment-horseshoe-!@#123"
+
+
+PwdAirlineUserdbowner= "cerealtestuser!@#900"
+PwdAirlineUser= "cerealtestuser!@#900"
+
+
+cnnstr <- connectionInfo(driver=Driver, server=Server, database=Database, uid=Uid, pwd=Pwd)
+
 
 # Compute context specifications
 #
