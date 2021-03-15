@@ -47,26 +47,26 @@ def _check_version(module_name):
 def test_install_different_names():
     """Test installing a single package with different capitalization"""
     def useit():
-        import theano.tensor as T
-        return str(T)
+        import funcsigs
+        print(funcsigs.__version__)
 
     try:
-        pkgmanager.install("Theano==1.0.4")
+        pkgmanager.install("funcsigs==1.0.2")
         pyexecutor.execute_function_in_sql(useit)
 
-        pkgmanager.uninstall("Theano")
+        pkgmanager.uninstall("funcsigs")
 
-        pkgmanager.install("theano==1.0.4")
+        pkgmanager.install("funcSIGS==1.0.2")
         pyexecutor.execute_function_in_sql(useit)
-        pkgmanager.uninstall("theano")
+        pkgmanager.uninstall("funcsigs")
 
     finally:
         _drop_all_ddl_packages(connection, scope)
 
 def test_install_version():
     """Test the 'version' installation parameter"""
-    package = "simplejson"
-    v = "3.0.3"
+    package = "funcsigs"
+    v = "1.0.1"
 
     def _package_version_exists(module_name: str, version: str):
         mod = __import__(module_name)
@@ -83,14 +83,36 @@ def test_install_version():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
+def test_dependency_resolution():
+    """Test that dependencies are installed with the main package"""
+    package = "data"
+    version = "0.4"
+
+    try:
+        pkgmanager.install(package, version=version, upgrade=True)
+        val = pyexecutor.execute_function_in_sql(_package_exists, module_name=package)
+        assert val
+
+        pkgs = _get_package_names_list(connection)
+
+        assert package in pkgs
+        assert "funcsigs" in pkgs
+
+        pkgmanager.uninstall(package)
+        val = pyexecutor.execute_function_in_sql(_package_no_exist, module_name=package)
+        assert val
+
+    finally:
+        _drop_all_ddl_packages(connection, scope)
+
 @pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_no_upgrade_parameter():
     """Test new version but no "upgrade" installation parameter"""
     try:
-        pkg = "cryptography"
+        pkg = "funcsigs"
 
-        first_version = "2.7"
-        second_version = "2.8"
+        first_version = "1.0.1"
+        second_version = "1.0.2"
         
         # Install package first so we can test upgrade param
         #
@@ -124,10 +146,10 @@ def test_no_upgrade_parameter():
 def test_upgrade_parameter():
     """Test the "upgrade" installation parameter"""
     try:
-        pkg = "cryptography"
+        pkg = "funcsigs"
 
-        first_version = "2.7"
-        second_version = "2.8"
+        first_version = "1.0.1"
+        second_version = "1.0.2"
 
         # Install package first so we can test upgrade param
         #
@@ -146,10 +168,10 @@ def test_upgrade_parameter():
         afterinstall = _get_sql_package_table(connection)
         assert len(afterinstall) >= len(originalsqlpkgs)
 
-        version = pyexecutor.execute_function_in_sql(check_version)
+        version = pyexecutor.execute_function_in_sql(_check_version, pkg)
         assert version > oldversion
 
-        pkgmanager.uninstall("cryptography")
+        pkgmanager.uninstall(pkg)
 
         sqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(afterinstall) - 1

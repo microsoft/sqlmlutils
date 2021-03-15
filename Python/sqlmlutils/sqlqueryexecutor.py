@@ -48,12 +48,14 @@ class SQLQueryExecutor:
             if out_file is not None:
                 with open(out_file,"a") as f:
                     if params is not None:
-                        script = query.replace("?", "N'%s'")
 
                         # Convert bytearray to hex so user can run as a script
                         #
                         if type(params) is bytearray:
                             params = str('0x' + params.hex())
+                            script = query.replace("?", "%s")
+                        else:
+                            script = query.replace("?", "N'%s'")
                             
                         f.write(script % params)
                     else:
@@ -96,11 +98,6 @@ class SQLQueryExecutor:
         return df, output_params
 
     def __enter__(self):
-        server=self._connection._server if self._connection._port == "" \
-            else "{server},{port}".format(
-                server=self._connection._server, 
-                port=self._connection._port)
-
         self._cnxn = pyodbc.connect(self._connection.connection_string,
                                     autocommit=True)
         self._cursor = self._cnxn.cursor()
