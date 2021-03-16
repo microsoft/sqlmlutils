@@ -8,9 +8,9 @@ To install from PyPI, run:
 ```
 pip install sqlmlutils
 ```
-To install from file, run:
+To install from file, download the latest release from https://github.com/microsoft/sqlmlutils/releases:
 ```
-pip install --find-links=Python/dist sqlmlutils
+pip install sqlmlutils-1.1.0.zip
 ```
 
 If you are developing on your own branch and want to rebuild and install the package, you can use the buildandinstall.cmd script that is included.

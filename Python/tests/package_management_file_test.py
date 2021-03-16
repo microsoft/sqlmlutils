@@ -193,7 +193,7 @@ def test_scope():
     pyexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
 
     revopkgmanager.uninstall(pkg_name, scope=Scope.private_scope())
-
+    
     # Try the same installation in public scope
     #
     revopkgmanager.install(package, scope=Scope.public_scope())
