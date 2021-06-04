@@ -1558,7 +1558,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
                     write(sprintf("R version installed on sql server (%s) is different from the R version on client (%s). Using sql server R version to find matching packages in repositories.",
                                   serverVersion$rversion, rversion), stdout())
 
-                    contribs <- sqlRemoteExecuteFun(connectionString, getContribUrls, serverVersion$serverIsWindows)
+                    contribs <- sqlRemoteExecuteFun(connectionString, getContribUrls, serverVersion$serverIsWindows, languageName = languageName) # needs languageName
                 }
 
                 contribSource <- contribs$ContribSource
