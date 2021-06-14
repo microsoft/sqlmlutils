@@ -30,7 +30,7 @@ Windows:
 
 From command prompt, run 
 ```
-R.exe -e "install.packages('odbc')"
+R.exe -e "install.packages('odbc', type='binary')"
 R.exe CMD INSTALL sqlmlutils_1.0.0.zip
 ```
 OR
