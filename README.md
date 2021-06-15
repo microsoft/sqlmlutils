@@ -28,7 +28,7 @@ Download the latest release from https://github.com/microsoft/sqlmlutils/release
 
 Windows:
 
-To obtain the version of R your server is currently using, please use this query
+To obtain the version of R your server is currently using, please use this query:
 ```
 EXEC sp_execute_external_script
 @language = N'R'
@@ -39,6 +39,7 @@ OutputDataSet = data.frame(rversion=paste0(v$major, ".", v$minor))
 , @input_data_1 = N'select 1'
 WITH RESULT SETS ((rversion varchar(max)));
 ```
+Get the version of R which the server is using and install it locally. Then. run the following commands with the same version of R. 
 
 From command prompt, run 
 ```
