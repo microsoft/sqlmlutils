@@ -39,7 +39,7 @@ OutputDataSet = data.frame(rversion=paste0(v$major, ".", v$minor))
 , @input_data_1 = N'select 1'
 WITH RESULT SETS ((rversion varchar(max)));
 ```
-Get the version of R which the server is using and install it locally. Then. run the following commands with the same version of R. 
+Get the version of R which the server is using and install it locally. Then, run the following commands with the same version of R. 
 
 From command prompt, run 
 ```
