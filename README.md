@@ -28,6 +28,18 @@ Download the latest release from https://github.com/microsoft/sqlmlutils/release
 
 Windows:
 
+To obtain the version of R your server is currently using, please use this query
+```
+EXEC sp_execute_external_script
+@language = N'R'
+, @script = N'
+v = R.version
+OutputDataSet = data.frame(rversion=paste0(v$major, ".", v$minor))
+'
+, @input_data_1 = N'select 1'
+WITH RESULT SETS ((rversion varchar(max)));
+```
+
 From command prompt, run 
 ```
 R.exe -e "install.packages('odbc', type='binary')"
