@@ -5,7 +5,7 @@ Version: 1.0.0
 Author: Microsoft Corporation
 Maintainer: Microsoft Corporation <msrpack@microsoft.com>
 Depends:
-    R (>= 3.2.2)
+    R (>= 3.2.2), odbc
 Imports:
     odbc, tools, methods, utils
 Description: sqlmlutils is a package designed to help users interact with SQL Server and execute R or Python code 
