@@ -59,6 +59,13 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install odbc driver
+      working-directory: ./Python
+      run: |
+        curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+        curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
+        sudo apt-get update
+        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17
     - name: Install dependencies
       working-directory: ./Python
       run: |
