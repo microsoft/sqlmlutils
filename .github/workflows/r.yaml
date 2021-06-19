@@ -24,7 +24,7 @@ env:
 
 jobs:
   R:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         r-version: [3.5]
