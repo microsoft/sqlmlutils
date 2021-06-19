@@ -14,6 +14,14 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  SERVER: ${{ secrets.SERVER }}
+  USER: ${{ secrets.USER }}
+  PASSWORD: ${{ secrets.PASSWORD }}
+  PASSWORD_AIRLINE_USER: ${{ secrets.PASSWORD_AIRLINE_USER }}
+  PASSWORD_AIRLINE_USER_DBOWNER: ${{ secrets.PASSWORD_AIRLINE_USER_DBOWNER }}
+  DATABASE: ${{ secrets.DATABASE }}
+
 jobs:
   R:
     runs-on: windows-latest
@@ -39,7 +47,7 @@ jobs:
         shell: Rscript {0}
 
   Python:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -66,8 +74,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run build script
       working-directory: ./Python
-      run: ./buildandinstall.cm
-      shell: cmd
+      run: ./buildandinstall.sh
     - name: Test with pytest
       working-directory: ./Python
       run: |
