@@ -84,6 +84,6 @@ jobs:
       working-directory: ./Python
       run: ./buildandinstall.sh
     - name: Test with pytest
-      working-directory: ./Python
+      working-directory: ./Python/tests
       run: |
         pytest
