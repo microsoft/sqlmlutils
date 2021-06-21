@@ -29,6 +29,10 @@ jobs:
       matrix:
         r-version: [3.5]
 
+    env:
+      # Define CI to skip some test case.
+      CI: True
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up R ${{ matrix.r-version }}

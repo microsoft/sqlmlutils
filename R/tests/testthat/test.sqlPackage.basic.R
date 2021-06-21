@@ -8,6 +8,8 @@ context("Tests for sqlmlutils package management")
 
 test_that( "successfull install and remove of package with special char in name that requires [] in t-sql",
 {
+    skip_on_ci()
+
     #
     # Set scope to public for trusted connection on Windows
     #
