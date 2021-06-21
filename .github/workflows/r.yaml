@@ -21,6 +21,7 @@ env:
   PASSWORD_AIRLINE_USER: ${{ secrets.PASSWORD_AIRLINE_USER }}
   PASSWORD_AIRLINE_USER_DBOWNER: ${{ secrets.PASSWORD_AIRLINE_USER_DBOWNER }}
   DATABASE: ${{ secrets.DATABASE }}
+  DRIVER: "{ODBC Driver 17 for SQL Server}"
 
 jobs:
   R:
