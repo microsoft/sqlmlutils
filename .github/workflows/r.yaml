@@ -58,9 +58,6 @@ jobs:
       matrix:
         python-version: [3.7]
 
-    env:
-      DRIVER: "{ODBC Driver 17 for SQL Server}"
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
