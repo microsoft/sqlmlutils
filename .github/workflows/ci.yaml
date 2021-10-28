@@ -37,16 +37,22 @@ jobs:
       # Define CI to skip some test case.
       CI: True
 
+    defaults:
+      run:
+        working-directory: ./R
+
     steps:
       - uses: actions/checkout@v2
+
       - name: Set up R ${{ matrix.r-version }}
         uses: r-lib/actions/setup-r@v1
         with:
           r-version: ${{ matrix.r-version }}
+
       - uses: r-lib/actions/setup-r-dependencies@v1
         with:
           extra-packages: rcmdcheck
-          
+
       # - name: Install dependencies
       #   working-directory: ./R
       #   run: |
@@ -70,7 +76,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@main
         with:
-          working-directory: ./Rs
           name: ${{ runner.os }}-r${{ matrix.r-version }}-results
           path: check
 
