@@ -26,7 +26,7 @@ env:
 jobs:
   R:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} (${{ matrix.r-version }})
+    name: R - ${{ matrix.os }} (${{ matrix.r-version }})
     strategy:
       fail-fast: false
       matrix:
@@ -43,16 +43,37 @@ jobs:
         uses: r-lib/actions/setup-r@v1
         with:
           r-version: ${{ matrix.r-version }}
-      - name: Install dependencies
+      - uses: r-lib/actions/setup-r-dependencies@v1
+        with:
+          extra-packages: rcmdcheck
+          
+      # - name: Install dependencies
+      #   working-directory: ./R
+      #   run: |
+      #     install.packages(c("remotes", "rcmdcheck"))
+      #     remotes::install_deps(dependencies = TRUE)
+      #   shell: Rscript {0}
+      # - name: Check
+      #   working-directory: ./R
+      #   run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
+      #   shell: Rscript {0}
+
+      - uses: r-lib/actions/check-r-package@v1
+
+      - name: Show testthat output
         working-directory: ./R
-        run: |
-          install.packages(c("remotes", "rcmdcheck"))
-          remotes::install_deps(dependencies = TRUE)
-        shell: Rscript {0}
-      - name: Check
-        working-directory: ./R
-        run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
-        shell: Rscript {0}
+        if: always()
+        run: find check -name 'testthat.Rout*' -exec cat '{}' \; || true
+        shell: bash
+
+      - name: Upload check results
+        if: failure()
+        uses: actions/upload-artifact@main
+        with:
+          working-directory: ./Rs
+          name: ${{ runner.os }}-r${{ matrix.r-version }}-results
+          path: check
+
 
   Python:
     runs-on: ubuntu-latest
