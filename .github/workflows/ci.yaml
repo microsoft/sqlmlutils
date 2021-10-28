@@ -46,6 +46,7 @@ jobs:
         uses: r-lib/actions/setup-r@v1
         with:
           r-version: ${{ matrix.r-version }}
+          extra-repositories: 'https://mran.microsoft.com/snapshot/2019-02-01'
 
       - name: Install dependencies
         working-directory: ./R
