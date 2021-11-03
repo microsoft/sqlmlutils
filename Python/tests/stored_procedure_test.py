@@ -18,7 +18,7 @@ sqlpy = sqlmlutils.SQLPythonExecutor(connection)
 
 # Prevent truncation of DataFrame when printing 
 #
-set_option("display.max_colwidth", -1)
+set_option("display.max_colwidth", None)
 set_option("display.max_columns", None)
 
 

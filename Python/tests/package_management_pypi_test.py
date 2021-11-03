@@ -194,10 +194,10 @@ def test_already_installed_popular_ml_packages():
 def test_dependency_spec():
     """Test that the DepedencyResolver handles ~= requirement spec.
     Also tests when package name and module name are different."""
-    package = "azure_cli_telemetry"
-    version = "1.0.4"
-    dependent = "portalocker"
-    module = "azure"
+    package = "beautifulsoup4"
+    version = "4.10.0"
+    dependent = "soupsieve"
+    module = "bs4"
 
     try:
         # Install the package and its dependencies
@@ -228,7 +228,7 @@ def test_dependency_spec():
 @pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_installing_popular_ml_packages():
     """Test a couple of popular ML packages"""
-    newpackages = ["plotly==4.9.0", "gensim==3.8.3"]
+    newpackages = [ {'package': "TextBlob==0.17.1", 'module': 'textblob'}, {'package': "vocabulary==1.0.4", 'module': 'vocabulary'}]
 
     def checkit(pkgname):
         val = __import__(pkgname)
@@ -236,8 +236,8 @@ def test_installing_popular_ml_packages():
 
     try:
         for package in newpackages:
-            pkgmanager.install(package)
-            pyexecutor.execute_function_in_sql(checkit, pkgname=package)
+            pkgmanager.install(package['package'])
+            pyexecutor.execute_function_in_sql(checkit, pkgname=package['module'])
     finally:
         _drop_all_ddl_packages(connection, scope)
 

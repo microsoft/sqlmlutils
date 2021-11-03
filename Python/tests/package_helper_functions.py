@@ -5,7 +5,7 @@ from sqlmlutils.sqlqueryexecutor import execute_raw_query
 
 
 def _get_sql_package_table(connection):
-    query = "select * from sys.external_libraries"
+    query = "select * from sys.external_libraries where Language='Python'"
     out_df, outparams = execute_raw_query(connection, query)
     return out_df
 
