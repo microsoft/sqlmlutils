@@ -449,7 +449,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
                                  withCallingHandlers({
                                  binArgList <- unlist(lapply(lapply(strsplit(\"%s\",\";\")[[1]], as.hexmode), as.raw))
                                  argList <- as.list(unserialize(binArgList))
-                                 result <- do.call(%s, argList)
+                                 result <- suppressPackageStartupMessages(do.call(%s, argList))
                              },
                              error = function(err)
                              {
@@ -458,6 +458,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
                              warning = function(warn)
                              {
                                 funwarnings <<- c(funwarnings, warn$message)
+                                invokeRestart(\"muffleWarning\")
                              }
                              ), silent = TRUE
                              ))
@@ -542,6 +543,11 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         funerror <- lst[[2]]
         funwarnings <-lst[[3]]
         output <- lst[[4]]
+
+        if(is.null(result))
+        {
+            result <- FALSE
+        }
 
         if (!is.null(output))
         {
