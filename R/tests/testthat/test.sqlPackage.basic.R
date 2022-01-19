@@ -8,10 +8,6 @@ context("Tests for sqlmlutils package management")
 
 test_that( "successfull install and remove of package with special char in name that requires [] in t-sql",
 {
-    # There is an issue running this test in github actions CI environment.
-    # We will need to investigate why it failed. For now, we will disable the test in CI.
-    skip_on_ci()
-
     #
     # Set scope to public for trusted connection on Windows
     #
@@ -29,9 +25,9 @@ test_that( "successfull install and remove of package with special char in name 
             cat("\nINFO: removing package...\n")
             sql_remove.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)
         }
-    
+
         helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
-    
+
         #
         # Install single package (package has no dependencies)
         #
@@ -39,9 +35,9 @@ test_that( "successfull install and remove of package with special char in name 
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
-    
+
         helper_checkPackageStatusRequire( connectionStringDBO, packageName, TRUE)
-    
+
         #
         # Remove the installed package and check again they are gone
         #
@@ -50,7 +46,7 @@ test_that( "successfull install and remove of package with special char in name 
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
-    
+
         helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
     }, finally={
         helper_cleanAllExternalLibraries(connectionStringDBO)

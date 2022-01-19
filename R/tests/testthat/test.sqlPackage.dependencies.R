@@ -8,10 +8,6 @@ context("Tests for sqlmlutils package management dependencies")
 
 test_that("single package install and removal with no dependencies",
 {
-    # There is an issue running this test in github actions CI environment.
-    # We will need to investigate why it failed. For now, we will disable the test in CI.
-    skip_on_ci()
-
     #
     # Set scope to public for trusted connection on Windows
     #
@@ -19,7 +15,7 @@ test_that("single package install and removal with no dependencies",
 
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
     packageName <- c("glue")
-    
+
     tryCatch({
         #
         # check package management is installed
@@ -66,23 +62,19 @@ test_that("single package install and removal with no dependencies",
 
 test_that( "package install and uninstall with dependency",
 {
-    # There is an issue running this test in github actions CI environment.
-    # We will need to investigate why it failed. For now, we will disable the test in CI.
-    skip_on_ci()
-
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
     scope <- "private"
-    
+
     tryCatch({
         #
         # check package management is installed
         #
         cat("\nINFO: checking remote lib paths...\n")
         helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
-    
+
         packageName <- c("A3")
         dependentPackageName <- "xtable"
-    
+
         #
         # remove old packages if any and verify they aren't there
         #
@@ -91,16 +83,16 @@ test_that( "package install and uninstall with dependency",
             cat("\nINFO: removing package:", packageName,"\n")
             sql_remove.packages( connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
         }
-    
+
         if (helper_remote.require(connectionStringAirlineUserdbowner, dependentPackageName) == TRUE)
         {
             cat("\nINFO: removing package:", dependentPackageName,"\n")
             sql_remove.packages( connectionStringAirlineUserdbowner, c(dependentPackageName), verbose = TRUE, scope = scope)
         }
-    
+
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
-    
+
         #
         # install the package with its dependencies and check if its present
         #
@@ -108,11 +100,11 @@ test_that( "package install and uninstall with dependency",
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
-    
+
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  packageName, TRUE)
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  dependentPackageName, TRUE)
         helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 2)
-    
+
         #
         # remove the installed packages and check again they are gone
         #
@@ -121,7 +113,7 @@ test_that( "package install and uninstall with dependency",
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
-    
+
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
         helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
     }, finally={
@@ -140,16 +132,16 @@ test_that( "Installing a package that is already in use",
         #
         cat("\nINFO: checking remote lib paths...\n")
         helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
-    
-    
+
+
         packageName <- c("lattice") # usually already attached in an R session.
-    
+
         installedPackages <- sql_installed.packages(connectionStringAirlineUserdbowner, fields = NULL, scope = scope)
         if (!packageName %in% installedPackages)
         {
             sql_install.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)
         }
-    
+
         #
         # install the package again and check if it fails with the correct message.
         #

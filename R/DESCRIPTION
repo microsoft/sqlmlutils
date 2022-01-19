@@ -13,7 +13,7 @@ Description: sqlmlutils is a package designed to help users interact with SQL Se
              creating and running stored procedures, and managing packages on the database.
 License: MIT + file LICENSE
 Copyright: Copyright 2016 Microsoft Corporation
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.2
 Encoding: UTF-8
 Suggests: testthat (>= 2.0.0),
     roxygen2

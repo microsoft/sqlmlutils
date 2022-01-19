@@ -146,12 +146,12 @@ test_that("InputDataSet with InputParameter test",
     capture.output(createSprocFromFunction(name, inDataParams, connectionString = connection, inputParams = inputParams))
     expect_true(checkSproc(name, connectionString = connection))
 
-    res <- executeSproc(name, id = "SELECT TOP 10 Id, CarrierDelay, TailNum, CancellationCode FROM airline5000", ip = 4, connectionString = connection)
+    res <- executeSproc(name, id = "SELECT TOP 10 Id, CarrierDelay, FlightNum, ActualElapsedTime FROM airline5000", ip = 4, connectionString = connection)
 
     expect_equal(nrow(res), 11)
     expect_equal(ncol(res), 4)
 
-    expect_error(executeSproc(name, "SELECT TOP 10 Id, CarrierDelay, TailNum, CancellationCode FROM airline5000", ip = 4, connectionString = connection))
+    expect_error(executeSproc(name, "SELECT TOP 10 Id, CarrierDelay, FlightNum, ActualElapsedTime FROM airline5000", ip = 4, connectionString = connection))
 
     dropIfExists(name, connectionString = connection)
     expect_false(checkSproc(name, connectionString = connection))
@@ -177,12 +177,12 @@ test_that("InputDataSet with InputParameter test, out of order",
     capture.output(createSprocFromFunction(name, inDataParams, connectionString = connection, inputParams = inputParams))
     expect_true(checkSproc(name, connectionString = connection))
 
-    res <- executeSproc(name, ip2 = "Hello", ip = 4, id = "SELECT TOP 10 Id, CarrierDelay, TailNum, CancellationCode FROM airline5000",  connectionString = connection)
+    res <- executeSproc(name, ip2 = "Hello", ip = 4, id = "SELECT TOP 10 Id, CarrierDelay, FlightNum, ActualElapsedTime FROM airline5000",  connectionString = connection)
 
     expect_equal(nrow(res), 11)
     expect_equal(ncol(res), 4)
 
-    expect_error(executeSproc(name,ip = 4,  "SELECT TOP 10 Id, CarrierDelay, TailNum, CancellationCode FROM airline5000", connectionString = connection))
+    expect_error(executeSproc(name,ip = 4,  "SELECT TOP 10 Id, CarrierDelay, FlightNum, ActualElapsedTime FROM airline5000", connectionString = connection))
 
     dropIfExists(name, connectionString = connection)
     expect_false(checkSproc(name, connectionString = connection))
@@ -205,7 +205,7 @@ test_that("Stored Procedure with Scripts",
         connectionString = connection, name=name, file.path(scriptDir, "script3.R"), inputParams = inputParams, outputParams = outputParams))
     expect_true(checkSproc(connectionString = connection, name = name))
 
-    retVal <- executeSproc(connectionString = connection, name, num1 = 3, num2 = 4, in_df = "SELECT TOP 10 Id, CarrierDelay, TailNum, CancellationCode FROM airline5000")
+    retVal <- executeSproc(connectionString = connection, name, num1 = 3, num2 = 4, in_df = "SELECT TOP 10 Id, CarrierDelay, FlightNum, ActualElapsedTime FROM airline5000")
 
     expect_equal(nrow(retVal), 11)
     expect_equal(ncol(retVal), 4)
