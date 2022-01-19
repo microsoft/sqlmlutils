@@ -381,7 +381,6 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         return (funText)
     }
 
-
     # Define a function that will attempt to resolve the ellipsis arguments
     # passed into the rxElem function and return those elements in a (named) list.
     # For those elements that are not resolvable, leave them as promises to be
