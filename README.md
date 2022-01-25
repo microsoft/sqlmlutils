@@ -1,7 +1,6 @@
 # sqlmlutils
 
-[![Build Status](https://travis-ci.com/Microsoft/sqlmlutils.svg?branch=master)](https://travis-ci.com/Microsoft/sqlmlutils)
-![Github action CI](https://github.com/Microsoft/sqlmlutils/actions/workflows/main.yml/badge.svg)
+[![BuildAndTest](https://github.com/microsoft/sqlmlutils/actions/workflows/ci.yaml/badge.svg)](https://github.com/microsoft/sqlmlutils/actions/workflows/ci.yaml)
 
 sqlmlutils is a package designed to help users interact with SQL databases (SQL Server and Azure SQL Database) and execute R or Python code in SQL from an R/Python client. 
 Currently, only the R version of sqlmlutils is supported in Azure SQL Database. Python support will be added later.
