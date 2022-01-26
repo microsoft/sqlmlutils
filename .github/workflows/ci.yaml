@@ -59,6 +59,7 @@ jobs:
             #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
             #Updated odbc pkg is still compatible with R >= 3.2.0
             cran::odbc
+            cran::testthat
             rcmdcheck
           
       - uses: r-lib/actions/check-r-package@v2
