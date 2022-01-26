@@ -53,7 +53,7 @@ jobs:
       - name: Install R Package Dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          cache-version: 1
+          cache-version: 2
           working-directory: ./R
           extra-packages:
             #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
