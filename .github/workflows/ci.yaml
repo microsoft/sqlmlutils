@@ -48,7 +48,7 @@ jobs:
         with:
           r-version: ${{ matrix.r-version }}
           #Utilize package snapshot to align with SQL Server R version 3.5.2
-          extra-repositories: 'https://mran.microsoft.com/snapshot/2019-02-01'
+          #extra-repositories: 'https://mran.microsoft.com/snapshot/2019-02-01'
 
       - name: Install R Package Dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
@@ -59,8 +59,8 @@ jobs:
             #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
             #Updated odbc pkg is still compatible with R >= 3.2.0
             cran::odbc
-            cran::testthat
             rcmdcheck
+            #cran::testthat
           
       - uses: r-lib/actions/check-r-package@v2
         with:
