@@ -8,10 +8,6 @@ context("Tests for sqlmlutils package management top level")
 
 test_that("package top level install and remove",
 {
-    # There is an issue running this test in github actions CI environment.
-    # We will need to investigate why it failed. For now, we will disable the test in CI.
-    skip_on_ci()
-
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
     scope <- "private"
 
