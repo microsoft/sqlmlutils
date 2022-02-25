@@ -1621,6 +1621,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
             pkgsUnison <-  data.frame(rbind(binaryPackages, sourcePackages), stringsAsFactors = FALSE)
 
             # For packages available as binary and source types, prune the source packages.
+            #
             pkgsUnison <- pkgsUnison[!duplicated(pkgsUnison$Package),,drop=FALSE]
             row.names(pkgsUnison) <- pkgsUnison$Package
 
