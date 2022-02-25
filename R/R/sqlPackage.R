@@ -548,7 +548,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         {
             result <- FALSE
         }
-
+        
         if (!is.null(output))
         {
             for(o in output)
