@@ -548,7 +548,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         {
             result <- FALSE
         }
-        
+
         if (!is.null(output))
         {
             for(o in output)
@@ -1155,7 +1155,27 @@ getDependentPackagesToInstall <- function(pkgs, availablePackages, installedPack
         write(sprintf("%s  Resolving package dependencies for (%s)...", pkgTime(), paste(pkgs, collapse = ', ')), stdout())
     }
 
-    dependencies <- tools::package_dependencies(packages = pkgs, db = availablePackages, recursive = TRUE, verbose = FALSE)
+    dependencies <- NULL
+
+    # Build list of dependencies
+    for ( package in pkgs)
+    {
+        currentPackageDependencies <- NULL
+        dependencyTypes <- c("Depends","Imports")
+
+        # Determine if package is available as a binary package
+        packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == "https://cran.rstudio.com/bin/windows/contrib/3.5", ]
+
+        # When only a source package is available, add LinkingTo dependencies
+        if ( length(packageProperties) < 1)
+        {
+            append(dependencyTypes, c("LinkingTo"))
+        }
+
+        currentPackageDependencies <- tools::package_dependencies(packages = pkgs, db = availablePackages, which = dependencyTypes, recursive = TRUE, verbose = FALSE)
+
+        dependencies <- append(dependencies, currentPackageDependencies)
+    }
 
     #
     # get combined dependency closure w/o base packages
@@ -1590,11 +1610,11 @@ sqlInstallPackagesExtLib <- function(connectionString,
             binaryPackages <- if (serverVersion$serverIsWindows) utils::available.packages(contribWinBinary, type = "win.binary") else NULL
             row.names(binaryPackages) <- NULL
 
-            pkgsUnison <-  data.frame(rbind(sourcePackages, binaryPackages), stringsAsFactors = FALSE)
+            pkgsUnison <-  data.frame(rbind(binaryPackages, sourcePackages), stringsAsFactors = FALSE)
             pkgsUnison <- pkgsUnison[!duplicated(pkgsUnison$Package),,drop=FALSE]
             row.names(pkgsUnison) <- pkgsUnison$Package
 
-            # check for missing packages
+            # check for missing packages (Package(s) requested to be installed, but not available on configured CRAN repo.)
             #
             missingPkgs <- pkgs[!(pkgs %in% pkgsUnison$Package) ]
 
@@ -1603,7 +1623,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
                 stop(sprintf("Cannot find specified packages (%s) to install", paste(missingPkgs, collapse = ', ')), call. = FALSE)
             }
 
-            # get all installed packages
+            # get list of all installed package on the server
             #
             installedPackages <- sql_installed.packages(connectionString,
                                                         fields = NULL,
