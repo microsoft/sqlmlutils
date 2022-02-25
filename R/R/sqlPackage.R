@@ -1156,6 +1156,8 @@ getDependentPackagesToInstall <- function(pkgs, availablePackages, installedPack
     }
 
     dependencies <- NULL
+    repos <- getOption("repos")
+    contribWinBinaryUrl <- utils::contrib.url(repos = repos, type = "win.binary")
 
     #
     # Build list of dependencies
@@ -1168,12 +1170,12 @@ getDependentPackagesToInstall <- function(pkgs, availablePackages, installedPack
         #
         # Determine if package is available as a binary package
         #
-        packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == "https://cran.rstudio.com/bin/windows/contrib/3.5", ]
+        packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == contribWinBinaryUrl, ]
 
         #
         # When only a source package is available, add LinkingTo dependencies
         #
-        if ( length(packageProperties) < 1)
+        if ( nrow(packageProperties) < 1)
         {
             append(dependencyTypes, c("LinkingTo"))
         }
@@ -1281,7 +1283,7 @@ prunePackagesToInstallExtLib <- function(dependentPackages, topMostPackages, ins
             }
 
             # if the available package is being requested as a top-level package we check
-            # if the top-leve attribute on the package is set to false we will have to update it to true
+            # if the top-level attribute on the package is set to false we will have to update it to true
             #
             if ('Attributes' %in% colnames(installedPackages))
             {
