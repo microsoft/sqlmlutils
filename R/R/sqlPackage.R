@@ -1157,16 +1157,22 @@ getDependentPackagesToInstall <- function(pkgs, availablePackages, installedPack
 
     dependencies <- NULL
 
+    #
     # Build list of dependencies
+    #
     for ( package in pkgs)
     {
         currentPackageDependencies <- NULL
         dependencyTypes <- c("Depends","Imports")
 
+        #
         # Determine if package is available as a binary package
+        #
         packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == "https://cran.rstudio.com/bin/windows/contrib/3.5", ]
 
+        #
         # When only a source package is available, add LinkingTo dependencies
+        #
         if ( length(packageProperties) < 1)
         {
             append(dependencyTypes, c("LinkingTo"))
@@ -1610,7 +1616,11 @@ sqlInstallPackagesExtLib <- function(connectionString,
             binaryPackages <- if (serverVersion$serverIsWindows) utils::available.packages(contribWinBinary, type = "win.binary") else NULL
             row.names(binaryPackages) <- NULL
 
+            # Concatenate list source packages to the list of binary packages available within configured CRAN repo.
+            #
             pkgsUnison <-  data.frame(rbind(binaryPackages, sourcePackages), stringsAsFactors = FALSE)
+
+            # For packages available as binary and source types, prune the source packages.
             pkgsUnison <- pkgsUnison[!duplicated(pkgsUnison$Package),,drop=FALSE]
             row.names(pkgsUnison) <- pkgsUnison$Package
 
@@ -1623,7 +1633,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
                 stop(sprintf("Cannot find specified packages (%s) to install", paste(missingPkgs, collapse = ', ')), call. = FALSE)
             }
 
-            # get list of all installed package on the server
+            # get list of all installed packages on the server
             #
             installedPackages <- sql_installed.packages(connectionString,
                                                         fields = NULL,
