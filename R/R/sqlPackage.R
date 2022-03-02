@@ -548,7 +548,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         {
             result <- FALSE
         }
-        
+
         if (!is.null(output))
         {
             for(o in output)
@@ -1162,7 +1162,7 @@ getDependentPackagesToInstall <- function(pkgs, availablePackages, installedPack
     #
     # Build list of dependencies
     #
-    for ( package in pkgs)
+    for (package in pkgs)
     {
         currentPackageDependencies <- NULL
         dependencyTypes <- c("Depends","Imports")
