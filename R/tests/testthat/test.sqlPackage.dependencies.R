@@ -32,29 +32,29 @@ test_that("single package install and removal with no dependencies",
             sql_remove.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)
         }
 
-        helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringDBO, packageName, FALSE)
 
         #
         # install single package (package has no dependencies)
         #
-        output <- try(capture.output(sql_install.packages( connectionStringDBO, packageName, verbose = TRUE, scope = scope)))
+        output <- try(capture.output(sql_install.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)))
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
 
-        helper_checkPackageStatusRequire( connectionStringDBO, packageName, TRUE)
+        helper_checkPackageStatusRequire(connectionStringDBO, packageName, TRUE)
         helper_checkSqlLibPaths(connectionStringDBO, 2)
 
         #
         # remove the installed package and check again they are gone
         #
         cat("\nINFO:removing package...\n")
-        output <- try(capture.output(sql_remove.packages( connectionStringDBO, packageName, verbose = TRUE, scope = scope)))
+        output <- try(capture.output(sql_remove.packages(connectionStringDBO, packageName, verbose = TRUE, scope = scope)))
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
 
-        helper_checkPackageStatusRequire( connectionStringDBO, packageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringDBO, packageName, FALSE)
     }, finally={
         helper_cleanAllExternalLibraries(connectionStringDBO)
     })
@@ -81,41 +81,41 @@ test_that( "package install and uninstall with dependency",
         if (helper_remote.require(connectionStringAirlineUserdbowner, packageName) == TRUE)
         {
             cat("\nINFO: removing package:", packageName,"\n")
-            sql_remove.packages( connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
+            sql_remove.packages(connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
         }
 
         if (helper_remote.require(connectionStringAirlineUserdbowner, dependentPackageName) == TRUE)
         {
             cat("\nINFO: removing package:", dependentPackageName,"\n")
-            sql_remove.packages( connectionStringAirlineUserdbowner, c(dependentPackageName), verbose = TRUE, scope = scope)
+            sql_remove.packages(connectionStringAirlineUserdbowner, c(dependentPackageName), verbose = TRUE, scope = scope)
         }
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, packageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
 
         #
         # install the package with its dependencies and check if its present
         #
-        output <- try(capture.output(sql_install.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
+        output <- try(capture.output(sql_install.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  packageName, TRUE)
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  dependentPackageName, TRUE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner,  packageName, TRUE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner,  dependentPackageName, TRUE)
         helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 2)
 
         #
         # remove the installed packages and check again they are gone
         #
         cat("\nINFO: removing packages...\n")
-        output <- try(capture.output(sql_remove.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
+        output <- try(capture.output(sql_remove.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, packageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, dependentPackageName, FALSE)
     }, finally={
         helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
     })
@@ -145,7 +145,7 @@ test_that( "Installing a package that is already in use",
         #
         # install the package again and check if it fails with the correct message.
         #
-        output <- capture.output(sql_install.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope))
+        output <- capture.output(sql_install.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope))
         expect_true(TRUE %in% (grepl("already installed", output)))
     }, finally={
         helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
@@ -173,40 +173,40 @@ test_that( "Binary Package install with LinkingTo dependency",
         if (helper_remote.require(connectionStringAirlineUserdbowner, packageName) == TRUE)
         {
             cat("\nINFO: removing package:", packageName,"\n")
-            sql_remove.packages( connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
+            sql_remove.packages(connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
         }
 
         if (helper_remote.require(connectionStringAirlineUserdbowner, linkingToPackageName) == TRUE)
         {
             cat("\nINFO: removing package:", linkingToPackageName,"\n")
-            sql_remove.packages( connectionStringAirlineUserdbowner, c(linkingToPackageName), verbose = TRUE, scope = scope)
+            sql_remove.packages(connectionStringAirlineUserdbowner, c(linkingToPackageName), verbose = TRUE, scope = scope)
         }
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, linkingToPackageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, packageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, linkingToPackageName, FALSE)
 
         #
         # install the package with its dependencies and validate that the LinkingTo package was not installed
         #
-        output <- try(capture.output(sql_install.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
+        output <- try(capture.output(sql_install.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  packageName, TRUE)
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  linkingToPackageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner,  packageName, TRUE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner,  linkingToPackageName, FALSE)
         helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
 
         #
         # remove the installed packages and check again they are gone
         #
         cat("\nINFO: removing packages...\n")
-        output <- try(capture.output(sql_remove.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
+        output <- try(capture.output(sql_remove.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, packageName, FALSE)
     }, finally={
         helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
     })
@@ -233,41 +233,41 @@ test_that( "Source Package install with LinkingTo dependency",
         if (helper_remote.require(connectionStringAirlineUserdbowner, packageName) == TRUE)
         {
             cat("\nINFO: removing package:", packageName,"\n")
-            sql_remove.packages( connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
+            sql_remove.packages(connectionStringAirlineUserdbowner, c(packageName), verbose = TRUE, scope = scope)
         }
 
         if (helper_remote.require(connectionStringAirlineUserdbowner, linkingToPackageName) == TRUE)
         {
             cat("\nINFO: removing package:", linkingToPackageName,"\n")
-            sql_remove.packages( connectionStringAirlineUserdbowner, c(linkingToPackageName), verbose = TRUE, scope = scope)
+            sql_remove.packages(connectionStringAirlineUserdbowner, c(linkingToPackageName), verbose = TRUE, scope = scope)
         }
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, linkingToPackageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, packageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, linkingToPackageName, FALSE)
 
         #
         # install the package with its dependencies and validate that the LinkingTo package was installed
         #
-        output <- try(capture.output(sql_install.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
+        output <- try(capture.output(sql_install.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  packageName, TRUE)
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner,  linkingToPackageName, TRUE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner,  packageName, TRUE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner,  linkingToPackageName, TRUE)
         helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
 
         #
         # remove the installed packages and check again they are gone
         #
         cat("\nINFO: removing packages...\n")
-        output <- try(capture.output(sql_remove.packages( connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
+        output <- try(capture.output(sql_remove.packages(connectionStringAirlineUserdbowner, packageName, verbose = TRUE, scope = scope)))
         print(output)
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
 
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, packageName, FALSE)
-        helper_checkPackageStatusRequire( connectionStringAirlineUserdbowner, linkingToPackageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, packageName, FALSE)
+        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, linkingToPackageName, FALSE)
     }, finally={
         helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
     })
