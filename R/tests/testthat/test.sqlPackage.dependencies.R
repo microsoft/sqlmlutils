@@ -152,6 +152,11 @@ test_that( "Installing a package that is already in use",
     })
 })
 
+#
+# 'iptools' is available as source and binary. This test validates that the LinkingTo package 'BH' is not installed.
+# If 'BH' is installed, that means that the 'iptools' source package was chosen,
+# because LinkingTo packages are required when building from source.
+#
 test_that( "Binary Package install with LinkingTo dependency",
 {
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
@@ -212,6 +217,10 @@ test_that( "Binary Package install with LinkingTo dependency",
     })
 })
 
+#
+# Source packages need the LinkingTo dependencies to be resolved and used for package compilation. This tests checks
+# that a source package is installed (successfully built) and it exists on the target server.
+#
 test_that( "Source Package install with LinkingTo dependency",
 {
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
@@ -253,8 +262,10 @@ test_that( "Source Package install with LinkingTo dependency",
         expect_true(!inherits(output, "try-error"))
         expect_equal(1, sum(grepl("Successfully installed packages on SQL server", output)))
 
+        #
+        # Source package built and then successfully installed on the server.
+        #
         helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner,  packageName, TRUE)
-        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner,  linkingToPackageName, TRUE)
         helper_checkSqlLibPaths(connectionStringAirlineUserdbowner, 1)
 
         #
@@ -267,7 +278,6 @@ test_that( "Source Package install with LinkingTo dependency",
         expect_equal(1, sum(grepl("Successfully removed packages from SQL server", output)))
 
         helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, packageName, FALSE)
-        helper_checkPackageStatusRequire(connectionStringAirlineUserdbowner, linkingToPackageName, FALSE)
     }, finally={
         helper_cleanAllExternalLibraries(connectionStringAirlineUserdbowner)
     })
