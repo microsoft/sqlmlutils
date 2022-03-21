@@ -548,7 +548,7 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         {
             result <- FALSE
         }
-        
+
         if (!is.null(output))
         {
             for(o in output)
@@ -1155,7 +1155,35 @@ getDependentPackagesToInstall <- function(pkgs, availablePackages, installedPack
         write(sprintf("%s  Resolving package dependencies for (%s)...", pkgTime(), paste(pkgs, collapse = ', ')), stdout())
     }
 
-    dependencies <- tools::package_dependencies(packages = pkgs, db = availablePackages, recursive = TRUE, verbose = FALSE)
+    dependencies <- NULL
+    repos <- getOption("repos")
+    contribWinBinaryUrl <- utils::contrib.url(repos = repos, type = "win.binary")
+
+    #
+    # Build list of dependencies
+    #
+    for (package in pkgs)
+    {
+        currentPackageDependencies <- NULL
+        dependencyTypes <- c("Depends","Imports")
+
+        #
+        # Determine if package is available as a binary package
+        #
+        packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == contribWinBinaryUrl, ]
+
+        #
+        # When only a source package is available, add LinkingTo dependencies
+        #
+        if ( nrow(packageProperties) < 1)
+        {
+            append(dependencyTypes, c("LinkingTo"))
+        }
+
+        currentPackageDependencies <- tools::package_dependencies(packages = pkgs, db = availablePackages, which = dependencyTypes, recursive = TRUE, verbose = FALSE)
+
+        dependencies <- append(dependencies, currentPackageDependencies)
+    }
 
     #
     # get combined dependency closure w/o base packages
@@ -1255,7 +1283,7 @@ prunePackagesToInstallExtLib <- function(dependentPackages, topMostPackages, ins
             }
 
             # if the available package is being requested as a top-level package we check
-            # if the top-leve attribute on the package is set to false we will have to update it to true
+            # if the top-level attribute on the package is set to false we will have to update it to true
             #
             if ('Attributes' %in% colnames(installedPackages))
             {
@@ -1590,11 +1618,16 @@ sqlInstallPackagesExtLib <- function(connectionString,
             binaryPackages <- if (serverVersion$serverIsWindows) utils::available.packages(contribWinBinary, type = "win.binary") else NULL
             row.names(binaryPackages) <- NULL
 
-            pkgsUnison <-  data.frame(rbind(sourcePackages, binaryPackages), stringsAsFactors = FALSE)
+            # Concatenate list source packages to the list of binary packages available within configured CRAN repo.
+            #
+            pkgsUnison <-  data.frame(rbind(binaryPackages, sourcePackages), stringsAsFactors = FALSE)
+
+            # For packages available as binary and source types, prune the source packages.
+            #
             pkgsUnison <- pkgsUnison[!duplicated(pkgsUnison$Package),,drop=FALSE]
             row.names(pkgsUnison) <- pkgsUnison$Package
 
-            # check for missing packages
+            # check for missing packages (Package(s) requested to be installed, but not available on configured CRAN repo.)
             #
             missingPkgs <- pkgs[!(pkgs %in% pkgsUnison$Package) ]
 
@@ -1603,7 +1636,7 @@ sqlInstallPackagesExtLib <- function(connectionString,
                 stop(sprintf("Cannot find specified packages (%s) to install", paste(missingPkgs, collapse = ', ')), call. = FALSE)
             }
 
-            # get all installed packages
+            # get list of all installed packages on the server
             #
             installedPackages <- sql_installed.packages(connectionString,
                                                         fields = NULL,
