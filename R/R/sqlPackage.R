@@ -818,7 +818,7 @@ sqlCheckPackageManagementVersion <- function(connectionString)
 
     version <- sqlPackageManagementVersion(connectionString)
 
-    if (is.null(version) || is.na(version) || length(version) == 0)
+    if (is.null(version) || any(is.na(version)) || length(version) == 0)
     {
         stop("Invalid SQL version is null or empty", call. = FALSE)
     }
