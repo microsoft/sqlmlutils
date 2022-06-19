@@ -22,3 +22,9 @@ test_that("Package management ExtLib", {
     versionClass <- sqlmlutils:::sqlCheckPackageManagementVersion(connectionString = helper_getSetting("connectionStringDBO"))
     expect_equal(versionClass, "ExtLib")
 })
+
+test_that("GetServerVersion() Returns Server Version of R Successfully",{
+    version <- sqlmlutils:::getserverVersion(connectionString = cnnstr, languageName = "R")
+    # rversion var truncated, so R may be >= 3.5 (3.5.3) or >= 4.2
+    expect_gte(as.double(version[['rversion']]), 3.5)
+})
