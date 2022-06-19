@@ -93,7 +93,8 @@ test_that("Returning a function object",
         return(func2)
     }
 
-    expect_equal(executeFunctionInSQL(connection, func=func1), func2)
+    # Result of executeFunctionInSQL() will have different environment than func2.
+    expect_equal(executeFunctionInSQL(connection, func=func1), func2, check.environment=FALSE)
 })
 
 test_that("Calling an object in the environment",
