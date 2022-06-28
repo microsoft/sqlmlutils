@@ -474,10 +474,14 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         query <- paste0("EXECUTE AS USER = '", asuser, "';")
     }
 
+    # Addresses Invalid Cursor State issue triggered by PRINT() statements
+    # and DIAG messages from SQL Server.
+    resultSet <- "WITH RESULT SETS((resultColumn varchar(MAX)))"
     query <- paste0(query
                     ,"\nEXEC sp_execute_external_script"
                     ,"\n@language = N'", languageName, "'"
-                    ,"\n,@script = N'",script, "';"
+                    ,"\n,@script = N'",script, "'"
+                    ,"\n",resultSet, ";"
     )
 
     if (!is.null(asuser))
