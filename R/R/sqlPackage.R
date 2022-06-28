@@ -1173,8 +1173,11 @@ getDependentPackagesToInstall <- function(pkgs, availablePackages, installedPack
 
         #
         # Determine if package is available as a binary package
+        # Utilize first of possibly many contributor URLs present
+        # in character vector contribWinBinaryUrl
         #
-        packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == contribWinBinaryUrl, ]
+        contributorURL <- contribWinBinaryUrl[1]
+        packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == contributorURL, ]
 
         #
         # When only a source package is available, add LinkingTo dependencies
