@@ -474,10 +474,14 @@ sqlRemoteExecuteFun <- function(connection, FUN, ..., useRemoteFun = FALSE, asus
         query <- paste0("EXECUTE AS USER = '", asuser, "';")
     }
 
+    # Addresses Invalid Cursor State issue triggered by PRINT() statements
+    # and DIAG messages from SQL Server.
+    resultSet <- "WITH RESULT SETS((resultColumn varchar(MAX)))"
     query <- paste0(query
                     ,"\nEXEC sp_execute_external_script"
                     ,"\n@language = N'", languageName, "'"
-                    ,"\n,@script = N'",script, "';"
+                    ,"\n,@script = N'",script, "'"
+                    ,"\n",resultSet, ";"
     )
 
     if (!is.null(asuser))
@@ -818,7 +822,7 @@ sqlCheckPackageManagementVersion <- function(connectionString)
 
     version <- sqlPackageManagementVersion(connectionString)
 
-    if (is.null(version) || is.na(version) || length(version) == 0)
+    if (is.null(version) || any(is.na(version)) || length(version) == 0)
     {
         stop("Invalid SQL version is null or empty", call. = FALSE)
     }
@@ -1169,8 +1173,11 @@ getDependentPackagesToInstall <- function(pkgs, availablePackages, installedPack
 
         #
         # Determine if package is available as a binary package
+        # Utilize first of possibly many contributor URLs present
+        # in character vector contribWinBinaryUrl
         #
-        packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == contribWinBinaryUrl, ]
+        contributorURL <- contribWinBinaryUrl[1]
+        packageProperties <- availablePackages[availablePackages$Package == package & availablePackages$Repository == contributorURL, ]
 
         #
         # When only a source package is available, add LinkingTo dependencies

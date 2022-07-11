@@ -39,7 +39,7 @@ connectionInfo <- function(driver = "SQL Server", server = "localhost", database
         }
         else
         {
-            authorization = sprintf("uid=%s;pwd=%s",uid,pwd)
+            authorization = sprintf("uid=%s;pwd={%s}",uid,pwd)
         }
     }
 
