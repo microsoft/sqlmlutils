@@ -75,7 +75,7 @@ def _remove_all_new_packages(manager):
 
 # Download the package zips we will use for these tests
 # 
-packages = ["astor==0.8.1", "html5lib==1.0.1", "termcolor==1.1.0"]
+packages = ["astor==0.8.1", "html5lib==1.1", "termcolor==1.1.0"]
 
 for package in packages:
     pipdownloader = PipDownloader(connection, path_to_packages, package, language_name="Python")
@@ -92,7 +92,7 @@ def test_install_basic_zip_package():
 
 def test_install_whl_files():
     """Test some basic wheel files"""
-    packages = ["html5lib-1.0.1-py2.py3-none-any.whl",
+    packages = ["html5lib-1.1-py2.py3-none-any.whl",
                 "astor-0.8.1-py2.py3-none-any.whl"]
     module_names = ["html5lib", "astor"]
     classes_to_check = ["parse", "code_gen"]
@@ -166,7 +166,6 @@ def test_package_already_exists_on_sql_table():
     assert version == "0.0.2"
 
     pkgmanager.uninstall("testpackageA")
-
 
 def test_scope():
     """Test installing in a private scope with a db_owner (not dbo) user"""
