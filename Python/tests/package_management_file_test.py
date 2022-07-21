@@ -177,12 +177,13 @@ def test_scope():
         import testpackageA
         return testpackageA.__file__
 
-    # The airline_user_connection is NOT dbo, so it has access to both Private and Public scopes
+    # The airline_user_connection is database user "airlineuser" and is NOT dbo,
+    # so it has access to both Private and Public scopes
     # 
     revopkgmanager = SQLPackageManager(airline_user_connection)
     revoexecutor = SQLPythonExecutor(airline_user_connection)
 
-    # Install a package into the private scope
+    # Install a package into the private scope using database user "airlineuser"
     #
     revopkgmanager.install(package, scope=Scope.private_scope())
     private_location = revoexecutor.execute_function_in_sql(get_location)
@@ -191,6 +192,8 @@ def test_scope():
 
     pyexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
 
+    # Uninstall packages installed into database user "airlineuser" private directory.
+    #
     revopkgmanager.uninstall(pkg_name, scope=Scope.private_scope())
     
     # Try the same installation in public scope
@@ -203,7 +206,10 @@ def test_scope():
 
     revopkgmanager.uninstall(pkg_name, scope=Scope.public_scope())
 
-    # Make sure the package was removed properly
+    # Make sure the package was removed properly from private scope
     #
     revoexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
+
+    # Make sure the package was removed properly from public scope
+    #
     pyexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
