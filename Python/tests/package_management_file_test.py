@@ -117,6 +117,7 @@ def test_install_targz_files():
         full_package = os.path.join(path_to_packages, package)
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
+@pytest.mark.skip(reason="Very long running test. Skip for CI.")
 def test_install_bad_package_badzipfile():
     """Test a zip that is not a package, then make sure it is not in the external_libraries table"""
     _remove_all_new_packages(pkgmanager)
