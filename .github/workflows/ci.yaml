@@ -25,7 +25,7 @@ env:
 
 jobs:
   R:
-    runs-on:  [self-hosted, 1ES.Pool=SQLMLUtils_GitHubRunnerPool]
+    runs-on:  [self-hosted, 1ES.Pool=sqlmlutils_GH_RunnerPool]
     strategy:
       fail-fast: false
       matrix:
