@@ -45,3 +45,16 @@ jobs:
       - name: Check Connection
       run: |
       sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+
+Python:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7]
+
+    env:
+      DATABASE: ${{ secrets.SQL22DB_PY }}
+
+    steps:
+    - uses: actions/checkout@v2
