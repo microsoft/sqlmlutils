@@ -43,8 +43,8 @@ jobs:
 
     steps:
       - name: Check Connection
-      run: |
-      sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+        run: |
+          sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
 
 Python:
     runs-on: windows-latest
