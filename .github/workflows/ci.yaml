@@ -16,9 +16,9 @@ on:
   workflow_dispatch:
 
 env:
-  SERVER: ${{ secrets.SERVER }}
+  SERVER: ${{ secrets.SQL22SERVER }}
   USER: ${{ secrets.USER }}
-  PASSWORD: ${{ secrets.PASSWORD }}
+  PASSWORD: ${{ secrets.SQL22SERVER_PWD }}
   PASSWORD_AIRLINE_USER: ${{ secrets.PASSWORD_AIRLINE_USER }}
   PASSWORD_AIRLINE_USER_DBOWNER: ${{ secrets.PASSWORD_AIRLINE_USER_DBOWNER }}
   DRIVER: "{ODBC Driver 17 for SQL Server}"
@@ -29,12 +29,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        r-version: ["3.5.2", "4.2"]
+        r-version: ["4.2"]
 
     env:
       # Define CI to skip some test case.
       CI: True
-      DATABASE: ${{ secrets.DATABASE }}
+      DATABASE: ${{ secrets.SQL22DB_R }}
 
     defaults:
       run:
@@ -71,7 +71,7 @@ jobs:
         python-version: [3.7]
 
     env:
-      DATABASE: ${{ secrets.DATABASE }}_Python
+      DATABASE: ${{ secrets.SQL22DB_PY }}
 
     steps:
     - uses: actions/checkout@v2
