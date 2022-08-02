@@ -39,56 +39,9 @@ jobs:
     defaults:
       run:
         working-directory: ./R
+        shell: cmd
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up R ${{ matrix.r-version }} Runtime
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: ${{ matrix.r-version }}
-
-      - name: Install R Package Dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          cache-version: 2
-          working-directory: ./R
-          extra-packages:
-            #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
-            #Updated odbc pkg is still compatible with R >= 3.2.0
-            cran::odbc
-            rcmdcheck
-
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          working-directory: ./R
-
-  Python:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [3.7]
-
-    env:
-      DATABASE: ${{ secrets.SQL22DB_PY }}
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      working-directory: ./Python
+      - name: Check Connection
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install flake8 pytest
-        pip install -r requirements.txt
-    - name: Run build script
-      working-directory: ./Python
-      run: ./buildandinstall.cmd
-    - name: Test with pytest
-      working-directory: ./Python/tests
-      run: |
-        pytest
+      sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
