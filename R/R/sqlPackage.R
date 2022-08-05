@@ -641,7 +641,7 @@ processInstalledPackagesResult <- function(result, fields)
         result <- result[, fields, drop = FALSE]
     }
 
-    if ((!is.null(fields)) && ((fields == "Package") && is.null(dim(result))))
+    if ((!is.null(fields)) && ((fields == "Package") && all(is.null(dim(result)))))
     {
         names(result) <- NULL
     }
