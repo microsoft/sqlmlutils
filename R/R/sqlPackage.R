@@ -641,7 +641,6 @@ processInstalledPackagesResult <- function(result, fields)
         result <- result[, fields, drop = FALSE]
     }
 
-    browser()
     if ((!is.null(fields)) && (any(fields == "Package") && is.null(dim(result))))
     {
         names(result) <- NULL
