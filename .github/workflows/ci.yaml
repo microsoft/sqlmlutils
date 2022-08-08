@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        r-version: ["4.2.0"]
+        r-version: ["3.5.2", "4.2.0"]
 
     env:
       # Define CI to skip some test case.
@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: [3.7]
+        python-version: [3.10.5]
 
     env:
       DATABASE: ${{ secrets.SQL22DB_PY }}
