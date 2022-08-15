@@ -90,6 +90,7 @@ def test_install_basic_zip_package():
 
     _create(module_name=module_name, package_file=package, class_to_check="ClassA")
 
+@pytest.mark.skip(reason="Very long running test. Skip for CI.")
 def test_install_whl_files():
     """Test some basic wheel files"""
     packages = ["html5lib-1.1-py2.py3-none-any.whl",
