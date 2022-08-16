@@ -21,6 +21,7 @@ env:
   PASSWORD_AIRLINE_USER: ${{ secrets.PASSWORD_AIRLINE_USER }}
   PASSWORD_AIRLINE_USER_DBOWNER: ${{ secrets.PASSWORD_AIRLINE_USER_DBOWNER }}
   DRIVER: "{ODBC Driver 17 for SQL Server}"
+  SERVER: 
   SQL2019SERVER: ${{ secrets.SQL19SERVER }}
   SQL2022SERVER: ${{ secrets.SQL22SERVER }}
 
@@ -44,11 +45,11 @@ jobs:
     steps:
       - name: Set SQL Server 2019 Env_var for R 3.5.3
         if: matrix.r-version == '3.5.3'
-        run: echo "SERVER=%SQL2019SERVER%" >> $GITHUB_ENV
+        run: echo "SERVER=%SQL2019SERVER%" >> %GITHUB_ENV%
 
       - name: Set SQL Server 2022 Env_var for R 4.2.0
         if: matrix.r-version == '4.2.0'
-        run: echo "SERVER=%SQL2022SERVER%" >> $GITHUB_ENV
+        run: echo "SERVER=%SQL2022SERVER%" >> %GITHUB_ENV%
 
       - name: check env
         run: env
@@ -94,11 +95,11 @@ jobs:
     steps:
     - name: Set SQL Server 2019 Env_var for Python 3.7.2
       if: matrix.python-version == '3.7.2'
-      run: echo "SERVER=%SQL2019SERVER%" >> $GITHUB_ENV
+      run: echo "SERVER=%SQL2019SERVER%" >> %GITHUB_ENV%
 
     - name: Set SQL Server 2022 Env_var for Python 3.10.5
       if: matrix.python-version == '3.10.5'
-      run: echo "SERVER=%SQL2022SERVER%" >> $GITHUB_ENV
+      run: echo "SERVER=%SQL2022SERVER%" >> %GITHUB_ENV%
 
     - name: Check Database Connectivity
       run: |
