@@ -44,11 +44,11 @@ jobs:
     steps:
       - name: Set SQL Server 2019 Env_var for R 3.5.3
         if: matrix.r-version == '3.5.3'
-        run: echo "SERVER=$(SQL2019SERVER)" >> $GITHUB_ENV
+        run: echo "SERVER=${{ SQL2019SERVER }}" >> $GITHUB_ENV
 
       - name: Set SQL Server 2022 Env_var for R 4.2.0
         if: matrix.r-version == '4.2.0'
-        run: echo "SERVER=$(SQL2022SERVER)" >> $GITHUB_ENV
+        run: echo "SERVER=${{ SQL2022SERVER }}" >> $GITHUB_ENV
 
       - name: Check Database Connectivity
         run: |
@@ -91,11 +91,11 @@ jobs:
     steps:
     - name: Set SQL Server 2019 Env_var for Python 3.7.2
       if: matrix.python-version == '3.7.2'
-      run: echo "SERVER=$(SQL2019SERVER)" >> $GITHUB_ENV
+      run: echo "SERVER=${{ SQL2019SERVER }}" >> $GITHUB_ENV
 
     - name: Set SQL Server 2022 Env_var for Python 3.10.5
       if: matrix.python-version == '3.10.5'
-      run: echo "SERVER=$(SQL2022SERVER)" >> $GITHUB_ENV
+      run: echo "SERVER=${{ SQL2022SERVER }}" >> $GITHUB_ENV
 
     - name: Check Database Connectivity
       run: |
