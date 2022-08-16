@@ -33,7 +33,7 @@ jobs:
         r-version: ["3.5.3", "4.2.0"]
         include:
           - r-version: "3.5.3"
-            server_ip: ${{ env.SQL2019SERVER }}
+            server_ip: ${{ SQL2019SERVER }}
           - r-version: "4.2.0"
             server_ip: ${{ SQL2022SERVER }}
 
