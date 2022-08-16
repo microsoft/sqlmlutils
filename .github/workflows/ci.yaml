@@ -16,7 +16,6 @@ on:
   workflow_dispatch:
 
 env:
-  SERVER: ${{ secrets.SQL22SERVER }}
   USER: ${{ secrets.USER }}
   PASSWORD: ${{ secrets.PASSWORD }}
   PASSWORD_AIRLINE_USER: ${{ secrets.PASSWORD_AIRLINE_USER }}
@@ -88,7 +87,7 @@ jobs:
             server: ${{ secrets.SQL22SERVER }}
 
     env:
-      DATABASE: ${{ secrets.SQL22DB_PY }}
+      DATABASE: ${{ secrets.DATABASE_PYTHON }}
       SERVER: ${{ matrix.server }}
 
     steps:
