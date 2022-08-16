@@ -21,6 +21,8 @@ env:
   PASSWORD_AIRLINE_USER: ${{ secrets.PASSWORD_AIRLINE_USER }}
   PASSWORD_AIRLINE_USER_DBOWNER: ${{ secrets.PASSWORD_AIRLINE_USER_DBOWNER }}
   DRIVER: "{ODBC Driver 17 for SQL Server}"
+  SQL2019SERVER: ${{ secrets.SQL19SERVER }}
+  SQL2022SERVER: ${{ secrets.SQL22SERVER }}
 
 jobs:
   R:
@@ -31,9 +33,9 @@ jobs:
         r-version: ["3.5.3", "4.2.0"]
         include:
           - r-version: "3.5.3"
-            server: ${{ secrets.SQL19SERVER }}
+            server: SQL2019SERVER
           - r-version: "4.2.0"
-            server: ${{ secrets.SQL22SERVER }}
+            server: SQL2022SERVER
 
     env:
       # Define CI to skip some test case.
@@ -82,9 +84,9 @@ jobs:
         python-version: [3.7.2, 3.10.5]
         include:
           - python-version: "3.7.2"
-            server: ${{ secrets.SQL19SERVER }}
+            server: SQL2019SERVER
           - python-version: "3.10.5"
-            server: ${{ secrets.SQL22SERVER }}
+            server: SQL2022SERVER
 
     env:
       DATABASE: ${{ secrets.DATABASE_PYTHON }}
