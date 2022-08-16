@@ -50,9 +50,12 @@ jobs:
         if: matrix.r-version == '4.2.0'
         run: echo "SERVER=${{ env.SQL2022SERVER }}" >> $GITHUB_ENV
 
+      - name: check env
+        run: env
+
       - name: Check Database Connectivity
         run: |
-          sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+          sqlcmd -S tcp:${{ SERVER }},1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
         shell: cmd
 
       - name: Checkout Branch
@@ -99,7 +102,7 @@ jobs:
 
     - name: Check Database Connectivity
       run: |
-        sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+        sqlcmd -S tcp:${{ SERVER }},1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
       shell: cmd
 
     - name: Checkout Branch
