@@ -29,11 +29,9 @@ set_option("display.max_columns", None)
 def test_no_output():
     """Test a function without output param/dataset"""
     def my_func():
-        print("blah blah blah")
-        
-        # Test single quotes as well
-        #
-        print('Hello')
+        x = 1
+        y = 2
+        z = x + y
 
     name = "test_no_output"
     sqlpy.drop_sproc(name)
@@ -43,7 +41,9 @@ def test_no_output():
 
     x, outparams = sqlpy.execute_sproc(name)
     assert type(x) == DataFrame
-    assert x.empty
+    
+    # Do not check x.empty, as x will always contain DataFrame representing OutputDataSet
+    # so we only check that outparams are empty as expected
     assert not outparams
 
     sqlpy.drop_sproc(name)
@@ -440,7 +440,7 @@ def test_script_out_param():
     assert sqlpy.check_sproc(name)
     
     res, outparams = sqlpy.execute_sproc(name, output_params = output_params, t1="Hello", t2 = 123, t3 = "select top 10 * from airline5000")
-    assert "Hello123" in outparams["param_str"]
+    assert "Hello123" == outparams["param_str"]
         
     sqlpy.drop_sproc(name)
     assert not sqlpy.check_sproc(name)
