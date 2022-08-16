@@ -75,7 +75,7 @@ def _remove_all_new_packages(manager):
 
 # Download the package zips we will use for these tests
 # 
-packages = ["astor==0.8.1", "html5lib==1.0.1", "termcolor==1.1.0"]
+packages = ["astor==0.8.1", "html5lib==1.1", "termcolor==1.1.0"]
 
 for package in packages:
     pipdownloader = PipDownloader(connection, path_to_packages, package, language_name="Python")
@@ -90,9 +90,10 @@ def test_install_basic_zip_package():
 
     _create(module_name=module_name, package_file=package, class_to_check="ClassA")
 
+@pytest.mark.skip(reason="Very long running test. Skip for CI.")
 def test_install_whl_files():
     """Test some basic wheel files"""
-    packages = ["html5lib-1.0.1-py2.py3-none-any.whl",
+    packages = ["html5lib-1.1-py2.py3-none-any.whl",
                 "astor-0.8.1-py2.py3-none-any.whl"]
     module_names = ["html5lib", "astor"]
     classes_to_check = ["parse", "code_gen"]
@@ -117,6 +118,7 @@ def test_install_targz_files():
         full_package = os.path.join(path_to_packages, package)
         _create(module_name=module, package_file=full_package, class_to_check=class_to_check)
 
+@pytest.mark.skip(reason="Very long running test. Skip for CI.")
 def test_install_bad_package_badzipfile():
     """Test a zip that is not a package, then make sure it is not in the external_libraries table"""
     _remove_all_new_packages(pkgmanager)
@@ -167,7 +169,6 @@ def test_package_already_exists_on_sql_table():
 
     pkgmanager.uninstall("testpackageA")
 
-
 def test_scope():
     """Test installing in a private scope with a db_owner (not dbo) user"""
     _remove_all_new_packages(pkgmanager)
@@ -178,12 +179,13 @@ def test_scope():
         import testpackageA
         return testpackageA.__file__
 
-    # The airline_user_connection is NOT dbo, so it has access to both Private and Public scopes
+    # The airline_user_connection is database user "airlineuser" and is NOT dbo,
+    # so it has access to both Private and Public scopes
     # 
     revopkgmanager = SQLPackageManager(airline_user_connection)
     revoexecutor = SQLPythonExecutor(airline_user_connection)
 
-    # Install a package into the private scope
+    # Install a package into the private scope using database user "airlineuser"
     #
     revopkgmanager.install(package, scope=Scope.private_scope())
     private_location = revoexecutor.execute_function_in_sql(get_location)
@@ -192,6 +194,8 @@ def test_scope():
 
     pyexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
 
+    # Uninstall packages installed into database user "airlineuser" private directory.
+    #
     revopkgmanager.uninstall(pkg_name, scope=Scope.private_scope())
     
     # Try the same installation in public scope
@@ -204,7 +208,10 @@ def test_scope():
 
     revopkgmanager.uninstall(pkg_name, scope=Scope.public_scope())
 
-    # Make sure the package was removed properly
+    # Make sure the package was removed properly from private scope
     #
     revoexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)
+
+    # Make sure the package was removed properly from public scope
+    #
     pyexecutor.execute_function_in_sql(check_package, package_name=pkg_name, exists=False)

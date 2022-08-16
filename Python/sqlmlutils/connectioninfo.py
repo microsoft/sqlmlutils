@@ -56,7 +56,7 @@ class ConnectionInfo:
             else "{server},{port}".format(server=self._server, port=self._port)
         
         auth = "Trusted_Connection=Yes" if self._uid == "" \
-            else "uid={uid};pwd={pwd}".format(uid=self._uid, pwd=self._pwd)
+            else "uid={uid};pwd={{{pwd}}}".format(uid=self._uid, pwd=self._pwd)
 
         return "Driver={driver};Server={server};Database={database};{auth};".format(
             driver = self._driver,
