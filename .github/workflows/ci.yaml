@@ -110,7 +110,6 @@ jobs:
       shell: cmd
 
     - name: Check Database Connectivity SQL Database
-      if: matrix.python-version == '3.7.1'
       run: |
         sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
       shell: cmd
