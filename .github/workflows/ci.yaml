@@ -53,7 +53,7 @@ jobs:
         run: echo SERVER=${{ secrets.SQL22SERVER }}>> %GITHUB_ENV%
         shell: cmd
 
-      - name: Check Database Connectivity to SQL Database
+      - name: Check Connectivity to SQL Database
         run: |
           sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
         shell: cmd
@@ -108,7 +108,7 @@ jobs:
       run: echo SERVER=${{ secrets.SQL22SERVER }}>> %GITHUB_ENV%
       shell: cmd
 
-    - name: Check Database Connectivity SQL Database
+    - name: Check Connectivity SQL Database
       run: |
         sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
       shell: cmd
