@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - r-version: "3.5.3"
+          - r-version: "3.5.2"
             sql-platform: "box"
           - r-version: "4.2.0"
             sql-platform: "box"
@@ -43,8 +43,8 @@ jobs:
         shell: cmd
 
     steps:
-      - name: Set SQL Server 2019 Env_var for R 3.5.3
-        if: matrix.r-version == '3.5.3' && matrix.sql-platform == 'box'
+      - name: Set SQL Server 2019 Env_var for R 3.5.2
+        if: matrix.r-version == '3.5.2' && matrix.sql-platform == 'box'
         run: echo SERVER=${{ secrets.SQL19SERVER }}>> %GITHUB_ENV%
         shell: cmd
 
