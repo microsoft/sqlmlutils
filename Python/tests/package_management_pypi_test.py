@@ -179,7 +179,7 @@ def test_upgrade_parameter():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
+@pytest.mark.skip(reason="Very long running test. Skip for CI.")
 def test_already_installed_popular_ml_packages():
     """Test packages that are preinstalled, make sure they do not install anything extra"""
     installedpackages = ["numpy", "scipy", "pandas"]
