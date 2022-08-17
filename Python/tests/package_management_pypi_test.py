@@ -105,7 +105,6 @@ def test_dependency_resolution():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_no_upgrade_parameter():
     """Test new version but no "upgrade" installation parameter"""
     try:
@@ -142,7 +141,6 @@ def test_no_upgrade_parameter():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_upgrade_parameter():
     """Test the "upgrade" installation parameter"""
     try:
@@ -179,7 +177,7 @@ def test_upgrade_parameter():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
+@pytest.mark.skip(reason="Very slow test. Skip for CI.")
 def test_already_installed_popular_ml_packages():
     """Test packages that are preinstalled, make sure they do not install anything extra"""
     installedpackages = ["numpy", "scipy", "pandas"]
@@ -190,7 +188,6 @@ def test_already_installed_popular_ml_packages():
         newsqlpkgs = _get_sql_package_table(connection)
         assert len(sqlpkgs) == len(newsqlpkgs)
 
-@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_dependency_spec():
     """Test that the DepedencyResolver handles ~= requirement spec.
     Also tests when package name and module name are different."""
@@ -225,7 +222,6 @@ def test_dependency_spec():
     finally:
         _drop_all_ddl_packages(connection, scope)
 
-@pytest.mark.skipif(sys.platform.startswith("linux"), reason="Slow test, don't run on Travis-CI, which uses Linux")
 def test_installing_popular_ml_packages():
     """Test a couple of popular ML packages"""
     newpackages = [ {'package': "TextBlob==0.17.1", 'module': 'textblob'}, {'package': "vocabulary==1.0.4", 'module': 'vocabulary'}]
