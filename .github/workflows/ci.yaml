@@ -108,9 +108,16 @@ jobs:
     - name: check env
       run: env
 
-    - name: Check Database Connectivity
+    - name: Check Database Connectivity SQL Server 2019
+      if: matrix.python-version == '3.7.2'
       run: |
-        sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+        sqlcmd -S tcp:${{ secrets.SQL19SERVER }},1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+      shell: cmd
+
+      - name: Check Database Connectivity SQL Server 2022
+      if: matrix.python-version == '3.10.5'
+      run: |
+        sqlcmd -S tcp:${{ secrets.SQL22SERVER }},1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
       shell: cmd
 
     - name: Checkout Branch
