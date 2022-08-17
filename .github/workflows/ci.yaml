@@ -29,12 +29,9 @@ jobs:
     runs-on: [self-hosted, 1ES.Pool=sqlmlutils_GH_RunnerPool]
     strategy:
       matrix:
-        r-version: ["3.5.3", "4.2.0"]
         include:
           - r-version: "3.5.3"
             sql-platform: "box"
-          - r-version: "3.5.3"
-            sql-platform: "MI"
           - r-version: "4.2.0"
             sql-platform: "box"
 
@@ -50,40 +47,25 @@ jobs:
     steps:
       - name: Set SQL Server 2019 Env_var for R 3.5.3
         if: matrix.sql-platform == 'box'
-        run: echo SERVER=${{ secrets.SQL19SERVER }} >> %GITHUB_ENV%
+        run: echo SERVER=${{ secrets.SQL19SERVER }}>> %GITHUB_ENV%
         shell: cmd
 
       - name: Set SQL MI Env_var for R 3.5.3
         if: matrix.sql-platform == 'MI'
-        run: echo SERVER=${{ secrets.SQLMISERVER }} >> %GITHUB_ENV%
+        run: echo SERVER=${{ secrets.SQLMISERVER }}>> %GITHUB_ENV%
         shell: cmd
 
       - name: Set SQL Server 2022 Env_var for R 4.2.0
         if: matrix.r-version == '4.2.0'
-        run: echo SERVER=${{ secrets.SQL22SERVER }} >> %GITHUB_ENV%
+        run: echo SERVER=${{ secrets.SQL22SERVER }}>> %GITHUB_ENV%
         shell: cmd
 
       - name: check env
         run: env
 
-      - name: Check Database Connectivity SQL Server 2019
-        if: matrix.r-version == '3.5.3' && matrix.sql-platform == 'box'
-        run: |
-          sqlcmd -S tcp:${{ env.SERVER }},1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
-        shell: cmd
-        continue-on-error: true
-
-      - name: Check Database Connectivity SQL MI
-        if: matrix.r-version == '3.5.3' && matrix.sql-platform == 'MI'
+      - name: Check Database Connectivity to SQL Database
         run: |
           sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
-        shell: cmd
-        continue-on-error: true
-
-      - name: Check Database Connectivity SQL Server 2022
-        if: matrix.r-version == '4.2.0' && matrix.sql-platform == 'box'
-        run: |
-          sqlcmd -S tcp:${{ env.SERVER }},1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
         shell: cmd
         continue-on-error: true
 
