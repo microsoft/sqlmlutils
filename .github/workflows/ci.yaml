@@ -35,7 +35,7 @@ jobs:
     env:
       # Define CI to skip some test case.
       CI: True
-      DATABASE: ${{ secrets.SQL22DB_R }}
+      DATABASE: ${{ secrets.DATABASE }}
 
     defaults:
       run:
