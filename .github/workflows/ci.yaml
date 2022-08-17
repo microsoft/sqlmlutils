@@ -57,7 +57,6 @@ jobs:
         run: |
           sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
         shell: cmd
-        continue-on-error: true
 
       - name: Checkout Branch
         uses: actions/checkout@v2
