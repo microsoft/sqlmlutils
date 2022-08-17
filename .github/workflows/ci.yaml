@@ -17,7 +17,7 @@ on:
 
 env:
   USER: ${{ secrets.USER }}
-  PASSWORD: ${{ secrets.SQL22SERVER_PWD }}
+  PASSWORD: ${{ secrets.PASSWORD }}
   PASSWORD_AIRLINE_USER: ${{ secrets.PASSWORD_AIRLINE_USER }}
   PASSWORD_AIRLINE_USER_DBOWNER: ${{ secrets.PASSWORD_AIRLINE_USER_DBOWNER }}
   DRIVER: "{ODBC Driver 17 for SQL Server}"
