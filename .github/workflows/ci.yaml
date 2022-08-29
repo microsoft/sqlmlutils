@@ -16,7 +16,6 @@ on:
   workflow_dispatch:
 
 env:
-  SERVER: ${{ secrets.SERVER }}
   USER: ${{ secrets.USER }}
   PASSWORD: ${{ secrets.PASSWORD }}
   PASSWORD_AIRLINE_USER: ${{ secrets.PASSWORD_AIRLINE_USER }}
@@ -25,11 +24,14 @@ env:
 
 jobs:
   R:
-    runs-on: windows-latest
+    runs-on: [self-hosted, 1ES.Pool=sqlmlutils_GH_RunnerPool]
     strategy:
-      fail-fast: false
       matrix:
-        r-version: ["3.5.2", "4.2"]
+        include:
+          - r-version: "3.5.2"
+            sql-platform: "box"
+          - r-version: "4.2.0"
+            sql-platform: "box"
 
     env:
       # Define CI to skip some test case.
@@ -38,10 +40,26 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./R
+        shell: cmd
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Set SQL Server 2019 Env_var for R 3.5.2
+        if: matrix.r-version == '3.5.2' && matrix.sql-platform == 'box'
+        run: echo SERVER=${{ secrets.SQL19SERVER }}>> %GITHUB_ENV%
+        shell: cmd
+
+      - name: Set SQL Server 2022 Env_var for R 4.2.0
+        if: matrix.r-version == '4.2.0' && matrix.sql-platform == 'box'
+        run: echo SERVER=${{ secrets.SQL22SERVER }}>> %GITHUB_ENV%
+        shell: cmd
+
+      - name: Check Connectivity to SQL Database
+        run: |
+          sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+        shell: cmd
+
+      - name: Checkout Branch
+        uses: actions/checkout@v2
 
       - name: Set up R ${{ matrix.r-version }} Runtime
         uses: r-lib/actions/setup-r@v2
@@ -57,6 +75,7 @@ jobs:
             #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
             #Updated odbc pkg is still compatible with R >= 3.2.0
             cran::odbc
+            cran::xml2
             rcmdcheck
 
       - uses: r-lib/actions/check-r-package@v2
@@ -64,31 +83,56 @@ jobs:
           working-directory: ./R
 
   Python:
-    runs-on: windows-latest
+    runs-on:  [self-hosted, 1ES.Pool=sqlmlutils_GH_RunnerPool]
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        python-version: [3.7]
+        include:
+          - python-version: "3.7.1"
+            sql-platform: "box"
+          - python-version: "3.10.5"
+            sql-platform: "box"
 
     env:
-      DATABASE: ${{ secrets.DATABASE }}_Python
+      CI: True
+      DATABASE: ${{ secrets.DATABASE_PYTHON }}
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Set SQL Server 2019 Env_var for Python 3.7.1
+      if: matrix.python-version == '3.7.1' && matrix.sql-platform == 'box'
+      run: echo SERVER=${{ secrets.SQL19SERVER }}>> %GITHUB_ENV%
+      shell: cmd
+
+    - name: Set SQL Server 2022 Env_var for Python 3.10.5
+      if: matrix.python-version == '3.10.5' && matrix.sql-platform == 'box'
+      run: echo SERVER=${{ secrets.SQL22SERVER }}>> %GITHUB_ENV%
+      shell: cmd
+
+    - name: Check Connectivity SQL Database
+      run: |
+        sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+      shell: cmd
+
+    - name: Checkout Branch
+      uses: actions/checkout@v2
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       working-directory: ./Python
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         pip install -r requirements.txt
-    - name: Run build script
+
+    - name: Build Python Package
       working-directory: ./Python
       run: ./buildandinstall.cmd
-    - name: Test with pytest
+
+    - name: Run pytest
       working-directory: ./Python/tests
       run: |
         pytest
