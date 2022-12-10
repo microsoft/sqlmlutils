@@ -1738,27 +1738,73 @@ sqlInstallPackagesExtLib <- function(connectionString,
         {
             # caller set repos = NULL, packages are file paths
             #
-            pkgs <- normalizePath(pkgs, mustWork = FALSE)
-            missingPkgs <- pkgs[!file.exists(pkgs)]
-
-            if (length(missingPkgs) > 0)
-            {
-                stop(sprintf("%s packages are missing.", paste0(missingPkgs, collapse = ", ")), call. = FALSE)
-            }
-
-            packages <- data.frame(matrix(nrow = 0, ncol = 3), stringsAsFactors = FALSE)
-            for( packageFile in pkgs)
-            {
-                packages <- rbind(packages, data.frame(
-                    Package = unlist(lapply(strsplit(basename(packageFile), '\\.|_'), '[[', 1), use.names =  F),
-                    File = packageFile,
-                    Attribute = topMostPackageFlag,
-                    stringsAsFactors = FALSE))
-            }
-
+            areValidFilesPaths(pkgs)
+            packages <- enumeratePackagesFromFilePaths(pkgs, topMostPackageFlag)
             sqlHelperInstallPackages(connectionString, packages, owner, scope, verbose, languageName)
         }
     }
+}
+
+#
+# Validates that the each file path in pkgs references an existing file.
+#
+areValidFilesPaths <- function(pkgs)
+{
+    pkgs <- normalizePath(pkgs, mustWork = FALSE)
+    missingPkgs <- pkgs[!file.exists(pkgs)]
+
+    if (length(missingPkgs) > 0)
+    {
+        stop(sprintf("%s packages are missing.", paste0(missingPkgs, collapse = ", ")), call. = FALSE)
+    }
+}
+
+#
+# Returns a data.frame consisting of metadata from the argument pkgs
+# pkgs -> list of binary package file paths provided by a user to sql_install.packages()
+# Returned data.frame consists of:
+# [Package]   -> 'packageName'
+# [File]      -> 'PackageFilePath'
+# [Attribute] -> 'topMostPackageFlag'
+#
+enumeratePackagesFromFilePaths <- function(pkgs, topMostPackageFlag)
+{
+    packages <- data.frame(matrix(nrow = 0, ncol = 3), stringsAsFactors = FALSE)
+    for( packageFilePath in pkgs)
+    {
+        packages <- rbind(packages, data.frame(
+            Package = getPackageNameFromFilePath(packageFilePath),
+            File = packageFilePath,
+            Attribute = topMostPackageFlag,
+            stringsAsFactors = FALSE))
+    }
+}
+
+#
+# Returns the package name parsed from the file path
+# of a binary package.
+# Returns my.package from C:\packages\my.package_1.0.0.zip
+#
+# A package name "should contain only (ASCII) letters, numbers and dot, have at least two
+# characters and start with a letter and not end in a dot.
+# Source: https://cran.r-project.org/doc/manuals/r-devel/R-exts.html#The-DESCRIPTION-file
+#
+getPackageNameFromFilePath <- function(packageFilePath)
+{
+    # Drops the file path prefixing the file name
+    # C:\packages\my.package_1.0.0.zip becomes my.package_1.0.0.zip
+    fileNameFromPath <- basename(packageFilePath)
+
+    # Splits path at instances of an underscore (_)
+    # my.package_1.0.0.zip becomes [0] my.package [1] 1.0.0.zip
+    packageFileNameComponents <- strsplit(fileNameFromPath, '\\_')
+
+    # Applies subsetting operator [[ to return a list
+    # with just the element my.package from [0] my.package [1] 1.0.0.zip
+    packageName <- lapply(packageFileNameComponents, '[[', 1)
+
+    # Gets the character element my.package which represents the package name
+    unlist(packageName, use.names =  F)
 }
 
 #
