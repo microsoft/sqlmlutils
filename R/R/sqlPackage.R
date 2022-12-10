@@ -1778,6 +1778,8 @@ enumeratePackagesFromFilePaths <- function(pkgs, topMostPackageFlag)
             Attribute = topMostPackageFlag,
             stringsAsFactors = FALSE))
     }
+
+    return (packages)
 }
 
 #
