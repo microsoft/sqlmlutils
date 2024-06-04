@@ -18,7 +18,7 @@ on:
 
 jobs:
   R:
-    #runs-on: [self-hosted, 1ES.Pool=sqlmlutils_GH_RunnerPool]
+    runs-on: windows-latest
     strategy:
       matrix:
         include:
