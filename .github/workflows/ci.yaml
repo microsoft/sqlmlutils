@@ -37,14 +37,14 @@ jobs:
         shell: cmd
 
     steps:
-      -name: Download CAB files
-       run: Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2134897" -OutFile "C:\"
-       shell: cmd
+      - name: Download CAB files
+        run: Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2134897" -OutFile "C:\"
+        shell: cmd
        
-      -name: Install SQL Server 2019
-       run: choco install sql-server-2019-cumulative-update -y -params "'/MRCACHEDIRECTORY=`"C:\`"" /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=`"Administrator`" /IACCEPTSQLSERVERLICENSETERMS'""
-       shell: cmd
+      - name: Install SQL Server 2019
+        run: choco install sql-server-2019-cumulative-update -y -params "'/MRCACHEDIRECTORY=`"C:\`"" /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=`"Administrator`" /IACCEPTSQLSERVERLICENSETERMS'""
+        shell: cmd
 
-      -name: Install sqlcmd
-       run: choco install sqlcmd
-       shell: cmd
+      - name: Install sqlcmd
+        run: choco install sqlcmd
+        shell: cmd
