@@ -18,7 +18,7 @@ on:
 
 jobs:
   R:
-    runs-on: windows-latest
+    runs-on: windows-2022
     strategy:
       matrix:
         include:
@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Download CAB files
-        run: wget -Uri https://go.microsoft.com/fwlink/?linkid=2134897 -OutFile C:\
+        run: wget -Uri "https://go.microsoft.com/fwlink/?linkid=2134897" -OutFile "C:\Temp"
         shell: cmd
        
       - name: Install SQL Server 2019
