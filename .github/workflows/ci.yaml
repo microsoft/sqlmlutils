@@ -62,9 +62,9 @@ jobs:
 
       - name: Check Connectivity to SQL Database
         run: |
-          sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+          sqlcmd -S tcp:MSSQLSERVER,1433 -U SA -P yukon900 -d Master -l 5 -Q "SELECT @@VERSION"
         shell: cmd
 
       - name: Enable External Scripts
-        run: sqlcmd -S MSSQL -Q `"EXEC sp_configure  'external scripts enabled', 1
+        run: sqlcmd -S MSSQLSERVER -Q `"EXEC sp_configure  'external scripts enabled', 1
           RECONFIGURE WITH OVERRIDE`"
