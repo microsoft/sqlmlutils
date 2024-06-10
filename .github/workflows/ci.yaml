@@ -53,7 +53,11 @@ jobs:
 
       # /MRCACHEDIRECTORY=`"C:\Temp`"
       - name: Install SQL Server 2019
-        run: choco install sql-server-2019-cumulative-update -y -params "'/ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=`"Administrator`" /SAPWD=`"yukon900`" /IACCEPTSQLSERVERLICENSETERMS'""
+        run: choco install sql-server-2019 -y -params "'/ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=`"Administrator`" /SAPWD=`"yukon900`" /IACCEPTSQLSERVERLICENSETERMS'""
+        shell: cmd
+
+      - name: Apply SQL Server 2019 Cumulative Update
+        run: choco install sql-server-2019-cumulative-update -y
         shell: cmd
 
       - name: Install sqlcmd
@@ -62,9 +66,9 @@ jobs:
 
       - name: Check Connectivity to SQL Database
         run: |
-          sqlcmd -S tcp:localhost\MSSQLSERVER -U SA -P yukon900 -d Master -l 5 -Q "SELECT @@VERSION"
+          sqlcmd -S localhost\MSSQLSERVER -U SA -P yukon900 -d Master -l 5 -Q "SELECT @@VERSION"
         shell: cmd
 
       - name: Enable External Scripts
-        run: sqlcmd -S MSSQLSERVER -Q `"EXEC sp_configure  'external scripts enabled', 1
+        run: sqlcmd -S localhost\MSSQLSERVER -Q `"EXEC sp_configure  'external scripts enabled', 1
           RECONFIGURE WITH OVERRIDE`"
