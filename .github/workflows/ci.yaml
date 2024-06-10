@@ -53,7 +53,7 @@ jobs:
 
       # /MRCACHEDIRECTORY=`"C:\Temp`"
       - name: Install SQL Server 2019
-        run: choco install sql-server-2019 -y -params "'/ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=`"Administrator`" /SAPWD=`"yukon900`" /IACCEPTSQLSERVERLICENSETERMS'""
+        run: choco install sql-server-2019 -y -params "'/ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=`"Administrator`" /IACCEPTSQLSERVERLICENSETERMS'""
         shell: cmd
 
       - name: Apply SQL Server 2019 Cumulative Update
