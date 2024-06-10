@@ -62,7 +62,7 @@ jobs:
 
       - name: Check Connectivity to SQL Database
         run: |
-          sqlcmd -S 127.0.0.1\MSSQLSERVER -U SA -P yukon900 -d Master -l 5 -Q "SELECT @@VERSION"
+          sqlcmd -S tcp:localhost\MSSQLSERVER -U SA -P yukon900 -d Master -l 5 -Q "SELECT @@VERSION"
         shell: cmd
 
       - name: Enable External Scripts
