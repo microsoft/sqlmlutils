@@ -47,9 +47,18 @@ jobs:
 
       # /MRCACHEDIRECTORY=`"C:\Temp`"
       - name: Install SQL Server 2019
-        run: choco install sql-server-2019-cumulative-update -y -params "'/ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=`"Administrator`" /IACCEPTSQLSERVERLICENSETERMS'""
+        run: choco install sql-server-2019-cumulative-update -y -params "'/ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=`"Administrator`" /SAPWD=`"yukon900`" /IACCEPTSQLSERVERLICENSETERMS'""
         shell: cmd
 
       - name: Install sqlcmd
         run: choco install sqlcmd
         shell: cmd
+
+      - name: Check Connectivity to SQL Database
+        run: |
+          sqlcmd -S tcp:%SERVER%,1433 -U %USER% -P %PASSWORD% -d %DATABASE% -l 5 -Q "SELECT @@VERSION"
+        shell: cmd
+
+      - name: Enable External Scripts
+        run: sqlcmd -S MSSQL -Q `"EXEC sp_configure  'external scripts enabled', 1
+          RECONFIGURE WITH OVERRIDE`"
