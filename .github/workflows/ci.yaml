@@ -52,13 +52,9 @@ jobs:
       #  shell: cmd
 
       # /MRCACHEDIRECTORY=`"C:\Temp`"
-      - name: Download installation files for SQL Server 2019
-       # run: choco install sql-server-2019 -y -params "'/ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=Administrator /IACCEPTSQLSERVERLICENSETERMS'"
-        run: choco install sql-server-2019 -y --skip-powershell
+      - name: Install SQL Server 2019
+        run: choco install sql-server-2019 -y -params "'/ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=Administrator /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
-
-      - name: Install Sql Server 2019
-        run: C:\ProgramData\chocolatey\lib\sql-server-2019\tools\setup.exe /IAcceptSqlServerLicenseTerms /ACTION="Install" /INSTANCENAME="MSSQLSERVER" /FEATURES="SQLEngine,ADVANCEDANALYTICS" /SQLSYSADMINACCOUNTS="Administrator" /INDICATEPROGRESS /Q
       
       - name: Apply SQL Server 2019 Cumulative Update
         run: choco install sql-server-2019-cumulative-update -y
