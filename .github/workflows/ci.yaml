@@ -54,7 +54,7 @@ jobs:
       # /MRCACHEDIRECTORY=`"C:\Temp`"
       - name: Install SQL Server 2019
         run: | 
-          $CurrentDir = Get-Location
+          $CurrentDir = pwd
           choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=C:\ /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=Administrator /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
       
