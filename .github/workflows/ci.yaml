@@ -53,9 +53,9 @@ jobs:
 
       # /MRCACHEDIRECTORY=`"C:\Temp`"
       - name: Install SQL Server 2019
-        run: |
-        $CurrentDir = Get-Location
-        choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=C:\ /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=Administrator /IACCEPTSQLSERVERLICENSETERMS'"
+        run: | 
+          $CurrentDir = Get-Location
+          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=C:\ /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=Administrator /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
       
       - name: Apply SQL Server 2019 Cumulative Update
