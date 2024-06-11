@@ -43,25 +43,28 @@ jobs:
         shell: cmd
 
     steps:
-      #- name: Download Microsoft R Open cabinet file
-      #  run: $CurrentDir = pwd
-      #    curl https://go.microsoft.com/fwlink/?linkid=2085686 -o "$CurrentDir/SRO_3.5.2.125_1033.cab"
-      #  shell: cmd
+      - name: Download Microsoft R Open cabinet file
+        run: |
+          $CurrentDir = pwd
+          curl https://go.microsoft.com/fwlink/?linkid=2085686 -o "$CurrentDir/SRO_3.5.2.125_1033.cab"
+        shell: cmd
       
-      #- name: Download Microsoft Python Open cabinet file
-      #  run: $CurrentDir = pwd
-      #    curl https://go.microsoft.com/fwlink/?linkid=2085793 -o "$CurrentDir/SPO_4.5.12.120_1033.cab"
-      #  shell: cmd
+      - name: Download Microsoft Python Open cabinet file
+        run: |
+          $CurrentDir = pwd
+          curl https://go.microsoft.com/fwlink/?linkid=2085793 -o "$CurrentDir/SPO_4.5.12.120_1033.cab"
+        shell: cmd
 
       # /MRCACHEDIRECTORY=`"C:\Temp`"
-      #- name: Install SQL Server 2019
-       # run: $CurrentDir = pwd
-       #   choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=$CurrentDir /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=Administrator /IACCEPTSQLSERVERLICENSETERMS'"
-       # shell: cmd
+      - name: Install SQL Server 2019
+        run: | 
+          $CurrentDir = pwd
+          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=$CurrentDir /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=Administrator /IACCEPTSQLSERVERLICENSETERMS'"
+        shell: cmd
       
-     # - name: Apply SQL Server 2019 Cumulative Update
-      #  run: choco install sql-server-2019-cumulative-update -y
-      #  shell: cmd
+      - name: Apply SQL Server 2019 Cumulative Update
+        run: choco install sql-server-2019-cumulative-update -y
+        shell: cmd
 
       - name: Install sqlcmd
         run: choco install sqlcmd
