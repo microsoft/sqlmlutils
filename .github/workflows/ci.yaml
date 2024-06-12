@@ -46,13 +46,13 @@ jobs:
       - name: Download Microsoft R Open cabinet file
         run: |
           set CurrentDir=%cd%
-          curl https://go.microsoft.com/fwlink/?linkid=2085686 -o "%CurrentDir%/SRO_3.5.2.125_1033.cab"
+          curl -L https://go.microsoft.com/fwlink/?linkid=2085686 -o "%CurrentDir%/SRO_3.5.2.125_1033.cab"
         shell: cmd
       
       - name: Download Microsoft Python Open cabinet file
         run: |
           set CurrentDir=%cd%
-          curl https://go.microsoft.com/fwlink/?linkid=2085793 -o "%CurrentDir%/SPO_4.5.12.120_1033.cab"
+          curl -L https://go.microsoft.com/fwlink/?linkid=2085793 -o "%CurrentDir%/SPO_4.5.12.120_1033.cab"
         shell: cmd
 
       # /MRCACHEDIRECTORY=`"C:\Temp`"
