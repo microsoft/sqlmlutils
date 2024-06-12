@@ -63,6 +63,7 @@ jobs:
         shell: cmd
 
       - name: Save Logs as artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Chocolatey Logs
