@@ -43,6 +43,15 @@ jobs:
         shell: cmd
 
     steps:
+
+      - task: Bash@3
+        displayName: 'Generate password'
+        inputs:
+          targetType: 'inline'
+          script: |
+            password=$(cat /dev/urandom | tr -dc 'A-Za-z0-9' | head -c24)
+            echo "##vso[task.setvariable variable=dbPassword;]$password"
+
       - name: Download Microsoft R Open cabinet file
         run: |
           set CurrentDir=%cd%
@@ -59,16 +68,16 @@ jobs:
       - name: Install SQL Server 2019
         run: | 
           set CurrentDir=%cd%
-          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=Administrator /IACCEPTSQLSERVERLICENSETERMS'"
+          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=$(dbPassword) /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=SA /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
 
-      - name: Save Logs as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Chocolatey Logs
-          path: C:\ProgramData\chocolatey\logs\chocolatey.log
-          retention-days: 20
+      #- name: Save Logs as artifact
+      #  if: always()
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: Chocolatey Logs
+      #    path: C:\ProgramData\chocolatey\logs\chocolatey.log
+      #    retention-days: 20
       
       - name: Apply SQL Server 2019 Cumulative Update
         run: choco install sql-server-2019-cumulative-update -y
