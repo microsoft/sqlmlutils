@@ -47,7 +47,7 @@ jobs:
       - name: Generate password
         run: |
           setlocal enabledelayedexpansion
-          set password=%random%%random%%random%qaz!
+          set password=%random%%random%%random%qaZ~@&\!
           echo dbPassword=!password! >> %GITHUB_ENV%
 
       - name: Download Microsoft R Open cabinet file
