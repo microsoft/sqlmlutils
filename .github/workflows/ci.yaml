@@ -88,9 +88,9 @@ jobs:
 
       - name: Check Connectivity to SQL Database
         run: |
-          sqlcmd -S localhost\MSSQLSERVER -U SA -P %dbPassword% -d Master -l 5 -Q "SELECT @@VERSION"
+          sqlcmd -S localhost -U SA -P %dbPassword% -d Master -l 5 -Q "SELECT @@VERSION"
         shell: cmd
 
       - name: Enable External Scripts
-        run: sqlcmd -S localhost\MSSQLSERVER -Q `"EXEC sp_configure  'external scripts enabled', 1
+        run: sqlcmd -S localhost -Q `"EXEC sp_configure  'external scripts enabled', 1
           RECONFIGURE WITH OVERRIDE`"
