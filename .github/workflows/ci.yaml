@@ -44,13 +44,10 @@ jobs:
 
     steps:
 
-      - task: Bash@3
-        displayName: 'Generate password'
-        inputs:
-          targetType: 'inline'
-          script: |
-            password=$(cat /dev/urandom | tr -dc 'A-Za-z0-9' | head -c24)
-            echo "##vso[task.setvariable variable=dbPassword;]$password"
+      - name: Generate password
+        run: |
+        password=$(cat /dev/urandom | tr -dc 'A-Za-z0-9' | head -c24)
+        echo "dbPassword=$password" >> $GITHUB_ENV
 
       - name: Download Microsoft R Open cabinet file
         run: |
@@ -68,7 +65,7 @@ jobs:
       - name: Install SQL Server 2019
         run: | 
           set CurrentDir=%cd%
-          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=$(dbPassword) /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=SA /IACCEPTSQLSERVERLICENSETERMS'"
+          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=$env:dbPassword /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /SQLSYSADMINACCOUNTS=SA /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
 
       #- name: Save Logs as artifact
@@ -89,7 +86,7 @@ jobs:
 
       - name: Check Connectivity to SQL Database
         run: |
-          sqlcmd -S localhost\MSSQLSERVER -U SA -P $(dbPassword) -d Master -l 5 -Q "SELECT @@VERSION"
+          sqlcmd -S localhost\MSSQLSERVER -U SA -P $env:dbPassword -d Master -l 5 -Q "SELECT @@VERSION"
         shell: cmd
 
       - name: Enable External Scripts
