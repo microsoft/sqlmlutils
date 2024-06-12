@@ -46,8 +46,8 @@ jobs:
 
       - name: Generate password
         run: |
-        password=$(cat /dev/urandom | tr -dc 'A-Za-z0-9' | head -c24)
-        echo "dbPassword=$password" >> $GITHUB_ENV
+          password=$(cat /dev/urandom | tr -dc 'A-Za-z0-9' | head -c24)
+          echo "dbPassword=$password" >> $GITHUB_ENV
 
       - name: Download Microsoft R Open cabinet file
         run: |
