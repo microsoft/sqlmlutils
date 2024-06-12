@@ -67,7 +67,7 @@ jobs:
       - name: Install SQL Server 2019
         run: | 
           set CurrentDir=%cd%
-          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=%dbPassword% /SECURITYMODE=SQL /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS'"
+          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
 
       - name: Save Logs as artifact
