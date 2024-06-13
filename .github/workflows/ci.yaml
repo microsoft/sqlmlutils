@@ -100,11 +100,12 @@ jobs:
       - name: List Current Directory
         run: |
           dir
-          cd .github
-          dir
+          
+      - name: Move AirlineTestDB.bak to corret file location for backup command
+        run: copy "AirlineTestDB.bak" "C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak"
 
-      #- name: Restore AirlineTestDB
-      #  run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "RESTORE DATABASE AirlineTestDB FROM DISK='<path-to-AirlineTestDB.bak>' WITH REPLACE;"
+      - name: Restore AirlineTestDB
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "USE [master]; RESTORE DATABASE [AirlineTestDB] FROM  DISK = N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak' WITH  FILE = 1,  MOVE N'AirlineTestDB' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.mdf',  MOVE N'AirlineTestDB_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.ldf',  NOUNLOAD,  STATS = 5; GO"
 
       #- name: Set up R ${{ matrix.r-version }} Runtime
       #  uses: r-lib/actions/setup-r@v2
