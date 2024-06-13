@@ -92,5 +92,28 @@ jobs:
         shell: cmd
 
       - name: Enable External Scripts
-        run: sqlcmd -S localhost -Q "EXEC sp_configure  'external scripts enabled', 1
-          RECONFIGURE WITH OVERRIDE"
+        run: sqlcmd -S localhost -Q "EXEC sp_configure  'external scripts enabled', 1 \n RECONFIGURE WITH OVERRIDE"
+
+      - name: Checkout Branch
+        uses: actions/checkout@v2
+
+      - name: Set up R ${{ matrix.r-version }} Runtime
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r-version }}
+
+      - name: Install R Package Dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          working-directory: ./R
+          extra-packages:
+            #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
+            #Updated odbc pkg is still compatible with R >= 3.2.0
+            cran::odbc
+            cran::xml2
+            rcmdcheck
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: ./R
