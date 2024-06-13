@@ -98,7 +98,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: List Current Directory
-        run: dir
+        run: |
+          dir
+          cd .github
+          dir
 
       #- name: Restore AirlineTestDB
       #  run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "RESTORE DATABASE AirlineTestDB FROM DISK='<path-to-AirlineTestDB.bak>' WITH REPLACE;"
