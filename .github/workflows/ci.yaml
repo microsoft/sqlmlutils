@@ -75,14 +75,6 @@ jobs:
           set CurrentDir=%cd%
           choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
-
-      - name: Save Logs as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Chocolatey Logs
-          path: C:\ProgramData\chocolatey\logs\chocolatey.log
-          retention-days: 20
       
       - name: Apply SQL Server 2019 Cumulative Update
         run: choco install sql-server-2019-cumulative-update -y
@@ -91,6 +83,14 @@ jobs:
       - name: Install sqlcmd
         run: choco install sqlcmd
         shell: cmd
+
+      - name: Save Logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chocolatey Logs
+          path: C:\ProgramData\chocolatey\logs\chocolatey.log
+          retention-days: 20
 
       - name: Check Connectivity to SQL Database
         run: |
