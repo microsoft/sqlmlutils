@@ -98,7 +98,8 @@ jobs:
         shell: cmd
 
       - name: Enable External Scripts
-        run: sqlcmd -S localhost -Q "EXEC sp_configure  'external scripts enabled', 1 \n RECONFIGURE WITH OVERRIDE"
+        run: sqlcmd -S localhost -Q "EXEC sp_configure  'external scripts enabled', 1 
+          RECONFIGURE WITH OVERRIDE"
 
       - name: Checkout Branch
         uses: actions/checkout@v2
