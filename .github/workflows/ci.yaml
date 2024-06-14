@@ -134,10 +134,10 @@ jobs:
       #  with:
       #    working-directory: ./R
 
-      #- name: Set up Python ${{ env.python-version }}
-      #  uses: actions/setup-python@v2
-      #  with:
-      #    python-version: ${{ env.python-version }}
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
 
       - name: Install Python dependencies
         working-directory: ./Python
