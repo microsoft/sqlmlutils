@@ -142,7 +142,7 @@ jobs:
           ',
           @input_data_1 =N'SELECT 1 AS hello'
           WITH RESULT SETS (([hello] int not null));
-          GO"
+          GO;"
 
       - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v2
@@ -168,7 +168,7 @@ jobs:
           ',
           @input_data_1 =N'SELECT 1 AS hello'
           WITH RESULT SETS (([hello] int not null));
-          GO"
+          GO;"
 
       - name: Run pytest
         working-directory: ./Python/tests
