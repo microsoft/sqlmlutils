@@ -141,8 +141,7 @@ jobs:
           OutputDataSet <- InputDataSet;
           ',
           @input_data_1 =N'SELECT 1 AS hello'
-          WITH RESULT SETS (([hello] int not null));
-          GO;"
+          WITH RESULT SETS (([hello] int not null));"
 
       - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v2
@@ -167,8 +166,7 @@ jobs:
           OutputDataSet = InputDataSet;
           ',
           @input_data_1 =N'SELECT 1 AS hello'
-          WITH RESULT SETS (([hello] int not null));
-          GO;"
+          WITH RESULT SETS (([hello] int not null));"
 
       - name: Run pytest
         working-directory: ./Python/tests
