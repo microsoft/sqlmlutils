@@ -121,11 +121,8 @@ jobs:
       - name: Execute SPEES for Python
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
           EXEC sp_execute_external_script  @language =N'Python',
-          @script=N'
-          OutputDataSet = InputDataSet;
-          ',
-          @input_data_1 =N'SELECT 1 AS hello'
-          WITH RESULT SETS (([hello] int not null));"
+          @script=N'OutputDataSet = InputDataSet;',
+          @input_data_1 =N'SELECT 1 AS hello' WITH RESULT SETS (([hello] int not null));"
 
       - name: Checkout Branch
         uses: actions/checkout@v2
