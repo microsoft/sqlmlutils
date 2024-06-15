@@ -73,7 +73,7 @@ jobs:
       - name: Install SQL Server 2019
         run: | 
           set CurrentDir=%cd%
-          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS'"
+          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS,SQL_INST_MR,SQL_INST_MPY /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
       
       - name: Apply SQL Server 2019 Cumulative Update
@@ -98,9 +98,10 @@ jobs:
         shell: cmd
 
       - name: Enable External Scripts
-        run: |
-          sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
-          sqlcmd -S localhost -U SA -P %dbPassword% -Q "RECONFIGURE WITH OVERRIDE;"  
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
+
+      - name: Reconfigure
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "RECONFIGURE WITH OVERRIDE;"  
 
       - name: Restart the Service
         run: |
