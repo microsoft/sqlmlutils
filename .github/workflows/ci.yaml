@@ -106,6 +106,23 @@ jobs:
           timeout /t 5 /nobreak
           net start "MSSQLSERVER"
 
+      - name: Execute SPEES for R
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          EXEC sp_execute_external_script  @language =N'R',
+          @script=N'
+          OutputDataSet <- InputDataSet;
+          ',
+          @input_data_1 =N'SELECT 1 AS hello'
+          WITH RESULT SETS (([hello] int not null));"
+      
+      - name: Execute SPEES for Python
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          EXEC sp_execute_external_script  @language =N'Python',
+          @script=N'
+          OutputDataSet = InputDataSet;
+          ',
+          @input_data_1 =N'SELECT 1 AS hello'
+          WITH RESULT SETS (([hello] int not null));"
 
       - name: Checkout Branch
         uses: actions/checkout@v2
@@ -140,15 +157,6 @@ jobs:
       #- uses: r-lib/actions/check-r-package@v2
       #  with:
       #    working-directory: ./R
-      
-      - name: Execute SPEES for R
-        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
-          EXEC sp_execute_external_script  @language =N'R',
-          @script=N'
-          OutputDataSet <- InputDataSet;
-          ',
-          @input_data_1 =N'SELECT 1 AS hello'
-          WITH RESULT SETS (([hello] int not null));"
 
       - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v2
@@ -165,15 +173,6 @@ jobs:
       - name: Build Python Package
         working-directory: ./Python
         run: ./buildandinstall.cmd
-
-      - name: Execute SPEES for Python
-        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
-          EXEC sp_execute_external_script  @language =N'Python',
-          @script=N'
-          OutputDataSet = InputDataSet;
-          ',
-          @input_data_1 =N'SELECT 1 AS hello'
-          WITH RESULT SETS (([hello] int not null));"
 
       - name: Run pytest
         working-directory: ./Python/tests
