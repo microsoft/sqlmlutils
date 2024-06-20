@@ -1,0 +1,120 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+#
+# See https://github.com/r-lib/actions/tree/master/examples#readme for
+# additional example workflows available for the R community.
+
+name: BuildAndTest
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  SQL19:
+    runs-on: windows-2022
+    
+    env:
+      # Define CI to skip some test case.
+      CI: True
+      r-version: "4.2.0"
+      python-version: "3.10.2"
+      sql-platform: "box"
+
+
+    defaults:
+      run:
+        shell: cmd
+
+    steps:
+
+      - name: Generate password
+        run: |
+          setlocal enabledelayedexpansion
+          set password=%random%%random%%random%qaZ~@
+          dbPassword=!password! >> %GITHUB_ENV%
+
+      # /SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 allows connecting using localhost without windows account.
+      # /FEATURES=SQLEngine,ADVANCEDANALYTICS are the machine learning services options.
+      # MRCACHEDIRECTORY is set to current directory as it is a required param, but will not actually be used for installation.
+      # Note that MLS require the initial release installed and then upgrading to newer versions.
+      - name: Install SQL Server 2019
+        run: | 
+          set CurrentDir=%cd%
+          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS '"
+        shell: cmd
+      
+      - name: Apply SQL Server 2019 Cumulative Update
+        run: choco install sql-server-2022-cumulative-update -y
+        shell: cmd
+
+      - name: Install sqlcmd
+        run: choco install sqlcmd
+        shell: cmd
+
+      # Saves the chocolately logs which will likely hold the errors needed to debug a failed installation of SQL Server 2019.
+      - name: Save Logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chocolatey Logs
+          path: C:\ProgramData\chocolatey\logs\chocolatey2022.log
+          retention-days: 20
+
+      - name: Check Connectivity to SQL Database
+        run: |
+          sqlcmd -S localhost -U SA -P %dbPassword% -d Master -l 5 -Q "SELECT @@VERSION"
+        shell: cmd
+
+      - name: Checkout Branch
+        uses: actions/checkout@v2
+
+      - name: Move AirlineTestDB.bak to correct file location for backup command
+        run: copy "AirlineTestDB.bak" "C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak"
+
+      - name: Restore AirlineTestDB
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "USE [master]; RESTORE DATABASE [AirlineTestDB] FROM  DISK = N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak' WITH  FILE = 1,  MOVE N'AirlineTestDB' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.mdf',  MOVE N'AirlineTestDB_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.ldf',  NOUNLOAD,  STATS = 5;"
+
+      - name: Set up R ${{ env.r-version }} Runtime
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ env.r-version }}
+
+      # Todo: Needs mirror installation URL for python 3.5
+      - name: Install R Package Dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          working-directory: ./R
+          extra-packages:
+            #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
+            #Current version needs R >=3.6 and is currently failing
+            cran::odbc
+            cran::xml2
+            rcmdcheck
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: ./R
+
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Install Python dependencies
+        working-directory: ./Python
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pytest
+          pip install -r requirements.txt
+
+      - name: Build Python Package
+        working-directory: ./Python
+        run: ./buildandinstall.cmd
+
