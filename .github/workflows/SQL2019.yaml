@@ -32,12 +32,12 @@ jobs:
         shell: cmd
 
     steps:
-
+      # Set password in github env but dont display output.
       - name: Generate password
         run: |
           setlocal enabledelayedexpansion
           set password=%random%%random%%random%qaZ~@
-          dbPassword=!password! >> %GITHUB_ENV%
+          (echo dbPassword=!password!) >> "%GITHUB_ENV%" >nul 2>&1
 
       # Downloads the R cabinet file for the initial release version of SQL Server 2019.
       # Note that we use the -L flag to allow for redirects.
