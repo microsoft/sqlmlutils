@@ -79,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Chocolatey Logs
-          path: C:\ProgramData\chocolatey\logs\chocolatey2019.log
+          path: C:\ProgramData\chocolatey\logs\chocolatey.log
           retention-days: 20
 
       - name: Check Connectivity to SQL Database
