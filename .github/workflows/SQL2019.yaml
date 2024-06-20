@@ -79,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Chocolatey Logs
-          path: C:\ProgramData\chocolatey\logs\chocolatey.log
+          path: C:\ProgramData\chocolatey\logs\chocolatey2019.log
           retention-days: 20
 
       - name: Check Connectivity to SQL Database
@@ -139,10 +139,10 @@ jobs:
           extra-packages:
             #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
             #Current version needs R >=3.6 and is currently failing
-            cran::odbc@
-            cran::xml2@
-            rcmdcheck@
-
+            cran::odbc
+            cran::xml2
+            rcmdcheck
+            
       - uses: r-lib/actions/check-r-package@v2
         with:
           working-directory: ./R
