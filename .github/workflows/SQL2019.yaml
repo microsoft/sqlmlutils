@@ -33,11 +33,13 @@ jobs:
 
     steps:
       # Set password in github env but dont display output.
+      # Note for github action you need to use double %, when testing in a local VM
+      # %i would be the correct format.
       - name: Generate password
         run: |
           setlocal enabledelayedexpansion
           set password=%random%%random%%random%qaZ~@
-          for /f "delims=" %i in ('echo !password!') do echo dbPassword=%i >> "%GITHUB_ENV%"
+          for /f "delims=" %%i in ('echo !password!') do echo dbPassword=%%i >> "%GITHUB_ENV%"
 
       # Downloads the R cabinet file for the initial release version of SQL Server 2019.
       # Note that we use the -L flag to allow for redirects.
