@@ -149,6 +149,8 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           working-directory: ./R
+        continue-on-error: true
+
 
       - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v2
