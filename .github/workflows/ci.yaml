@@ -79,18 +79,21 @@ jobs:
       - name: Create Logins for Test DBs
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
           CREATE LOGIN AirlineUser WITH PASSWORD = '%dbPassword%', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;
-          CREATE LOGIN AirlineUserdbowner WITH PASSWORD = '%dbPassword%', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;"
+          CREATE LOGIN AirlineUserdbowner WITH PASSWORD = '%dbPassword%'', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;"
       
       - name: Alter AirlineUser
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USE AirlineTestDB;
           ALTER USER [AirlineUser] WITH LOGIN=[AirlineUser]"
       
       - name: Alter AirlineUserdbowner
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USE AirlineTestDB;
           ALTER USER [AirlineUserdbowner] WITH LOGIN=[AirlineUserdbowner]"
 
       - name: Alter Authorization
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USER AirlineTestDB;
           ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner]"
 
       - name: Install R for MLS
