@@ -46,7 +46,7 @@ jobs:
       - name: Install SQL Server 2022
         run: | 
           set CurrentDir=%cd%
-          choco install sql-server-2022 -y -params "'/SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS '"
+          choco install sql-server-2022 -y -params "'/SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS'"
         shell: cmd
 
       - name: Install sqlcmd
@@ -75,6 +75,33 @@ jobs:
 
       - name: Restore AirlineTestDB
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "USE [master]; RESTORE DATABASE [AirlineTestDB] FROM  DISK = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak' WITH  FILE = 1,  MOVE N'AirlineTestDB' TO N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.mdf',  MOVE N'AirlineTestDB_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.ldf',  NOUNLOAD,  STATS = 5;"
+
+      - name: Install R for MLS
+        run: |
+          curl -L -o R-4.2.0-win.exe https://cloud.r-project.org/bin/windows/base/old/4.2.0/R-4.2.0-win.exe
+          R-4.2.0-win.exe /VERYSILENT /DIR=C:\MLS\R
+
+      - name: Install CompatibilityAPI and RevoScaleR after installing their dependencies (iterators, foreach, R6, and jsonlite).
+        run: |
+          C:\R\instance2\bin\Rscript.exe -e "install.packages(c('iterators', 'foreach', 'R6', 'jsonlite'), repos='https://cloud.r-project.org/')"
+          C:\MLS\R\bin\Rscript.exe -e "install.packages('https://aka.ms/sqlml/r4.2/windows/CompatibilityAPI_1.1.0.zip', repos=NULL)"
+          C:\MLS\R\bin\Rscript.exe -e "install.packages('https://aka.ms/sqlml/r4.2/windows/RevoScaleR_10.0.1.zip', repos=NULL)"
+
+      - name: Configure the R runtime installed for MLS with SQL Server
+        run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
+
+      - name: Enable External Scripts
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
+
+      - name: Reconfigure
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "RECONFIGURE WITH OVERRIDE;"  
+
+      - name: Restart the Service
+        run: |
+          sqlcmd -S localhost -U SA -P %dbPassword% -Q "SHUTDOWN WITH NOWAIT"
+          timeout /t 5 /nobreak
+          net start "MSSQLSERVER"
+
 
       - name: Set up R ${{ env.r-version }} Runtime
         uses: r-lib/actions/setup-r@v2
