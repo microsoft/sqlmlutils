@@ -152,5 +152,5 @@ jobs:
         with:
           working-directory: ./R
         env:
-          connectionStringAirlineUser: "Server=localhost;Database=AirlineTestDB;User Id=AirlineUser;Password=%dbPassword%;"
-          connectionStringAirlineUserdbowner: "Server=localhost;Database=AirlineTestDB;User Id=AirlineUserdbowner;Password=%dbPassword%;"
+          connectionStringAirlineUser: "Server=localhost;Database=AirlineTestDB;User Id=AirlineUser;Password=${{ env.dbPassword }};"
+          connectionStringAirlineUserdbowner: "Server=localhost;Database=AirlineTestDB;User Id=AirlineUserdbowner;Password=${{ env.dbPassword }};"
