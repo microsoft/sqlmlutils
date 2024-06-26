@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  SQL19:
+  SQLServer19:
     runs-on: windows-2022
     
     env:
