@@ -151,3 +151,6 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           working-directory: ./R
+        env:
+          connectionStringAirlineUser: "Server=localhost;Database=AirlineTestDB;User Id=AirlineUser;Password=%dbPassword%;"
+          connectionStringAirlineUserdbowner: "Server=localhost;Database=AirlineTestDB;User Id=AirlineUserdbowner;Password=%dbPassword%;"
