@@ -79,7 +79,7 @@ jobs:
       - name: Create Logins for Test DBs
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
           CREATE LOGIN AirlineUser WITH PASSWORD = '%dbPassword%', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;
-          CREATE LOGIN AirlineUserdbowner WITH PASSWORD = '%dbPassword%'', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;"
+          CREATE LOGIN AirlineUserdbowner WITH PASSWORD = '%dbPassword%', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;"
       
       - name: Alter AirlineUser
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
