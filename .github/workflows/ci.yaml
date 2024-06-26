@@ -93,7 +93,7 @@ jobs:
 
       - name: Alter Authorization
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
-          USER AirlineTestDB;
+          USE AirlineTestDB;
           ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner]"
 
       - name: Install R for MLS
