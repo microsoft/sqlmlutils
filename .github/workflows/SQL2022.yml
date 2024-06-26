@@ -6,7 +6,7 @@
 # See https://github.com/r-lib/actions/tree/master/examples#readme for
 # additional example workflows available for the R community.
 
-name: BuildAndTest SQLMLUtils for SQLServer2022
+name: SQLServer2022
 
 on:
   push:
@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  SQLServer22:
+  R 4.2 - Python 3.10:
     runs-on: windows-2022
     
     env:
