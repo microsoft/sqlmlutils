@@ -152,5 +152,5 @@ jobs:
         with:
           working-directory: ./R
         env:
-          pwdAirlineUser: "${{ env.dbPassword }}"
-          pwdAirlineUserdbowner: "${{ env.dbPassword }}"
+          PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
+          PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
