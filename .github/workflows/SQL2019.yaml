@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  R 3.5 - Python 3.7:
+  R3.5-Python3.7:
     runs-on: windows-2022
     
     env:
