@@ -110,8 +110,6 @@ jobs:
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
 
-
-
       - name: Enable External Scripts
         run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
 
@@ -124,6 +122,14 @@ jobs:
           timeout /t 5 /nobreak
           net start "MSSQLSERVER"
 
+      - name: Execute SPEES for R
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          EXEC sp_execute_external_script  @language =N'R',
+          @script=N'
+          OutputDataSet <- InputDataSet;
+          ',
+          @input_data_1 =N'SELECT 1 AS hello'
+          WITH RESULT SETS (([hello] int not null));"
 
       - name: Set up R ${{ env.r-version }} Runtime
         uses: r-lib/actions/setup-r@v2
@@ -145,20 +151,3 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           working-directory: ./R
-
-      - name: Set up Python ${{ env.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.python-version }}
-
-      - name: Install Python dependencies
-        working-directory: ./Python
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install flake8 pytest
-          pip install -r requirements.txt
-
-      - name: Build Python Package
-        working-directory: ./Python
-        run: ./buildandinstall.cmd
-
