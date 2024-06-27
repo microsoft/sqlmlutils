@@ -181,3 +181,24 @@ jobs:
         env:
           PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
           PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
+
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Install Python dependencies
+        working-directory: ./Python
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pytest
+          pip install -r requirements.txt
+
+      - name: Build Python Package
+        working-directory: ./Python
+        run: ./buildandinstall.cmd
+
+      - name: Run pytest
+        working-directory: ./Python/tests
+        run: |
+          pytest
