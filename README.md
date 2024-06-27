@@ -14,11 +14,11 @@ To install sqlmlutils, follow the instructions below for Python and R, respectiv
 Python:
 To install from PyPI:
 Run
-```
+```bash
 pip install sqlmlutils
 ```
 To install from file, download the latest release from https://github.com/microsoft/sqlmlutils/releases:
-```
+```bash
 pip install sqlmlutils-1.1.0.zip
 ```
 
@@ -29,7 +29,7 @@ Download the latest release from https://github.com/microsoft/sqlmlutils/release
 Windows:
 
 To obtain the version of R your server is currently using, please use this query:
-```
+```tsql
 EXEC sp_execute_external_script
     @language = N'R',
     @script = N'
@@ -41,18 +41,18 @@ WITH RESULT SETS ((rversion varchar(max)));
 Get the version of R which the server is using and install it locally. Then, run the following commands with the same version of R. 
 
 From command prompt, run 
-```
+```bash
 R.exe -e "install.packages('odbc', type='binary')"
 R.exe CMD INSTALL sqlmlutils_1.0.0.zip
 ```
 OR
 To build a new package file and install, run
-```
+```bash
 .\buildandinstall.cmd
 ```
 
 Linux
-```
+```bash
 R.exe -e "install.packages('odbc')"
 R.exe CMD INSTALL sqlmlutils_1.0.0.tar.gz
 ```
