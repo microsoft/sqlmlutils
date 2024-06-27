@@ -96,6 +96,7 @@ jobs:
           USE AirlineTestDB;
           ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner]"
 
+      # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-r-support
       - name: Install R for MLS
         run: |
           curl -L -o R-4.2.0-win.exe https://cloud.r-project.org/bin/windows/base/old/4.2.0/R-4.2.0-win.exe
@@ -110,6 +111,7 @@ jobs:
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
 
+      # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-python-support
       - name: Install Python for MLS
         run: |
           curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
@@ -183,7 +185,7 @@ jobs:
           PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
 
       - name: Set up Python ${{ env.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.python-version }}
 
