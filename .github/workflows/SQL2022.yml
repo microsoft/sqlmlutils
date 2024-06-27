@@ -202,3 +202,7 @@ jobs:
         working-directory: ./Python/tests
         run: |
           pytest
+        env:
+          PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
+          PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
+
