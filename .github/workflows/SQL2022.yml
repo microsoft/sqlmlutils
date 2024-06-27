@@ -100,13 +100,13 @@ jobs:
         run: |
           curl -L -o R-4.2.0-win.exe https://cloud.r-project.org/bin/windows/base/old/4.2.0/R-4.2.0-win.exe
           R-4.2.0-win.exe /VERYSILENT /DIR=C:\MLS\R
-          
-      # C:\MLS\R\bin\Rscript.exe -e "install.packages(c('rtools'), repo='https://cloud.r-project.org/', lib='C:\\MLS\\R\\library')"
+
       - name: Install CompatibilityAPI and RevoScaleR after installing their dependencies (iterators, foreach, R6, and jsonlite).
         run: |
           C:\MLS\R\bin\Rscript.exe -e "install.packages(c('iterators', 'foreach', 'R6', 'jsonlite'), repos='https://cloud.r-project.org/', lib='C:\\MLS\\R\\library')"
           C:\MLS\R\bin\Rscript.exe -e "install.packages('https://aka.ms/sqlml/r4.2/windows/CompatibilityAPI_1.1.0.zip', repos=NULL, lib='C:\\MLS\\R\\library')"
           C:\MLS\R\bin\Rscript.exe -e "install.packages('https://aka.ms/sqlml/r4.2/windows/RevoScaleR_10.0.1.zip', repos=NULL, lib='C:\\MLS\\R\\library')"
+          C:\MLS\R\bin\Rscript.exe -e "install.packages(c('rtools'), repo='https://cloud.r-project.org/', lib='C:\\MLS\\R\\library')"
 
 
       - name: Configure the R runtime installed for MLS with SQL Server
