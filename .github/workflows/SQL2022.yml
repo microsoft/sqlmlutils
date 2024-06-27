@@ -111,6 +111,12 @@ jobs:
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
 
+      # Remove any previous installations of Python
+      - name: Uninstall existing Python installations
+        run: |
+          if exist C:\MLS\Python rmdir /S /Q C:\MLS\Python
+          if exist %USERPROFILE%\AppData\Local\Programs\Python\Python310 rmdir /S /Q %USERPROFILE%\AppData\Local\Programs\Python\Python310
+
       # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-python-support
       - name: Install Python for MLS
         run: |
