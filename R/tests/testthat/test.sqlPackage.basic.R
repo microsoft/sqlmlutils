@@ -13,7 +13,7 @@ test_that( "successfull install and remove of package with special char in name 
     #
     scope <- if(!helper_isServerLinux()) "public" else "private"
 
-    packageName <- c("assertive.base")
+    packageName <- c("abc.data")
     connectionStringDBO <- helper_getSetting("connectionStringDBO")
 
     tryCatch({
