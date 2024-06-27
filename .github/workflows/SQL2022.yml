@@ -68,7 +68,7 @@ jobs:
         shell: cmd
 
       - name: Checkout Branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Move AirlineTestDB.bak to correct file location for backup command
         run: copy "AirlineTestDB.bak" "C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak"
