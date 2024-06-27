@@ -110,10 +110,26 @@ jobs:
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
 
-      - name: Download Python installer
+      - name: Install Python for MLS
         run: |
           curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
           python-installer.exe /quiet InstallAllUsers=1 TargetDir=C:\MLS\Python
+      
+      - name: Install revoscalepy and dependencies
+        run: |
+          cd C:\MLS\Python
+          python -m pip install -t "C:\MLS\Python\Lib\site-packages" dill numpy==1.22.0 pandas patsy python-dateutil
+          python -m pip install -t "C:\MLS\Python\Lib\site-packages" https://aka.ms/sqlml/python3.10/windows/revoscalepy-10.0.1-py3-none-any.whl
+
+      - name: Grant READ/EXECUTE access to installed libraries
+        run: |
+          icacls "C:\MLS\Python\Lib\site-packages" /grant "NT Service\MSSQLLAUNCHPAD":(OI)(CI)RX /T
+          icacls "C:\MLS\Python\Lib\site-packages" /grant *S-1-15-2-1:(OI)(CI)RX /T
+
+      - name: Configure the Python runtime installed for MLS with SQL Server
+        run: |
+        cd C:\MLS\Python\Lib\site-packages\revoscalepy\rxLibs 
+        .\RegisterRext.exe /configure /pythonhome:"C:\MLS\Python" /instance:"MSSQLSERVER"
 
       - name: Enable External Scripts
         run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
@@ -135,6 +151,12 @@ jobs:
           ',
           @input_data_1 =N'SELECT 1 AS hello'
           WITH RESULT SETS (([hello] int not null));"
+
+      - name: Execute SPEES for Python
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          EXEC sp_execute_external_script  @language =N'Python',
+          @script=N'OutputDataSet = InputDataSet;',
+          @input_data_1 =N'SELECT 1 AS hello' WITH RESULT SETS (([hello] int not null));"
 
       - name: Set up R ${{ env.r-version }} Runtime
         uses: r-lib/actions/setup-r@v2
