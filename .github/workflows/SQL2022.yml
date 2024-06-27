@@ -115,7 +115,7 @@ jobs:
       - name: Install Python for MLS
         run: |
           curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.2/python-3.10.2-amd64.exe 
-          python-installer.exe InstallAllUsers=1 TargetDir=C:\MLS\Python /log C:\MLS\install.log
+          python-installer.exe /passive InstallAllUsers=1 TargetDir=C:\MLS\Python /log C:\MLS\install.log
       
       - name: Save Python Logs as artifact
         if: always()
