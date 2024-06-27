@@ -127,6 +127,26 @@ jobs:
       - name: Restore AirlineTestDB
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "USE [master]; RESTORE DATABASE [AirlineTestDB] FROM  DISK = N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak' WITH  FILE = 1,  MOVE N'AirlineTestDB' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.mdf',  MOVE N'AirlineTestDB_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.ldf',  NOUNLOAD,  STATS = 5;"
 
+      - name: Create Logins for Test DBs
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          CREATE LOGIN AirlineUser WITH PASSWORD = '%dbPassword%', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;
+          CREATE LOGIN AirlineUserdbowner WITH PASSWORD = '%dbPassword%', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;"
+      
+      - name: Alter AirlineUser
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USE AirlineTestDB;
+          ALTER USER [AirlineUser] WITH LOGIN=[AirlineUser]"
+      
+      - name: Alter AirlineUserdbowner
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USE AirlineTestDB;
+          ALTER USER [AirlineUserdbowner] WITH LOGIN=[AirlineUserdbowner]"
+
+      - name: Alter Authorization
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USE AirlineTestDB;
+          ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner]"
+
       - name: Set up R ${{ env.r-version }} Runtime
         uses: r-lib/actions/setup-r@v2
         with:
@@ -149,6 +169,9 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           working-directory: ./R
+        env:
+          PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
+          PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
         continue-on-error: true
 
 
