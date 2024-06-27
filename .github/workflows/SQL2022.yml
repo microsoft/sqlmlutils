@@ -114,8 +114,16 @@ jobs:
       # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-python-support
       - name: Install Python for MLS
         run: |
-          curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
-          python-installer.exe /quiet InstallAllUsers=1 TargetDir=C:\MLS\Python
+          curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.2/python-3.10.2-amd64.exe 
+          python-installer.exe InstallAllUsers=1 TargetDir=C:\MLS\Python /log C:\MLS\install.log
+      
+      - name: Save Python Logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Python Installation Logs
+          path: C:\MLS\install.log
+          retention-days: 20
       
       - name: Install revoscalepy and dependencies
         run: |
