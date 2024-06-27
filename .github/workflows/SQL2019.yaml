@@ -1,0 +1,197 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+#
+# See https://github.com/r-lib/actions/tree/master/examples#readme for
+# additional example workflows available for the R community.
+
+name: R 3.5 - Python 3.7
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  SQLServer2019:
+    runs-on: windows-2022
+    
+    env:
+      # Define CI to skip some test case.
+      CI: True
+      r-version: "3.5.2"
+      python-version: "3.7.1"
+      sql-platform: "box"
+
+    defaults:
+      run:
+        shell: cmd
+
+    steps:
+      # Set password in github env but dont display output.
+      # Note for github action you need to use double %, when testing in a local VM
+      # %i would be the correct format.
+      - name: Generate password
+        run: |
+          setlocal enabledelayedexpansion
+          set password=%random%%random%%random%qaZ~@
+          for /f "delims=" %%i in ('echo !password!') do echo dbPassword=%%i >> "%GITHUB_ENV%"
+
+      # Downloads the R cabinet file for the initial release version of SQL Server 2019.
+      # Note that we use the -L flag to allow for redirects.
+      - name: Download Microsoft R Open cabinet file
+        run: |
+          set CurrentDir=%cd%
+          curl -L https://go.microsoft.com/fwlink/?linkid=2085686 -o "%CurrentDir%/SRO_3.5.2.125_1033.cab"
+        shell: cmd
+      
+      # Downloads the Python cabinet file for the initial release  version of SQL Server 2019.
+      # Note that we use the -L flag to allow for redirects.
+      - name: Download Microsoft Python Open cabinet file
+        run: |
+          set CurrentDir=%cd%
+          curl -L https://go.microsoft.com/fwlink/?linkid=2085793 -o "%CurrentDir%/SPO_4.5.12.120_1033.cab"
+        shell: cmd
+
+      # /MRCACHEDIRECTORY=%CurrentDir% is where we saved the cabinet files
+      # /SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 allows connecting using localhost without windows account
+      # /FEATURES=SQLEngine,ADVANCEDANALYTICS,SQL_INST_MR,SQL_INST_MPY are the machine learning services options including R and Python
+      # Note that MLS require the initial release installed and then upgrading to newer versions.
+      - name: Install SQL Server 2019
+        run: | 
+          set CurrentDir=%cd%
+          choco install sql-server-2019 -y -params "'/MRCACHEDIRECTORY=%CurrentDir% /SAPWD=%dbPassword% /SECURITYMODE=SQL /TCPENABLED=1 /INDICATEPROGRESS /ACTION=Install /FEATURES=SQLEngine,ADVANCEDANALYTICS,SQL_INST_MR,SQL_INST_MPY /INSTANCENAME=MSSQLSERVER /IACCEPTSQLSERVERLICENSETERMS /IACCEPTROPENLICENSETERMS /IACCEPTPYTHONLICENSETERMS'"
+        shell: cmd
+      
+      - name: Apply SQL Server 2019 Cumulative Update
+        run: choco install sql-server-2019-cumulative-update -y
+        shell: cmd
+
+      - name: Install sqlcmd
+        run: choco install sqlcmd
+        shell: cmd
+
+      # Saves the chocolately logs which will likely hold the errors needed to debug a failed installation of SQL Server 2019.
+      - name: Save Logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chocolatey Logs
+          path: C:\ProgramData\chocolatey\logs\chocolatey.log
+          retention-days: 20
+
+      - name: Check Connectivity to SQL Database
+        run: |
+          sqlcmd -S localhost -U SA -P %dbPassword% -d Master -l 5 -Q "SELECT @@VERSION"
+        shell: cmd
+
+      - name: Enable External Scripts
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
+
+      - name: Reconfigure
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "RECONFIGURE WITH OVERRIDE;"  
+
+      - name: Restart the Service
+        run: |
+          sqlcmd -S localhost -U SA -P %dbPassword% -Q "SHUTDOWN WITH NOWAIT"
+          timeout /t 5 /nobreak
+          net start "MSSQLSERVER"
+
+      # Validate that MLS works for R.
+      - name: Execute SPEES for R
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          EXEC sp_execute_external_script  @language =N'R',
+          @script=N'
+          OutputDataSet <- InputDataSet;
+          ',
+          @input_data_1 =N'SELECT 1 AS hello'
+          WITH RESULT SETS (([hello] int not null));"
+      
+      # Validate that MLS works for Python.
+      - name: Execute SPEES for Python
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          EXEC sp_execute_external_script  @language =N'Python',
+          @script=N'OutputDataSet = InputDataSet;',
+          @input_data_1 =N'SELECT 1 AS hello' WITH RESULT SETS (([hello] int not null));"
+
+      - name: Checkout Branch
+        uses: actions/checkout@v2
+
+      - name: Move AirlineTestDB.bak to correct file location for backup command
+        run: copy "AirlineTestDB.bak" "C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak"
+
+      - name: Restore AirlineTestDB
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "USE [master]; RESTORE DATABASE [AirlineTestDB] FROM  DISK = N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak' WITH  FILE = 1,  MOVE N'AirlineTestDB' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.mdf',  MOVE N'AirlineTestDB_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\DATA\AirlineTestDB_Primary.ldf',  NOUNLOAD,  STATS = 5;"
+
+      - name: Create Logins for Test DBs
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          CREATE LOGIN AirlineUser WITH PASSWORD = '%dbPassword%', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;
+          CREATE LOGIN AirlineUserdbowner WITH PASSWORD = '%dbPassword%', CHECK_POLICY=OFF, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE=AirlineTestDB;"
+      
+      - name: Alter AirlineUser
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USE AirlineTestDB;
+          ALTER USER [AirlineUser] WITH LOGIN=[AirlineUser]"
+      
+      - name: Alter AirlineUserdbowner
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USE AirlineTestDB;
+          ALTER USER [AirlineUserdbowner] WITH LOGIN=[AirlineUserdbowner]"
+
+      - name: Alter Authorization
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          USE AirlineTestDB;
+          ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner]"
+
+      - name: Set up R ${{ env.r-version }} Runtime
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ env.r-version }}
+
+      # Todo: Needs mirror installation URL for python 3.5
+      - name: Install R Package Dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          working-directory: ./R
+          extra-packages:
+            #Retrieves most recent odbc pkg from cran to avoid errors seen in older versions.
+            #Current version needs R >=3.6 and is currently failing
+            cran::odbc
+            cran::xml2
+            rcmdcheck
+        continue-on-error: true
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: ./R
+        env:
+          PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
+          PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
+        continue-on-error: true
+
+
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Install Python dependencies
+        working-directory: ./Python
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pytest
+          pip install -r requirements.txt
+
+      - name: Build Python Package
+        working-directory: ./Python
+        run: ./buildandinstall.cmd
+
+      - name: Run pytest
+        working-directory: ./Python/tests
+        run: |
+          pytest
+        continue-on-error: true
