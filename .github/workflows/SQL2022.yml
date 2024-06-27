@@ -110,6 +110,11 @@ jobs:
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
 
+      - name: Download Python installer
+        run: |
+          curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
+          python-installer.exe /quiet InstallAllUsers=1 TargetDir=C:\MLS\Python
+
       - name: Enable External Scripts
         run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
 
