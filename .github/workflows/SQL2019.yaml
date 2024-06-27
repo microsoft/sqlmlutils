@@ -118,7 +118,7 @@ jobs:
           @input_data_1 =N'SELECT 1 AS hello' WITH RESULT SETS (([hello] int not null));"
 
       - name: Checkout Branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Move AirlineTestDB.bak to correct file location for backup command
         run: copy "AirlineTestDB.bak" "C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak"
