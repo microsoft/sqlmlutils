@@ -159,6 +159,7 @@ test_that( "Installing a package that is already in use",
 #
 test_that( "Binary Package install with LinkingTo dependency",
 {
+    skip('iptools no longer on CRAN, FIX TODO: https://github.com/microsoft/sqlmlutils/issues/114 ')
     connectionStringAirlineUserdbowner <- helper_getSetting("connectionStringAirlineUserdbowner")
     scope <- "private"
 
