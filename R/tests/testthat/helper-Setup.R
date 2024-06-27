@@ -51,7 +51,7 @@ testthatDir <- getwd()
 R_Root <- file.path(testthatDir, "../..")
 scriptDirectory <- file.path(testthatDir, "scripts")
 
-options(repos = c(CRAN="https://cran.microsoft.com/snapshot/2022-07-06"))
+options(repos = c(CRAN="https://cloud.r-project.org/"))
 cat("INFO: repos = ", getOption("repos"), sep="\n")
 
 # Compute context specifications
