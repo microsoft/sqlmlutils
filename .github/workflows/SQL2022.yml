@@ -32,7 +32,7 @@ jobs:
         shell: cmd
 
     steps:
-      # Set password in github env but dont display output.
+      # Set password in Github env but don't display output.
       # Note for github action you need to use double %, when testing in a local VM
       # %i would be the correct format.
       - name: Generate password
@@ -106,8 +106,6 @@ jobs:
           C:\MLS\R\bin\Rscript.exe -e "install.packages(c('iterators', 'foreach', 'R6', 'jsonlite'), repos='https://cloud.r-project.org/', lib='C:\\MLS\\R\\library')"
           C:\MLS\R\bin\Rscript.exe -e "install.packages('https://aka.ms/sqlml/r4.2/windows/CompatibilityAPI_1.1.0.zip', repos=NULL, lib='C:\\MLS\\R\\library')"
           C:\MLS\R\bin\Rscript.exe -e "install.packages('https://aka.ms/sqlml/r4.2/windows/RevoScaleR_10.0.1.zip', repos=NULL, lib='C:\\MLS\\R\\library')"
-          C:\MLS\R\bin\Rscript.exe -e "install.packages(c('rtools'), repo='https://cloud.r-project.org/', lib='C:\\MLS\\R\\library')"
-
 
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
