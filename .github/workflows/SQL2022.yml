@@ -130,8 +130,8 @@ jobs:
 
       - name: Configure the Python runtime installed for MLS with SQL Server
         run: |
-        cd C:\MLS\Python\Lib\site-packages\revoscalepy\rxLibs 
-        .\RegisterRext.exe /configure /pythonhome:"C:\MLS\Python" /instance:"MSSQLSERVER"
+          cd C:\MLS\Python\Lib\site-packages\revoscalepy\rxLibs 
+          .\RegisterRext.exe /configure /pythonhome:"C:\MLS\Python" /instance:"MSSQLSERVER"
 
       - name: Enable External Scripts
         run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
