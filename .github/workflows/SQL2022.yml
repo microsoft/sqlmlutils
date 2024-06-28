@@ -211,6 +211,8 @@ jobs:
         run: |
           pytest
         env:
+          USER: "SA"
+          PASSWORD: "${{ env.dbPassword }}"
           PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
           PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
 
