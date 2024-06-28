@@ -42,7 +42,9 @@ jobs:
           icacls "${{ env.Python3_ROOT_DIR }}\Lib\site-packages" /grant *S-1-15-2-1:(OI)(CI)RX /T
 
       - name: Change directory
-        run: cd D:\a\
+        run: |
+          cd D:\a\
+          dir
 
       - name: Checkout Branch
         uses: actions/checkout@v2
