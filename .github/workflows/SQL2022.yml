@@ -111,26 +111,24 @@ jobs:
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
 
-      # Remove any previous installations of Python
-      - name: Uninstall existing Python installations
-        run: |
-          if exist C:\MLS\Python rmdir /S /Q C:\MLS\Python
-          if exist %USERPROFILE%\AppData\Local\Programs\Python\Python310 rmdir /S /Q %USERPROFILE%\AppData\Local\Programs\Python\Python310
-
       # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-python-support
-      - name: Install Python for MLS
-        run: |
-          curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.2/python-3.10.2-amd64.exe 
-          python-installer.exe /passive InstallAllUsers=1 TargetDir=C:\MLS\Python /log C:\MLS\install.log
+      #- name: Install Python for MLS
+      #  run: |
+      #    curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.2/python-3.10.2-amd64.exe 
+      #    python-installer.exe /passive InstallAllUsers=1 TargetDir=C:\MLS\Python /log C:\MLS\install.log
       
-      - name: Save Python Logs as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
+      #- name: Save Python Logs as artifact
+      #  if: always()
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: Python Installation Logs
+      #    path: C:\MLS\install.log
+      #    retention-days: 20
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v5
         with:
-          name: Python Installation Logs
-          path: C:\MLS\install.log
-          retention-days: 20
-      
+          python-version: ${{ env.python-version }}
+
       - name: Install revoscalepy and dependencies
         run: |
           cd C:\MLS\Python
@@ -197,11 +195,6 @@ jobs:
         env:
           PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
           PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
-
-      - name: Set up Python ${{ env.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.python-version }}
 
       - name: Install Python dependencies
         working-directory: ./Python
