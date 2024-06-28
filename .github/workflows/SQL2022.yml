@@ -94,8 +94,7 @@ jobs:
       - name: Alter Authorization
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
           USE AirlineTestDB;
-          ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner];
-          ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUser];"
+          ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner]"
 
       # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-r-support
       - name: Install R for MLS
@@ -212,6 +211,6 @@ jobs:
         run: |
           pytest
         env:
-          USER: "AirlineUser"
+          USER: "AirlineUserdbowner"
           PASSWORD: "${{ env.dbPassword }}"
           PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
