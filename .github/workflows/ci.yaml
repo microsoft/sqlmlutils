@@ -25,11 +25,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.python-version }}
-      
-      - name: Set up Python 3.10.0
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.10.0
 
       - name: Verify Python installation
         run: python --version && where python && echo %PYTHON%
@@ -47,12 +42,12 @@ jobs:
       #    icacls "C:\MLS\Python\Lib\site-packages" /grant *S-1-15-2-1:(OI)(CI)RX /T
 
       - name: Install Python dependencies
-        working-directory: ./Python
+        working-directory: ${{ env.Python3_ROOT_DIR }}
         run: |
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest
           pip install -r requirements.txt
 
       - name: Build Python Package
-        working-directory: ./Python
+        working-directory: ${{ env.Python3_ROOT_DIR }}
         run: ./buildandinstall.cmd
