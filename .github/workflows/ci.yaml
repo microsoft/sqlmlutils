@@ -51,7 +51,9 @@ jobs:
           python -m pip install flake8 pytest 
 
       - name: Install additional Python dependency with requirements
-        run:  pip install -r requirements.txt
+        run:  |
+          dir
+          pip install -r requirements.txt
 
       - name: Build Python Package
         working-directory: ${{ env.Python3_ROOT_DIR }}
