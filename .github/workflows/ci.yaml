@@ -32,6 +32,8 @@ jobs:
 
       - name: Checkout Branch
         uses: actions/checkout@v2
+        run: dir
+
       #- name: Install revoscalepy and dependencies
       #  run: |
       #    cd C:\MLS\Python
