@@ -21,35 +21,25 @@ jobs:
         shell: cmd
 
     steps:
-      # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-python-support
-      - name: Install Python for MLS
-        run: |
-          curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.2/python-3.10.2-amd64.exe 
-          python-installer.exe /passive InstallAllUsers=1 TargetDir=C:\MLS\Python /log C:\MLS\install.log
-      
-      - name: Save Python Logs as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Python Installation Logs
-          path: C:\MLS\install.log
-          retention-days: 20
-
-      - name: Install revoscalepy and dependencies
-        run: |
-          cd C:\MLS\Python
-          python -m pip install -t "C:\MLS\Python\Lib\site-packages" dill numpy==1.22.0 pandas patsy python-dateutil
-          python -m pip install -t "C:\MLS\Python\Lib\site-packages" https://aka.ms/sqlml/python3.10/windows/revoscalepy-10.0.1-py3-none-any.whl
-
-      - name: Grant READ/EXECUTE access to installed libraries
-        run: |
-          icacls "C:\MLS\Python\Lib\site-packages" /grant "NT Service\MSSQLLAUNCHPAD":(OI)(CI)RX /T
-          icacls "C:\MLS\Python\Lib\site-packages" /grant *S-1-15-2-1:(OI)(CI)RX /T
-
       - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.python-version }}
+
+      - name: Verify Python installation
+        run: python --version && where python && echo %PYTHON%
+        shell: cmd
+
+      #- name: Install revoscalepy and dependencies
+      #  run: |
+      #    cd C:\MLS\Python
+      #    python -m pip install -t "C:\MLS\Python\Lib\site-packages" dill numpy==1.22.0 pandas patsy python-dateutil
+      #    python -m pip install -t "C:\MLS\Python\Lib\site-packages" https://aka.ms/sqlml/python3.10/windows/revoscalepy-10.0.1-py3-none-any.whl
+
+      #- name: Grant READ/EXECUTE access to installed libraries
+      #  run: |
+      #    icacls "C:\MLS\Python\Lib\site-packages" /grant "NT Service\MSSQLLAUNCHPAD":(OI)(CI)RX /T
+      #    icacls "C:\MLS\Python\Lib\site-packages" /grant *S-1-15-2-1:(OI)(CI)RX /T
 
       - name: Install Python dependencies
         working-directory: ./Python
