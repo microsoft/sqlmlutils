@@ -56,5 +56,5 @@ jobs:
           pip install -r Python\requirements.txt
 
       - name: Build Python Package
-        working-directory: ${{ env.Python3_ROOT_DIR }}
+        working-directory: ./Python
         run: ./buildandinstall.cmd
