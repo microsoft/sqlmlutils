@@ -26,13 +26,12 @@ jobs:
         with:
           python-version: ${{ env.python-version }}
 
-      - name: Verify Python installation
-        run: python --version && where python && echo %PYTHON%
-        shell: cmd
-
       - name: Checkout Branch
         uses: actions/checkout@v2
-        run: dir
+      
+      - name: Verify Python installation
+        run: python --version && where python && echo %PYTHON% && dir
+        shell: cmd
 
       #- name: Install revoscalepy and dependencies
       #  run: |
