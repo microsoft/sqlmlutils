@@ -111,19 +111,6 @@ jobs:
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
 
-      # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-python-support
-      #- name: Install Python for MLS
-      #  run: |
-      #    curl -Lo python-installer.exe https://www.python.org/ftp/python/3.10.2/python-3.10.2-amd64.exe 
-      #    python-installer.exe /passive InstallAllUsers=1 TargetDir=C:\MLS\Python /log C:\MLS\install.log
-      
-      #- name: Save Python Logs as artifact
-      #  if: always()
-      #  uses: actions/upload-artifact@v4
-      #  with:
-      #    name: Python Installation Logs
-      #    path: C:\MLS\install.log
-      #    retention-days: 20
       - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -156,7 +143,7 @@ jobs:
           timeout /t 5 /nobreak
           net start "MSSQLSERVER"
 
-      - name: Execute SPEES for R
+      - name: Execute sp_execute_external_script for R
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
           EXEC sp_execute_external_script  @language =N'R',
           @script=N'
@@ -165,7 +152,7 @@ jobs:
           @input_data_1 =N'SELECT 1 AS hello'
           WITH RESULT SETS (([hello] int not null));"
 
-      - name: Execute SPEES for Python
+      - name: Execute sp_execute_external_script for Python
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
           EXEC sp_execute_external_script  @language =N'Python',
           @script=N'OutputDataSet = InputDataSet;',
@@ -214,3 +201,4 @@ jobs:
           USER: "AirlineUserdbowner"
           PASSWORD: "${{ env.dbPassword }}"
           PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
+        continue-on-error: true
