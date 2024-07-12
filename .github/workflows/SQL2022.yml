@@ -96,6 +96,7 @@ jobs:
           USE AirlineTestDB;
           ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner]"
 
+      # https://learn.microsoft.com/sql/machine-learning/install/sql-machine-learning-services-windows-install-sql-2022?view=sql-server-ver16#setup-r-support
       - name: Install R for MLS
         run: |
           curl -L -o R-4.2.0-win.exe https://cloud.r-project.org/bin/windows/base/old/4.2.0/R-4.2.0-win.exe
@@ -110,6 +111,26 @@ jobs:
       - name: Configure the R runtime installed for MLS with SQL Server
         run: C:\MLS\R\library\RevoScaleR\rxLibs\x64\RegisterRext.exe /configure /rhome:"C:\MLS\R" /instance:"MSSQLSERVER"
 
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Install revoscalepy and dependencies
+        working-directory: ${{ env.Python3_ROOT_DIR }}
+        run: |
+          python -m pip install -t "${{ env.Python3_ROOT_DIR }}\Lib\site-packages" dill numpy==1.22.0 pandas patsy python-dateutil
+          python -m pip install -t "${{ env.Python3_ROOT_DIR }}\Lib\site-packages" https://aka.ms/sqlml/python3.10/windows/revoscalepy-10.0.1-py3-none-any.whl
+
+      - name: Grant READ/EXECUTE access to installed libraries
+        run: |
+          icacls "${{ env.Python3_ROOT_DIR }}\Lib\site-packages" /grant "NT Service\MSSQLLAUNCHPAD":(OI)(CI)RX /T
+          icacls "${{ env.Python3_ROOT_DIR }}\Lib\site-packages" /grant *S-1-15-2-1:(OI)(CI)RX /T
+
+      - name: Configure the Python runtime installed for MLS with SQL Server
+        working-directory: ${{ env.Python3_ROOT_DIR }}\Lib\site-packages\revoscalepy\rxLibs
+        run: .\RegisterRext.exe /configure /pythonhome:"${{ env.Python3_ROOT_DIR }}" /instance:"MSSQLSERVER"
+
       - name: Enable External Scripts
         run: sqlcmd -S localhost -U SA -P %dbPassword% -Q "EXEC sp_configure  'external scripts enabled', 1;"
 
@@ -122,7 +143,7 @@ jobs:
           timeout /t 5 /nobreak
           net start "MSSQLSERVER"
 
-      - name: Execute SPEES for R
+      - name: Execute sp_execute_external_script for R
         run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
           EXEC sp_execute_external_script  @language =N'R',
           @script=N'
@@ -130,6 +151,12 @@ jobs:
           ',
           @input_data_1 =N'SELECT 1 AS hello'
           WITH RESULT SETS (([hello] int not null));"
+
+      - name: Execute sp_execute_external_script for Python
+        run: sqlcmd -S localhost -U SA -P %dbPassword% -l 5 -Q "
+          EXEC sp_execute_external_script  @language =N'Python',
+          @script=N'OutputDataSet = InputDataSet;',
+          @input_data_1 =N'SELECT 1 AS hello' WITH RESULT SETS (([hello] int not null));"
 
       - name: Set up R ${{ env.r-version }} Runtime
         uses: r-lib/actions/setup-r@v2
@@ -154,3 +181,24 @@ jobs:
         env:
           PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
           PASSWORD_AIRLINE_USER_DBOWNER: "${{ env.dbPassword }}"
+
+      - name: Install Python dependencies
+        working-directory: ./Python
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pytest
+          pip install -r requirements.txt
+
+      - name: Build Python Package
+        working-directory: ./Python
+        run: ./buildandinstall.cmd
+
+      - name: Run pytest
+        working-directory: ./Python/tests
+        run: |
+          pytest
+        env:
+          USER: "AirlineUserdbowner"
+          PASSWORD: "${{ env.dbPassword }}"
+          PASSWORD_AIRLINE_USER: "${{ env.dbPassword }}"
+        continue-on-error: true
