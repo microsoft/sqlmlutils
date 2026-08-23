@@ -77,7 +77,7 @@ jobs:
       # Saves the chocolately logs which will likely hold the errors needed to debug a failed installation of SQL Server 2019.
       - name: Save Logs as artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: Chocolatey Logs
           path: C:\ProgramData\chocolatey\logs\chocolatey.log
@@ -118,7 +118,7 @@ jobs:
           @input_data_1 =N'SELECT 1 AS hello' WITH RESULT SETS (([hello] int not null));"
 
       - name: Checkout Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Move AirlineTestDB.bak to correct file location for backup command
         run: copy "AirlineTestDB.bak" "C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQL\Backup\AirlineTestDB.bak"
@@ -147,13 +147,13 @@ jobs:
           ALTER AUTHORIZATION ON SCHEMA::[db_owner] TO [AirlineUserdbowner]"
 
       - name: Set up R ${{ env.r-version }} Runtime
-        uses: r-lib/actions/setup-r@v2
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
         with:
           r-version: ${{ env.r-version }}
 
       # Todo: Needs mirror installation URL for python 3.5
       - name: Install R Package Dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
+        uses: r-lib/actions/setup-r-dependencies@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
         with:
           cache-version: 2
           working-directory: ./R
@@ -165,7 +165,7 @@ jobs:
             rcmdcheck
         continue-on-error: true
 
-      - uses: r-lib/actions/check-r-package@v2
+      - uses: r-lib/actions/check-r-package@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
         with:
           working-directory: ./R
         env:
@@ -175,7 +175,7 @@ jobs:
 
 
       - name: Set up Python ${{ env.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@e9aba2c848f5ebd159c070c61ea2c4e2b122355e # v2.3.4
         with:
           python-version: ${{ env.python-version }}
 
